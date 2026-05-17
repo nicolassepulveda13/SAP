@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Remove-Item *)",
+      "mcp__plugin_figma_figma__get_variable_defs"
+    ]
+  }
+}
