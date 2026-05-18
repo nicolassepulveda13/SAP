@@ -1,0 +1,82 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-barlow);
+  --font-mono: var(--font-geist-mono);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+}
+
+/* SilverBack Design System */
+:root {
+  --background: #181818;
+  --foreground: #ffffff;
+  --card: #242424;
+  --card-foreground: #ffffff;
+  --popover: #242424;
+  --popover-foreground: #ffffff;
+  --primary: #F97316;
+  --primary-foreground: #ffffff;
+  --secondary: #2e2e2e;
+  --secondary-foreground: #ffffff;
+  --muted: #2e2e2e;
+  --muted-foreground: #9CA3AF;
+  --accent: #2e2e2e;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --border: #333333;
+  --input: #2e2e2e;
+  --ring: #F97316;
+  --radius: 0.5rem;
+
+  /* SilverBack custom tokens */
+  --sb-bg: #181818;
+  --sb-surface: #242424;
+  --sb-surface-2: #2e2e2e;
+  --sb-primary: #F97316;
+  --sb-primary-hover: #EA6800;
+  --sb-text: #ffffff;
+  --sb-text-muted: #9CA3AF;
+  --sb-border: #333333;
+  --sb-sidebar-w: 256px;
+  --sb-topbar-h: 56px;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    background-color: var(--sb-bg);
+    color: var(--sb-text);
+    font-family: var(--font-inter), system-ui, sans-serif;
+  }
+}
+
+/* Barlow Condensed utility */
+.font-heading {
+  font-family: var(--font-barlow), var(--font-inter), sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--sb-bg); }
+::-webkit-scrollbar-thumb { background: var(--sb-border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--sb-text-muted); }

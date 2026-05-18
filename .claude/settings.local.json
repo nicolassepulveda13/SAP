@@ -2,7 +2,18 @@
   "permissions": {
     "allow": [
       "Bash(Remove-Item *)",
-      "mcp__plugin_figma_figma__get_variable_defs"
+      "mcp__plugin_figma_figma__get_variable_defs",
+      "mcp__plugin_figma_figma__get_metadata",
+      "mcp__plugin_figma_figma__get_design_context",
+      "Bash(npx create-next-app@latest silverback --typescript --tailwind --app --src-dir no --import-alias \"@/*\" --no-git --yes)",
+      "Bash(npx shadcn@latest init -d)",
+      "Bash(npx shadcn@latest add button input select card badge progress)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(pandoc --version)",
+      "PowerShell(Get-Command *)",
+      "Bash(npx tsc *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)"
     ]
   }
 }
