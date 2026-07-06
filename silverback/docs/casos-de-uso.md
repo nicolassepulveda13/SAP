@@ -20,32 +20,32 @@
 
 ## Índice de Casos de Uso por Componente
 
-| Componente | Código | Nombre |
-|-----------|--------|--------|
-| **CU-001 — INCORPORACIÓN** | CU-001-001 | Registrar Datos Biométricos Iniciales |
-| | CU-001-002 | Seleccionar Arquetipo de Entrenamiento |
-| | CU-001-003 | Buscar Manadas Disponibles |
-| | CU-001-004 | Unirse a una Manada |
-| **CU-002 — SANTUARIO** | CU-002-001 | Visualizar el Panel del Santuario |
-| | CU-002-002 | Consultar Desafíos en La Forja |
-| | CU-002-003 | Aceptar un Desafío Semanal |
-| | CU-002-004 | Comunicarse en la Sala de Tácticas |
-| | CU-002-005 | Asignar Rol a un Miembro del Clan |
-| | CU-002-006 | Expulsar a un Miembro del Clan |
-| **CU-003 — ARENA** | CU-003-001 | Consultar el Estado de la Guerra Global |
-| | CU-003-002 | Registrar un Entrenamiento |
-| | CU-003-003 | Calcular el Puntaje CER |
-| | CU-003-004 | Consultar el Historial de Batallas |
-| **CU-004 — EVOLUCIÓN / BÓVEDA** | CU-004-001 | Visualizar Progreso de Evolución |
-| | CU-004-002 | Mejorar Nodo del Árbol de Habilidades |
-| | CU-004-003 | Reclamar Recompensa de la Bóveda |
-| | CU-004-004 | Adquirir Ítem en el Marketplace |
-| **CU-005 — PERFIL** | CU-005-001 | Consultar Dashboard de Rendimiento Personal |
-| | CU-005-002 | Consultar Racha de Entrenamiento |
-| | CU-005-003 | Salvar Racha con Puntos de Clan |
-| | CU-005-004 | Monitorear Estado de Fatiga Biométrica |
-| | CU-005-005 | Consultar Vitrina de Trofeos |
-| | CU-005-006 | Reclamar Beneficio de un Aliado Comercial |
+| Componente | Código | Nombre | Estado |
+|-----------|--------|--------|--------|
+| **CU-001 — INCORPORACIÓN** | CU-001-001 | Registrar Datos Biométricos Iniciales | ✅ Aprobado E1 |
+| | CU-001-002 | Seleccionar Arquetipo de Entrenamiento | ✅ Aprobado E1 |
+| | CU-001-003 | Buscar Manadas Disponibles | ✅ Aprobado E1 |
+| | CU-001-004 | Unirse a una Manada | ✅ Aprobado E1 |
+| **CU-002 — SANTUARIO** | CU-002-001 | Visualizar el Panel del Santuario | ✅ Aprobado E1 |
+| | CU-002-002 | Consultar Desafíos en La Forja | ✅ Aprobado E1 |
+| | CU-002-003 | Aceptar un Desafío Semanal | ✅ Aprobado E1 |
+| | CU-002-004 | Comunicarse en la Sala de Tácticas | ✅ Aprobado E1 |
+| | CU-002-005 | Asignar Rol a un Miembro del Clan | ✅ Aprobado E1 |
+| | CU-002-006 | Expulsar a un Miembro del Clan | ✅ Aprobado E1 |
+| **CU-003 — ARENA** | CU-003-001 | Consultar el Estado de la Guerra Global | ✅ Aprobado E1 |
+| | CU-003-002 | Registrar un Entrenamiento | ✅ Aprobado E1 |
+| | CU-003-003 | Calcular el Puntaje CER | ✅ Aprobado E1 |
+| | CU-003-004 | Consultar el Historial de Batallas | ✅ Aprobado E1 |
+| **CU-004 — EVOLUCIÓN / BÓVEDA** | CU-004-001 | Visualizar Progreso de Evolución | ✅ Aprobado E1 |
+| | CU-004-002 | Mejorar Nodo del Árbol de Habilidades | ✅ Aprobado E1 |
+| | CU-004-003 | Reclamar Recompensa de la Bóveda | ✅ Aprobado E1 |
+| | CU-004-004 | Adquirir Ítem en el Marketplace | ✅ Aprobado E1 |
+| **CU-005 — PERFIL** | CU-005-001 | Consultar Dashboard de Rendimiento Personal | ✅ Aprobado E1 |
+| | CU-005-002 | Consultar Racha de Entrenamiento | ✅ Aprobado E1 |
+| | CU-005-003 | Salvar Racha con Puntos de Clan | ✅ Aprobado E1 |
+| | CU-005-004 | Monitorear Estado de Fatiga Biométrica | ✅ Aprobado E1 |
+| | CU-005-005 | Consultar Vitrina de Trofeos | ✅ Aprobado E1 |
+| | CU-005-006 | Reclamar Beneficio de un Aliado Comercial | ✅ Aprobado E1 |
 
 ---
 

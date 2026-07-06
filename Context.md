@@ -12,7 +12,7 @@
 - **Carrera:** Ingeniería en Sistemas Informáticos
 - **Curso:** 5to B | **Año:** 2026 | **Sede:** Centro
 - **Profesores:** Jorge Scali — Pablo Vilaboa
-s
+
 ---
 
 ## 🏢 El Negocio: SilverBack
@@ -27,7 +27,7 @@ El negocio consiste en erradicar la alta tasa de abandono en los entrenamientos 
 ### Descripción Complementaria (canvas)
 SilverBack es una **aplicación web** B2C de entrenamiento físico guiado y gamificado. Transforma el esfuerzo físico en una "evolución biológica" tangible a través de un **avatar virtual** (mascota evolutiva que pasa de "mono" a "gorila alfa"). Combina mapas de habilidades deportivas con tecnología de carga de datos por voz.
 
-> **Aclaración técnica:** La solución es una **app web responsive**. El soporte móvil es deseable pero NO es el requisito fundamental — el desarrollo se plantea web-first.
+> **Aclaración técnica:** La solución es una **app web responsive** (Next.js). El soporte móvil es deseable pero NO es el requisito fundamental — el desarrollo se plantea **web-first**.
 
 ---
 
@@ -107,9 +107,9 @@ Estrategia **"Try & Buy"**: 15 días de prueba gratuita total antes de requerir 
 | **Recursos Clave** | Algoritmos de gamificación · NLP (voz a texto) · Infraestructura cloud · Equipo: ingenieros + game designers + expertos fitness · Base de usuarios activos |
 | **Propuesta de Valor** | B2C: gamificación + registro sin fricción + avatar evolutivo · B2B: reducción churn + canal ventas + market insights |
 | **Relación con Clientes** | B2C: autoservicio + retención psicológica (streaks + Duelo de Manadas) · B2B: soporte dedicado + consultoría de datos |
-| **Canales** | App stores iOS/Android · Redes sociales + influencers fitness · Rankings compartibles · Fuerza de ventas B2B directa |
+| **Canales** | Web app (navegador web) · Redes sociales + influencers fitness · Rankings compartibles · Fuerza de ventas B2B directa |
 | **Segmentos** | B2C: Novato + Avanzado · B2B: Gimnasios, marcas deportivas, suplementación |
-| **Estructura de Costos** | Variable: infraestructura cloud + CAC + comisiones app stores · Fijo: nómina ingenieros + diseñadores + equipo comercial |
+| **Estructura de Costos** | Variable: infraestructura cloud + CAC · Fijo: nómina ingenieros + diseñadores + equipo comercial |
 | **Fuentes de Ingresos** | Suscripciones · Microtransacciones · Comisiones afiliados · Market Insights B2B |
 
 ---
@@ -126,13 +126,13 @@ Estrategia **"Try & Buy"**: 15 días de prueba gratuita total antes de requerir 
 
 ### MVP 2 — Motor de Registro "Cero Fricción" (Voz y Wearables)
 **Problema:** Fricción al ingresar datos durante el esfuerzo físico.
-1. Speech-to-Text nativo: micrófono escuchando en momentos clave, extracción automática de valores numéricos sin interacción táctil
+1. Web Speech API: micrófono escuchando en momentos clave, extracción automática de valores numéricos sin interacción táctil
 2. Integración con APIs de wearables: captura pasiva de ritmo cardíaco, calorías y tiempos de descanso
 
 ### MVP 3 — Ecosistema "Duelo de Manadas"
 **Problema:** Abandono por falta de compromiso social.
 1. Creación/unión a Manadas mediante códigos de invitación
-2. Esfuerzo equitativo: progreso relativo (novato con 20kg = experto con 100kg en % de esfuerzo)
+2. Esfuerzo equitativo: progreso relativo — CER (Coeficiente de Esfuerzo Relativo), novato con 20kg = experto con 100kg en % de esfuerzo
 3. Desafíos semanales colectivos con medallas y reconocimientos digitales
 
 ---
@@ -141,17 +141,17 @@ Estrategia **"Try & Buy"**: 15 días de prueba gratuita total antes de requerir 
 
 | Capa | Tecnología |
 |------|-----------|
-| **Frontend Web** | **Next.js + React** — App Router, web-first, responsive. Mobile como mejora progresiva, no requisito. |
+| **Frontend Web** | Next.js 14 + React 18 — App Router, TypeScript, Tailwind CSS. Web-first, responsive. Mobile como mejora progresiva. |
 | **Voz a Texto** | Web Speech API (nativa del browser) |
-| **Backend / BaaS** | Supabase (PostgreSQL) — tiempo real, seguridad, escalabilidad elástica, costo ~$0 en etapa inicial |
+| **Base de Datos** | PostgreSQL o SQL Server — base de datos relacional con Row-Level Security, procedimientos almacenados y capa backend-for-frontend |
+| **Autenticación** | Sesiones de usuario almacenadas en base de datos, validación por HTTP |
 | **Wearables** | APIs de relojes inteligentes (Apple Health, Google Fit) — integración futura/opcional |
 | **Motor de Gamificación** | Sistema propio de árboles de habilidades + evolución de avatar |
-| **Motor Social** | Arquitectura multijugador asíncrona para Manadas con cálculo de promedios grupales en tiempo real |
+| **Motor Social** | Arquitectura multijugador asíncrona para Manadas con cálculo CER grupal en tiempo real |
 | **Big Data / Analytics** | Recolección, anonimización y procesamiento de datos de comportamiento |
 | **IA / Recomendación** | Algoritmos de plan dinámico para tier Pro |
 
-> **Stack confirmado:** Next.js + React (App Router) + Supabase + TypeScript + Tailwind CSS.
-> La fuente de verdad del desarrollo es `SPEC_silverback.md` — 20 páginas web + 20 CUs + estructura App Router.
+> ⚠️ **REGLA CRÍTICA:** El backend usa **PostgreSQL o SQL Server**. **Nunca Supabase**. La fuente de verdad del desarrollo es `SPEC_silverback.md` — 20 páginas web + 20 CUs + estructura App Router.
 
 ---
 
@@ -160,7 +160,7 @@ Estrategia **"Try & Buy"**: 15 días de prueba gratuita total antes de requerir 
 | Código | Contenido | Estado |
 |--------|-----------|--------|
 | `canvas` | Canvas de idea de negocio | ✅ Entregado y aprobado |
-| `E1` | Negocios: secciones 1-3 / Tecnología: 10 a 10.5.3 | 🔄 En construcción |
+| `E1` | Negocios: secciones 1-3 / Tecnología: 10 a 10.5.3 | ✅ Tecnología entregada · Negocios observado (en corrección) |
 | `E2` | Acumulativo E1 + Negocios: 4-5 / Tecnología: hasta 10.5.7 | ⏳ Pendiente |
 | `E3` | Acumulativo E2 + Negocios: 6-7 / Tecnología: 10.5 completo | ⏳ Pendiente |
 | `CF` | Carpeta final completa (requiere E1+E2+E3 aprobados) | ⏳ Pendiente |
@@ -170,7 +170,24 @@ Estrategia **"Try & Buy"**: 15 días de prueba gratuita total antes de requerir 
 
 ---
 
+## 📖 Secciones por Entrega — Negocios (Guía SAP)
 
+### E1 — Secciones 1 a 3
+- **1 Descripción General:** 1.1 Descripción básica · 1.2 Situación actual · 1.3 Qué lo hace único · 1.4 Factores clave de éxito · 1.5 Misión y Visión (marco temporal, alcances con escala --, -, E, +, ++; competencias únicas, misión, visión) · 1.6 Oportunidad de negocio · 1.7 Propuesta de valor
+- **2 Análisis Estratégico:** 2.1 Contexto (industria, factores económicos, políticos, tecnológicos) · 2.2 Cadena de valor propia + 3 competidores comparables (Hevy, Liftosaur, Fitplan) · 2.3 Análisis competidores · 2.4 Posicionamiento · 2.5 Fortaleza del negocio (Baja/Media/Alta)
+- **3 FODA:** 3.1 Cuadro FODA (Fortalezas, Debilidades, Oportunidades, Amenazas)
+
+### E2 — Secciones 4 y 5
+- **4 Segmentación:** 4.1-4.4 (consumidores, grupos, potenciales compradores, comportamiento esperado)
+- **5 Plan de Acción:** 5.1 Programas generales · 5.2 Programas específicos
+
+### E3 — Secciones 6 y 7
+- **6 Plan de Marketing:** 6.1-6.7 (objetivos, cobertura, posicionamiento, producto, precio, CIM, distribución)
+- **7 Operaciones:** 7.1-7.6 (organización, fundadores, staff, estructura, filosofía, RRHH)
+
+---
+
+## 💻 Secciones por Entrega — Tecnología (Sección 10 de la Guía)
 
 ### E1 — Puntos 10 a 10.5.3
 **10.1** Carátula · **10.2** Índice · **10.3** Historial de Revisión
@@ -211,4 +228,7 @@ Estrategia **"Try & Buy"**: 15 días de prueba gratuita total antes de requerir 
 - Todo contenido para el TP debe seguir el formato de la **guía SAP de la UAI**
 - Ser concreto y específico para SilverBack — nunca genérico
 - Fuente de verdad: este archivo + archivos originales del proyecto
+- **Base de datos: PostgreSQL o SQL Server — NUNCA Supabase**
+- **Frontend: Next.js 14 + React 18, web-first — NO React Native ni mobile-first**
+- Competidores aprobados para sección 2.2: **Hevy, Liftosaur, Fitplan** (no usar Nike, Strava, MyFitnessPal)
 - Ante ambigüedad, preguntar antes de redactar
