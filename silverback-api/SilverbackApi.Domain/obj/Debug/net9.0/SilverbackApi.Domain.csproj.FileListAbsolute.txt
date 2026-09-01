@@ -1,0 +1,12 @@
+C:\Users\nico_\Documents\Repo sap\silverback-api\SilverbackApi.Domain\bin\Debug\net9.0\SilverbackApi.Domain.deps.json
+C:\Users\nico_\Documents\Repo sap\silverback-api\SilverbackApi.Domain\bin\Debug\net9.0\SilverbackApi.Domain.dll
+C:\Users\nico_\Documents\Repo sap\silverback-api\SilverbackApi.Domain\bin\Debug\net9.0\SilverbackApi.Domain.pdb
+C:\Users\nico_\Documents\Repo sap\silverback-api\SilverbackApi.Domain\obj\Debug\net9.0\SilverbackApi.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\nico_\Documents\Repo sap\silverback-api\SilverbackApi.Domain\obj\Debug\net9.0\SilverbackApi.Domain.AssemblyInfoInputs.cache
+C:\Users\nico_\Documents\Repo sap\silverback-api\SilverbackApi.Domain\obj\Debug\net9.0\SilverbackApi.Domain.AssemblyInfo.cs
+C:\Users\nico_\Documents\Repo sap\silverback-api\SilverbackApi.Domain\obj\Debug\net9.0\SilverbackApi.Domain.csproj.CoreCompileInputs.cache
+C:\Users\nico_\Documents\Repo sap\silverback-api\SilverbackApi.Domain\obj\Debug\net9.0\SilverbackApi.Domain.sourcelink.json
+C:\Users\nico_\Documents\Repo sap\silverback-api\SilverbackApi.Domain\obj\Debug\net9.0\SilverbackApi.Domain.dll
+C:\Users\nico_\Documents\Repo sap\silverback-api\SilverbackApi.Domain\obj\Debug\net9.0\refint\SilverbackApi.Domain.dll
+C:\Users\nico_\Documents\Repo sap\silverback-api\SilverbackApi.Domain\obj\Debug\net9.0\SilverbackApi.Domain.pdb
+C:\Users\nico_\Documents\Repo sap\silverback-api\SilverbackApi.Domain\obj\Debug\net9.0\ref\SilverbackApi.Domain.dll

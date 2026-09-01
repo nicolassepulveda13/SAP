@@ -3,7 +3,7 @@
 **Proyecto:** SILVERBACK  
 **Tipo:** Diagrama ER — Notación pata de gallo (Information Engineering)  
 **Base de datos:** PostgreSQL / SQL Server  
-**Descripción:** Modelo relacional completo del sistema. Las cardinalidades usan notación crow's foot (pata de gallo).
+**Descripción:** Modelo relacional completo. Cardinalidades en notación crow's foot.
 
 ---
 
@@ -21,7 +21,9 @@ skinparam arrow {
   Color #F97316
 }
 
-' ─── NÚCLEO: MIEMBRO Y CLAN ───────────────────────────────
+' ════════════════════════════════════════
+' FILA 1 — NÚCLEO
+' ════════════════════════════════════════
 
 entity CLAN {
   * id : UUID <<PK>>
@@ -46,7 +48,9 @@ entity MIEMBRO {
   clan_id : UUID <<FK>>
 }
 
-' ─── PERFIL Y BIOMÉTRICA ──────────────────────────────────
+' ════════════════════════════════════════
+' FILA 2 — PERFIL BIOMÉTRICO
+' ════════════════════════════════════════
 
 entity DATOS_BIOMETRICOS {
   * miembro_id : UUID <<PK,FK>>
@@ -74,7 +78,9 @@ entity RACHA {
   * ultimo_entrenamiento : TIMESTAMP
 }
 
-' ─── ARENA ────────────────────────────────────────────────
+' ════════════════════════════════════════
+' FILA 3 — ARENA
+' ════════════════════════════════════════
 
 entity ENTRENAMIENTO {
   * id : UUID <<PK>>
@@ -102,7 +108,9 @@ entity PARTICIPACION_GUERRA {
   * puntaje_cer : DECIMAL DEFAULT 0
 }
 
-' ─── SANTUARIO ────────────────────────────────────────────
+' ════════════════════════════════════════
+' FILA 4 — SANTUARIO
+' ════════════════════════════════════════
 
 entity DESAFIO {
   * id : UUID <<PK>>
@@ -134,7 +142,9 @@ entity MENSAJE {
   * timestamp : TIMESTAMP DEFAULT NOW()
 }
 
-' ─── EVOLUCIÓN / BÓVEDA ───────────────────────────────────
+' ════════════════════════════════════════
+' FILA 5 — EVOLUCIÓN: SKILL TREE + BÓVEDA
+' ════════════════════════════════════════
 
 entity NODO {
   * id : UUID <<PK>>
@@ -158,6 +168,10 @@ entity COFRE {
   * rareza : ENUM(COMUN,RARO,EPICO,LEGENDARIO)
   * estado : ENUM(DISPONIBLE,RECLAMADO)
 }
+
+' ════════════════════════════════════════
+' FILA 6 — EVOLUCIÓN: MARKETPLACE
+' ════════════════════════════════════════
 
 entity ITEM {
   * id : UUID <<PK>>
@@ -183,7 +197,9 @@ entity TRANSACCION_MARKETPLACE {
   * fecha : TIMESTAMP DEFAULT NOW()
 }
 
-' ─── PERFIL: TROFEOS Y BENEFICIOS ─────────────────────────
+' ════════════════════════════════════════
+' FILA 7 — PERFIL: TROFEOS + BENEFICIOS
+' ════════════════════════════════════════
 
 entity TROFEO {
   * id : UUID <<PK>>
@@ -232,47 +248,61 @@ entity ADMIN_HISTORIAL {
   * timestamp : TIMESTAMP DEFAULT NOW()
 }
 
-' ─── RELACIONES ───────────────────────────────────────────
+' ════════════════════════════════════════
+' HIDDEN LINKS — FORZAR APILAMIENTO VERTICAL
+' ════════════════════════════════════════
 
-' Núcleo
+CLAN -[hidden]d- DATOS_BIOMETRICOS
+MIEMBRO -[hidden]d- RACHA
+DATOS_BIOMETRICOS -[hidden]d- ENTRENAMIENTO
+RACHA -[hidden]d- GUERRA_GLOBAL
+ENTRENAMIENTO -[hidden]d- DESAFIO
+GUERRA_GLOBAL -[hidden]d- ACEPTACION_DESAFIO
+DESAFIO -[hidden]d- NODO
+ACEPTACION_DESAFIO -[hidden]d- COFRE
+NODO -[hidden]d- ITEM
+COFRE -[hidden]d- INVENTARIO_ITEMS
+ITEM -[hidden]d- TROFEO
+INVENTARIO_ITEMS -[hidden]d- ALIADO_COMERCIAL
+TROFEO -[hidden]d- BENEFICIO_ALIADO
+ALIADO_COMERCIAL -[hidden]d- ADMIN_HISTORIAL
+
+' ════════════════════════════════════════
+' RELACIONES
+' ════════════════════════════════════════
+
 MIEMBRO }o--|| CLAN : "pertenece a"
 CLAN ||--|| MIEMBRO : "liderado por"
 
-' Perfil biométrico (1:1)
 DATOS_BIOMETRICOS ||-|| MIEMBRO : "corresponde a"
 DATOS_FATIGA ||-|| MIEMBRO : "corresponde a"
 RACHA ||-|| MIEMBRO : "corresponde a"
 
-' Arena
 ENTRENAMIENTO }|--|| MIEMBRO : "registrado por"
 PARTICIPACION_GUERRA }|--|| GUERRA_GLOBAL : "de"
 PARTICIPACION_GUERRA }|--|| CLAN : "de"
 
-' Santuario
 DESAFIO }o--|| CLAN : "propuesto por"
 ACEPTACION_DESAFIO }|--|| DESAFIO : "sobre"
 ACEPTACION_DESAFIO }|--|| MIEMBRO : "aceptado por"
 MENSAJE }|--|| CLAN : "en"
 MENSAJE }|--|| MIEMBRO : "enviado por"
 
-' Evolución
 INVERSION_NODO }|--|| MIEMBRO : "realizada por"
 INVERSION_NODO }|--|| NODO : "sobre"
 NODO }o--o{ NODO : "depende de"
 COFRE }o--|| MIEMBRO : "pertenece a"
+
 INVENTARIO_ITEMS }|--|| MIEMBRO : "de"
 INVENTARIO_ITEMS }|--|| ITEM : "contiene"
 TRANSACCION_MARKETPLACE }|--|| MIEMBRO : "realizada por"
 TRANSACCION_MARKETPLACE }|--|| ITEM : "sobre"
 
-' Perfil
 TROFEO }o--|| MIEMBRO : "obtenido por"
 BENEFICIO_ALIADO }|--|| ALIADO_COMERCIAL : "provisto por"
 BENEFICIO_ALIADO }o--o| MIEMBRO : "reclamado por"
 SUSCRIPCION_ACTIVA }|--|| MIEMBRO : "de"
 SUSCRIPCION_ACTIVA }|--|| ALIADO_COMERCIAL : "con"
-
-' Administración
 ADMIN_HISTORIAL }|--|| MIEMBRO : "registra acciones de"
 
 @enduml

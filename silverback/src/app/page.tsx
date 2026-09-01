@@ -1,5 +1,8 @@
 import { redirect } from "next/navigation";
+import { getToken } from "@/lib/session";
 
-export default function Home() {
-  redirect("/onboarding/biometrics");
+export default async function Home() {
+  const token = await getToken();
+  if (token) redirect("/santuario");
+  redirect("/login");
 }

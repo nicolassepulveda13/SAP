@@ -1,270 +1,103 @@
 # 10.5.7 — Diagrama de Clases
 
 **Proyecto:** SILVERBACK  
-**Tipo:** Diagrama de clases UML — Arquitectura en capas  
-**Descripción:** Métodos 100% derivados de los diagramas de secuencia. Cada clase pertenece a su capa explícita.
+**Tipo:** Diagrama de clases UML — Arquitectura en 4 capas  
+**Descripción:** Métodos 100% derivados de los diagramas de secuencia.  
+**Distribución física:** La capa de Presentación reside en **Next.js 16** (proyecto `silverback/`). Las capas de Servicios, Repositorios y Dominio residen en **ASP.NET Core 9 Web API** (proyecto `silverback-api/`), implementadas como proyectos separados (`SilverbackApi.Services`, `SilverbackApi.Data`, `SilverbackApi.Domain`). La comunicación entre Presentación y Servicios ocurre por HTTP REST con autenticación JWT Bearer.
 
 ---
-
-## Enumeraciones del Dominio
-
-| Enum | Valores |
-|------|---------|
-| `Arquetipo` | VOLUMEN · DEFINIDO · ATLETICO |
-| `Rol` | SILVERBACK · BETA · EXPLORADOR · RECLUTA |
-| `Rango` | BRONCE · PLATA · ORO · RANGO_S |
-| `NivelExperiencia` | PRINCIPIANTE · INTERMEDIO · AVANZADO · ELITE |
-| `EstadoRacha` | ACTIVA · EN_RIESGO · ROTA |
-| `EstadoFatiga` | OPTIMA · MODERADA · ELEVADA · CRITICA |
-| `TierDesafio` | BRONCE · PLATA · ORO |
-| `EstadoDesafio` | PENDIENTE · ACTIVO · COMPLETADO · EXPIRADO |
-| `TipoMensaje` | TEXTO · SISTEMA · DESAFIO |
-| `EstadoNodo` | BLOQUEADO · DISPONIBLE · DESBLOQUEADO |
-| `RarezaCofre` | COMUN · RARO · EPICO · LEGENDARIO |
-| `EstadoCofre` | DISPONIBLE · RECLAMADO |
-| `CategoriaItem` | SKIN · HABITAT · ACCESORIO · AURA |
-| `TipoTrofeo` | RACHA · CER · CLAN · EVENTO |
-| `TipoBeneficio` | CODIGO · REDIRECCION · CUPON · SUSCRIPCION |
-| `EstadoBeneficio` | DISPONIBLE · RECLAMADO · EXPIRADO |
-
----
-
-## Diagrama
 
 ```plantuml
 @startuml class-diagram
 skinparam classAttributeIconSize 0
 skinparam packageStyle rectangle
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
 
-' ═══════════════════════════════════════════════════════════
-' CAPA DE DOMINIO
-' ═══════════════════════════════════════════════════════════
+skinparam class {
+  BackgroundColor #FFFFFF
+  FontColor #111111
 
-package "Dominio" #1C1C2E {
+  BorderColor<<page>> #7C3AED
+  HeaderBackgroundColor<<page>> #DDD6FE
 
-  class Miembro {
-    +UUID id
-    +String nombre
-    +String email
-    +Arquetipo arquetipo
-    +Rol rol
-    +Rango rango
-    +Int xp
-    +Int coins
-    +UUID clanId
-  }
-  class Clan {
-    +UUID id
-    +String nombre
-    +UUID liderClanId
-    +Float puntajeCER
-    +Int cantidadMiembros
-    +Int puntosClan
-  }
-  class DatosBiometricos {
-    +UUID miembroId
-    +Int edad
-    +Float pesoKg
-    +Int alturaCm
-    +NivelExperiencia nivelExperiencia
-  }
-  class Racha {
-    +UUID miembroId
-    +Int diasConsecutivos
-    +EstadoRacha estado
-    +Date ultimoEntrenamiento
-  }
-  class DatosFatiga {
-    +UUID miembroId
-    +EstadoFatiga nivelFatiga
-    +Int frecuenciaCardiacaReposo
-    +Int calidadSueno
-    +Float cargaSemanal
-  }
-  class Entrenamiento {
-    +UUID id
-    +UUID miembroId
-    +String ejercicio
-    +Float pesoKg
-    +Int repeticiones
-    +Float puntajeCER
-    +Date fecha
-  }
-  class ResultadoCER {
-    +Float puntaje
-    +Float multiplicador
-    +Arquetipo arquetipo
-  }
-  class GuerraGlobal {
-    +UUID id
-    +String semana
-    +String estado
-    +Date fechaFin
-  }
-  class Desafio {
-    +UUID id
-    +UUID clanId
-    +String nombre
-    +TierDesafio tier
-    +EstadoDesafio estado
-    +Int xpRecompensa
-    +Date fechaExpiracion
-  }
-  class AceptacionDesafio {
-    +UUID id
-    +UUID desafioId
-    +UUID miembroId
-    +EstadoDesafio estado
-    +Date fechaAceptacion
-  }
-  class Mensaje {
-    +UUID id
-    +UUID clanId
-    +UUID miembroId
-    +String contenido
-    +TipoMensaje tipo
-    +Date timestamp
-  }
-  class Nodo {
-    +UUID id
-    +String nombre
-    +Int costoXP
-    +EstadoNodo estado
-  }
-  class InversionNodo {
-    +UUID miembroId
-    +UUID nodoId
-    +Date fechaInversion
-  }
-  class Cofre {
-    +UUID id
-    +UUID miembroId
-    +RarezaCofre rareza
-    +EstadoCofre estado
-  }
-  class Item {
-    +UUID id
-    +String nombre
-    +CategoriaItem categoria
-    +Int precio
-    +RarezaCofre rareza
-  }
-  class Trofeo {
-    +UUID id
-    +UUID miembroId
-    +String nombre
-    +TipoTrofeo tipo
-    +Date fechaObtencion
-  }
-  class BeneficioAliado {
-    +UUID id
-    +UUID aliadoId
-    +UUID miembroId
-    +String nombre
-    +TipoBeneficio tipo
-    +Rango rangoMinimo
-    +EstadoBeneficio estado
-    +Date fechaReclamo
-  }
-  class AliadoComercial {
-    +UUID id
-    +String nombre
-    +String urlBase
-    +String logoUrl
-  }
-  class ParticipacionGuerra {
-    +UUID guerraId
-    +UUID clanId
-    +Float puntajeCER
-  }
+  BorderColor<<service>> #2E8B57
+  HeaderBackgroundColor<<service>> #C3EDCF
+
+  BorderColor<<repository>> #D4620A
+  HeaderBackgroundColor<<repository>> #FDDCB5
+
+  BorderColor #3B82F6
+  HeaderBackgroundColor #DBEAFE
+}
+skinparam arrow {
+  Color #444444
+  FontColor #333333
+  FontSize 10
+}
+skinparam package {
+  BorderThickness 2
+  FontStyle bold
+  FontSize 12
 }
 
 ' ═══════════════════════════════════════════════════════════
-' CAPA DE REPOSITORIOS
+' CAPA 1 — PRESENTACIÓN (Next.js 16 — proyecto silverback/)
 ' ═══════════════════════════════════════════════════════════
 
-package "Repositorios" #2E1C10 {
+package "Presentación — Next.js" #F5F0FF {
 
-  class MiembroRepository <<repository>> {
-    +crear(datos: DatosBiometricos): Miembro
-    +buscarPorId(id: UUID): Miembro
-    +listarPorClan(clanId: UUID): Miembro[]
-    +asignarClan(miembroId: UUID, clanId: UUID, rol: Rol): Miembro
-    +actualizarArquetipo(miembroId: UUID, arquetipo: Arquetipo, multiplicadorCER: Float): Miembro
-    +actualizarRol(miembroId: UUID, rol: Rol): Miembro
-    +actualizarXP(miembroId: UUID, xp: Int): Miembro
-    +actualizarCoins(miembroId: UUID, delta: Int): Miembro
-    +actualizar(miembroId: UUID, datos: Object): void
-    +eliminarMembresia(miembroId: UUID): void
+  class IncorporacionPage <<page>> {
+    +onRegistrarBiometricos(datos: DatosBiometricos): void
+    +onAsignarArquetipo(arquetipo: Arquetipo): void
+    +onBuscarManadas(filtros: Object): void
+    +onUnirseAManada(clanId: UUID): void
   }
-  class ClanRepository <<repository>> {
-    +listarDisponibles(filtros: Object, pagina: Int, limite: Int): Clan[]
-    +buscarPorId(id: UUID): Clan
-    +obtenerConMiembros(id: UUID): Clan
-    +verificarDisponibilidad(id: UUID): boolean
-    +actualizarContadorMiembros(id: UUID, delta: Int): Clan
-    +descontarPuntos(id: UUID, puntos: Int): void
+  class SantuarioPage <<page>> {
+    +onCargarDashboard(): void
+    +onListarDesafiosPorTier(tier: TierDesafio): void
+    +onAceptarDesafio(desafioId: UUID): void
+    +onObtenerMensajes(desde: Date): void
+    +onEnviarMensaje(contenido: String, tipo: TipoMensaje): void
+    +onListarMiembrosClan(): void
+    +onActualizarRol(miembroId: UUID, nuevoRol: Rol): void
+    +onExpulsarMiembro(miembroId: UUID): void
   }
-  class EntrenamientoRepository <<repository>> {
-    +crear(entrenamiento: Entrenamiento): Entrenamiento
-    +listar(miembroId: UUID, filtros: Object, pagina: Int): Entrenamiento[]
-    +obtenerEstadisticas(miembroId: UUID): Object
+  class ArenaPage <<page>> {
+    +onObtenerGuerraActiva(): void
+    +onRegistrarEntrenamiento(datos: Entrenamiento): void
+    +onObtenerHistorial(filtros: Object, pagina: Int): void
+    +onCalcularCER(pesoKg: Float, reps: Int, arquetipo: Arquetipo): void
   }
-  class GuerraRepository <<repository>> {
-    +findGuerraActiva(): GuerraGlobal
-    +findRankingClanes(guerraId: UUID, top: Int): Clan[]
-    +obtenerPuntajeActual(clanId: UUID): GuerraGlobal
+  class EvolucionPage <<page>> {
+    +onCargarProgreso(): void
+    +onObtenerCofresDisponibles(): void
+    +onMejorarNodo(nodoId: UUID): void
+    +onReclamarCofre(cofreId: UUID): void
+    +onObtenerItems(categoria: CategoriaItem): void
+    +onComprarItem(itemId: UUID): void
   }
-  class DesafioRepository <<repository>> {
-    +listarActivos(clanId: UUID): Desafio[]
-    +listarPorTier(clanId: UUID, tier: TierDesafio): Desafio[]
-    +buscarAceptacion(desafioId: UUID, miembroId: UUID): AceptacionDesafio
-    +crearAceptacion(miembroId: UUID, desafioId: UUID, estado: EstadoDesafio): AceptacionDesafio
+  class PerfilPage <<page>> {
+    +onCargarDashboard(): void
+    +onConsultarRacha(): void
+    +onSalvarRacha(): void
+    +onCargarFatiga(): void
+    +onCargarTrofeos(): void
+    +onCargarBeneficios(): void
+    +onReclamarBeneficio(beneficioId: UUID): void
   }
-  class MensajeRepository <<repository>> {
-    +crear(mensaje: Mensaje): Mensaje
-    +listarPorClan(clanId: UUID, desde: Date): Mensaje[]
-  }
-  class RachaRepository <<repository>> {
-    +obtenerPorMiembro(miembroId: UUID): Racha
-    +actualizar(miembroId: UUID, datos: Object): Racha
-    +restaurar(miembroId: UUID): Racha
-  }
-  class SkillTreeRepository <<repository>> {
-    +obtenerArbol(miembroId: UUID): Nodo[]
-    +crearInversion(inversion: InversionNodo): InversionNodo
-  }
-  class CofreRepository <<repository>> {
-    +listarDisponibles(miembroId: UUID): Cofre[]
-    +marcarReclamado(cofreId: UUID): void
-  }
-  class MarketplaceRepository <<repository>> {
-    +listar(categoria: CategoriaItem): Item[]
-    +buscarItem(itemId: UUID): Item
-    +registrarCompra(miembroId: UUID, itemId: UUID): void
-  }
-  class TrofeoRepository <<repository>> {
-    +listarPorMiembro(miembroId: UUID): Trofeo[]
-    +obtenerProgreso(miembroId: UUID): Object
-  }
-  class BeneficioRepository <<repository>> {
-    +listarElegibles(miembroId: UUID, rango: Rango): BeneficioAliado[]
-    +registrarReclamo(beneficioId: UUID, miembroId: UUID): void
-    +actualizarEstado(beneficioId: UUID, datos: Object): void
-  }
-  class FatigaRepository <<repository>> {
-    +obtenerPorMiembro(miembroId: UUID): DatosFatiga
-  }
-  class AdminHistorialRepository <<repository>> {
-    +registrar(evento: String): void
-  }
+
+  IncorporacionPage -[hidden]r- SantuarioPage
+  SantuarioPage -[hidden]r- ArenaPage
+  IncorporacionPage -[hidden]d- EvolucionPage
+  EvolucionPage -[hidden]r- PerfilPage
 }
 
 ' ═══════════════════════════════════════════════════════════
-' CAPA DE SERVICIOS
+' CAPA 2 — SERVICIOS (ASP.NET Core — SilverbackApi.Services)
 ' ═══════════════════════════════════════════════════════════
 
-package "Servicios" #1C2E1C {
+package "Servicios — ASP.NET Core" #EBFBF0 {
 
   class IncorporacionService <<service>> {
     +registrarBiometricos(datos: DatosBiometricos): Miembro
@@ -318,34 +151,278 @@ package "Servicios" #1C2E1C {
     -calcularProgresoHaciaProximo(miembroId: UUID, proximo: Trofeo): Float
     -generarCupon(beneficioId: UUID, miembroId: UUID): String
   }
+
+  IncorporacionService -[hidden]r- SantuarioService
+  ArenaService -[hidden]r- CERService
+  EvolucionService -[hidden]r- PerfilService
+  IncorporacionService -[hidden]d- ArenaService
+  ArenaService -[hidden]d- EvolucionService
 }
 
 ' ═══════════════════════════════════════════════════════════
-' RELACIONES ENTRE ENTIDADES
+' CAPA 3 — REPOSITORIOS (ASP.NET Core — SilverbackApi.Data)
 ' ═══════════════════════════════════════════════════════════
 
-Miembro "N" --> "1" Clan : pertenece a
-Miembro "1" *-- "1" DatosBiometricos : tiene
-Miembro "1" *-- "1" Racha : tiene
-Miembro "1" *-- "1" DatosFatiga : tiene
-Miembro "1" o-- "*" Trofeo : acumula
-Miembro "1" o-- "*" Entrenamiento : registra
-Clan "1" o-- "*" Desafio : publica
-Clan "1" o-- "*" ParticipacionGuerra : acumula
-GuerraGlobal "1" o-- "*" ParticipacionGuerra : registra
-Desafio "1" o-- "*" AceptacionDesafio : genera
-AceptacionDesafio "N" --> "1" Miembro : pertenece a
-Mensaje "N" --> "1" Clan : enviado en
-Mensaje "N" --> "1" Miembro : enviado por
-InversionNodo "N" --> "1" Miembro : realizada por
-InversionNodo "N" --> "1" Nodo : sobre
-Nodo "*" --> "*" Nodo : depende de
-Cofre "N" --> "1" Miembro : pertenece a
-BeneficioAliado "N" --> "1" AliadoComercial : provisto por
-BeneficioAliado "N" --> "0..1" Miembro : reclamado por
+package "Repositorios — ASP.NET Core" #FFF3EB {
+
+  class MiembroRepository <<repository>> {
+    +crear(datos: DatosBiometricos): Miembro
+    +buscarPorId(id: UUID): Miembro
+    +listarPorClan(clanId: UUID): Miembro[]
+    +asignarClan(miembroId: UUID, clanId: UUID, rol: Rol): Miembro
+    +actualizarArquetipo(miembroId: UUID, arquetipo: Arquetipo, multiplicadorCER: Float): Miembro
+    +actualizarRol(miembroId: UUID, rol: Rol): Miembro
+    +actualizarXP(miembroId: UUID, xp: Int): Miembro
+    +actualizarCoins(miembroId: UUID, delta: Int): Miembro
+    +actualizar(miembroId: UUID, datos: Object): void
+    +eliminarMembresia(miembroId: UUID): void
+  }
+  class ClanRepository <<repository>> {
+    +listarDisponibles(filtros: Object, pagina: Int, limite: Int): Clan[]
+    +buscarPorId(id: UUID): Clan
+    +obtenerConMiembros(id: UUID): Clan
+    +verificarDisponibilidad(id: UUID): boolean
+    +actualizarContadorMiembros(id: UUID, delta: Int): Clan
+    +descontarPuntos(id: UUID, puntos: Int): void
+  }
+  class RachaRepository <<repository>> {
+    +obtenerPorMiembro(miembroId: UUID): Racha
+    +actualizar(miembroId: UUID, datos: Object): Racha
+    +restaurar(miembroId: UUID): Racha
+  }
+  class FatigaRepository <<repository>> {
+    +obtenerPorMiembro(miembroId: UUID): DatosFatiga
+  }
+  class EntrenamientoRepository <<repository>> {
+    +crear(entrenamiento: Entrenamiento): Entrenamiento
+    +listar(miembroId: UUID, filtros: Object, pagina: Int): Entrenamiento[]
+    +obtenerEstadisticas(miembroId: UUID): Object
+  }
+  class GuerraRepository <<repository>> {
+    +findGuerraActiva(): GuerraGlobal
+    +findRankingClanes(guerraId: UUID, top: Int): Clan[]
+    +obtenerPuntajeActual(clanId: UUID): GuerraGlobal
+  }
+  class DesafioRepository <<repository>> {
+    +listarActivos(clanId: UUID): Desafio[]
+    +listarPorTier(clanId: UUID, tier: TierDesafio): Desafio[]
+    +buscarAceptacion(desafioId: UUID, miembroId: UUID): AceptacionDesafio
+    +crearAceptacion(miembroId: UUID, desafioId: UUID, estado: EstadoDesafio): AceptacionDesafio
+  }
+  class MensajeRepository <<repository>> {
+    +crear(mensaje: Mensaje): Mensaje
+    +listarPorClan(clanId: UUID, desde: Date): Mensaje[]
+  }
+  class SkillTreeRepository <<repository>> {
+    +obtenerArbol(miembroId: UUID): Nodo[]
+    +crearInversion(inversion: InversionNodo): InversionNodo
+  }
+  class CofreRepository <<repository>> {
+    +listarDisponibles(miembroId: UUID): Cofre[]
+    +marcarReclamado(cofreId: UUID): void
+  }
+  class MarketplaceRepository <<repository>> {
+    +listar(categoria: CategoriaItem): Item[]
+    +buscarItem(itemId: UUID): Item
+    +registrarCompra(miembroId: UUID, itemId: UUID): void
+  }
+  class TrofeoRepository <<repository>> {
+    +listarPorMiembro(miembroId: UUID): Trofeo[]
+    +obtenerProgreso(miembroId: UUID): Object
+  }
+  class BeneficioRepository <<repository>> {
+    +listarElegibles(miembroId: UUID, rango: Rango): BeneficioAliado[]
+    +registrarReclamo(beneficioId: UUID, miembroId: UUID): void
+    +actualizarEstado(beneficioId: UUID, datos: Object): void
+  }
+  class AdminHistorialRepository <<repository>> {
+    +registrar(evento: String): void
+  }
+
+  MiembroRepository -[hidden]r- ClanRepository
+  ClanRepository -[hidden]r- RachaRepository
+  RachaRepository -[hidden]r- FatigaRepository
+  MiembroRepository -[hidden]d- EntrenamientoRepository
+  EntrenamientoRepository -[hidden]r- GuerraRepository
+  GuerraRepository -[hidden]r- DesafioRepository
+  DesafioRepository -[hidden]r- MensajeRepository
+  EntrenamientoRepository -[hidden]d- SkillTreeRepository
+  SkillTreeRepository -[hidden]r- CofreRepository
+  CofreRepository -[hidden]r- MarketplaceRepository
+  SkillTreeRepository -[hidden]d- TrofeoRepository
+  TrofeoRepository -[hidden]r- BeneficioRepository
+  BeneficioRepository -[hidden]r- AdminHistorialRepository
+}
 
 ' ═══════════════════════════════════════════════════════════
-' DEPENDENCIAS: SERVICIOS → REPOSITORIOS
+' CAPA 4 — DOMINIO (ASP.NET Core — SilverbackApi.Domain)
+' ═══════════════════════════════════════════════════════════
+
+package "Dominio — ASP.NET Core" #EBF4FF {
+
+  class Miembro {
+    +UUID id
+    +String nombre
+    +String email
+    +Arquetipo arquetipo
+    +Rol rol
+    +Rango rango
+    +Int xp
+    +Int coins
+    +UUID clanId
+  }
+  class Clan {
+    +UUID id
+    +String nombre
+    +UUID liderClanId
+    +Float puntajeCER
+    +Int cantidadMiembros
+    +Int puntosClan
+  }
+  class DatosBiometricos {
+    +UUID miembroId
+    +Int edad
+    +Float pesoKg
+    +Int alturaCm
+    +NivelExperiencia nivelExperiencia
+  }
+  class Racha {
+    +UUID miembroId
+    +Int diasConsecutivos
+    +EstadoRacha estado
+    +Date ultimoEntrenamiento
+  }
+  class DatosFatiga {
+    +UUID miembroId
+    +EstadoFatiga nivelFatiga
+    +Float cargaSemanal
+  }
+  class Entrenamiento {
+    +UUID id
+    +UUID miembroId
+    +String ejercicio
+    +Float pesoKg
+    +Int repeticiones
+    +Float puntajeCER
+    +Date fecha
+  }
+  class ResultadoCER {
+    +Float puntaje
+    +Float modificador
+    +String descripcion
+  }
+  class GuerraGlobal {
+    +UUID id
+    +String semana
+    +String estado
+    +Date fechaFin
+  }
+  class ParticipacionGuerra {
+    +UUID guerraId
+    +UUID clanId
+    +Float cerAcumulado
+  }
+  class DesafioClan {
+    +UUID id
+    +UUID clanId
+    +String descripcion
+    +TierDesafio tier
+    +EstadoDesafio estado
+    +Int recompensaXp
+    +Date fechaExpiracion
+  }
+  class MensajeClan {
+    +UUID id
+    +UUID clanId
+    +UUID miembroId
+    +String contenido
+    +TipoMensaje tipo
+    +Date enviadoEn
+  }
+  class Nodo {
+    +UUID id
+    +String nombre
+    +Int costoXP
+    +EstadoNodo estado
+  }
+  class InversionNodo {
+    +UUID miembroId
+    +UUID nodoId
+    +Date invertidoEn
+  }
+  class Cofre {
+    +UUID id
+    +UUID miembroId
+    +RarezaCofre rareza
+    +EstadoCofre estado
+  }
+  class Item {
+    +UUID id
+    +String nombre
+    +CategoriaItem categoria
+    +Int precio
+  }
+  class Trofeo {
+    +UUID id
+    +UUID miembroId
+    +String nombre
+    +TipoTrofeo tipo
+    +Date obtenidoEn
+  }
+  class BeneficioAliado {
+    +UUID id
+    +UUID aliadoId
+    +TipoBeneficio tipo
+    +Rango rangoMinimo
+    +EstadoBeneficio estado
+  }
+  class AliadoComercial {
+    +UUID id
+    +String nombre
+    +String urlBase
+    +String logoUrl
+  }
+
+  Miembro -[hidden]r- Clan
+  Miembro -[hidden]d- DatosBiometricos
+  DatosBiometricos -[hidden]r- Racha
+  Racha -[hidden]r- DatosFatiga
+  DatosBiometricos -[hidden]d- Entrenamiento
+  Entrenamiento -[hidden]r- ResultadoCER
+  ResultadoCER -[hidden]r- GuerraGlobal
+  GuerraGlobal -[hidden]r- ParticipacionGuerra
+  Entrenamiento -[hidden]d- DesafioClan
+  DesafioClan -[hidden]r- MensajeClan
+  DesafioClan -[hidden]d- Nodo
+  Nodo -[hidden]r- InversionNodo
+  InversionNodo -[hidden]r- Cofre
+  Cofre -[hidden]r- Item
+  Nodo -[hidden]d- Trofeo
+  Trofeo -[hidden]r- BeneficioAliado
+  BeneficioAliado -[hidden]r- AliadoComercial
+}
+
+' ═══════════════════════════════════════════════════════════
+' FORZAR ORDEN VERTICAL ENTRE CAPAS
+' ═══════════════════════════════════════════════════════════
+
+IncorporacionPage -[hidden]d- IncorporacionService
+IncorporacionService -[hidden]d- MiembroRepository
+MiembroRepository -[hidden]d- Miembro
+
+' ═══════════════════════════════════════════════════════════
+' DEPENDENCIAS: PAGES → API REST → SERVICIOS
+' ═══════════════════════════════════════════════════════════
+
+IncorporacionPage ..> IncorporacionService : HTTP REST — Bearer JWT
+SantuarioPage ..> SantuarioService : HTTP REST — Bearer JWT
+ArenaPage ..> ArenaService : HTTP REST — Bearer JWT
+ArenaPage ..> CERService : HTTP REST — Bearer JWT
+EvolucionPage ..> EvolucionService : HTTP REST — Bearer JWT
+PerfilPage ..> PerfilService : HTTP REST — Bearer JWT
+
+' ═══════════════════════════════════════════════════════════
+' DEPENDENCIAS: SERVICIOS → REPOSITORIOS (in-process)
 ' ═══════════════════════════════════════════════════════════
 
 IncorporacionService ..> MiembroRepository : usa
@@ -375,6 +452,27 @@ PerfilService ..> TrofeoRepository : usa
 PerfilService ..> BeneficioRepository : usa
 PerfilService ..> EntrenamientoRepository : usa
 PerfilService ..> ClanRepository : usa
+
+' ═══════════════════════════════════════════════════════════
+' RELACIONES: DOMINIO
+' ═══════════════════════════════════════════════════════════
+
+Miembro "N" --> "1" Clan : pertenece a
+Miembro "1" *-- "1" DatosBiometricos : tiene
+Miembro "1" *-- "1" Racha : tiene
+Miembro "1" *-- "1" DatosFatiga : tiene
+Miembro "1" o-- "*" Trofeo : acumula
+Miembro "1" o-- "*" Entrenamiento : registra
+Clan "1" o-- "*" DesafioClan : publica
+Clan "1" o-- "*" ParticipacionGuerra : acumula
+GuerraGlobal "1" o-- "*" ParticipacionGuerra : registra
+MensajeClan "N" --> "1" Clan : enviado en
+MensajeClan "N" --> "1" Miembro : enviado por
+InversionNodo "N" --> "1" Miembro : realizada por
+InversionNodo "N" --> "1" Nodo : sobre
+Nodo "*" --> "*" Nodo : depende de
+Cofre "N" --> "1" Miembro : pertenece a
+BeneficioAliado "N" --> "1" AliadoComercial : provisto por
 
 @enduml
 ```

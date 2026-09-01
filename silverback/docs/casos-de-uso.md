@@ -22,7 +22,8 @@
 
 | Componente | Código | Nombre | Estado |
 |-----------|--------|--------|--------|
-| **CU-001 — INCORPORACIÓN** | CU-001-001 | Registrar Datos Biométricos Iniciales | ✅ Aprobado E1 |
+| **CU-001 — INCORPORACIÓN** | CU-001-000 | Crear Cuenta / Iniciar Sesión | ✏️ Modificado S2 |
+| | CU-001-001 | Registrar Datos Biométricos Iniciales | ✅ Aprobado E1 |
 | | CU-001-002 | Seleccionar Arquetipo de Entrenamiento | ✅ Aprobado E1 |
 | | CU-001-003 | Buscar Manadas Disponibles | ✅ Aprobado E1 |
 | | CU-001-004 | Unirse a una Manada | ✅ Aprobado E1 |
@@ -46,6 +47,7 @@
 | | CU-005-004 | Monitorear Estado de Fatiga Biométrica | ✅ Aprobado E1 |
 | | CU-005-005 | Consultar Vitrina de Trofeos | ✅ Aprobado E1 |
 | | CU-005-006 | Reclamar Beneficio de un Aliado Comercial | ✅ Aprobado E1 |
+| | CU-005-007 | Gestionar Datos de Cuenta | ✏️ Agregado S2 |
 
 ---
 
@@ -53,7 +55,45 @@
 
 # CU-001 — INCORPORACIÓN
 
-*Flujo lineal de 4 pasos. El usuario completa estos casos de uso en secuencia antes de acceder a la aplicación principal. Layout centrado, sin Topbar ni Sidebar.*
+*Flujo lineal de 4 pasos (incluyendo la creación de cuenta). El usuario completa estos casos de uso en secuencia antes de acceder a la aplicación principal. Layout centrado, sin Topbar ni Sidebar.*
+
+> **Modificación consciente (S2):** Se agrega CU-001-000 como paso previo al onboarding para capturar credenciales (nombre, email, contraseña). No formaba parte del flujo aprobado en E1 porque los CUs de biometría, arquetipo y clan asumían implícitamente la existencia de una cuenta. El flujo aprobado de 3 pasos permanece intacto; este paso se antepone.
+
+---
+
+## CU-001-000: Crear Cuenta / Iniciar Sesión
+
+**Descripción:** Este caso de uso describe el proceso mediante el cual el usuario nuevo crea una cuenta en la plataforma SilverBack ingresando sus datos de acceso, o bien el usuario existente inicia sesión con sus credenciales. Es el punto de entrada absoluto del sistema. Para usuarios nuevos, la creación de cuenta emite un JWT provisional (`onboardingCompletado = false`) y redirige al flujo de incorporación (CU-001-001). Para usuarios existentes con onboarding completo, el login emite un JWT definitivo y redirige al Santuario.
+
+**Actores:** Miembro (nuevo o existente), Sistema SilverBack
+
+**Precondiciones:** El usuario accede a la plataforma por primera vez o tiene una sesión expirada.
+
+**Escenario Principal de Éxito — Usuario nuevo:**
+
+1. El sistema presenta la pantalla de acceso con dos secciones: "INICIAR SESIÓN" y "CREAR CUENTA".
+2. El usuario selecciona la sección "CREAR CUENTA".
+3. El usuario completa los campos: NOMBRE (nombre de clan), EMAIL y CONTRASEÑA.
+4. El usuario presiona "CONTINUAR →".
+5. El sistema valida que el email no esté registrado y que la contraseña cumpla el formato mínimo.
+6. El sistema crea el perfil del miembro con `onboardingCompletado = false` y emite un JWT provisional.
+7. El sistema almacena el JWT en una cookie HTTP-only `sb_token`.
+8. El sistema redirige al usuario a la pantalla de Calibración Biométrica (CU-001-001, paso 1 de 3).
+
+**Escenario Principal de Éxito — Usuario existente:**
+
+1. El usuario completa los campos EMAIL y CONTRASEÑA en la sección "INICIAR SESIÓN".
+2. El usuario presiona "INICIAR SESIÓN".
+3. El sistema valida las credenciales contra la base de datos.
+4. El sistema emite un JWT con `onboardingCompletado = true` (usuario ya completó el flujo).
+5. El sistema almacena el JWT en una cookie HTTP-only `sb_token`.
+6. El sistema redirige al usuario al Santuario (`/santuario`).
+
+**Flujos Alternativos:**
+
+- **[FA-1]** Si el email ya está registrado al crear cuenta, el sistema muestra "Este email ya tiene una cuenta. ¿Querés iniciar sesión?"
+- **[FA-2]** Si las credenciales de login son incorrectas, el sistema muestra "Email o contraseña incorrectos." sin indicar cuál falló.
+- **[FA-3]** Si el usuario existente tiene `onboardingCompletado = false` (creó cuenta pero no terminó el onboarding), el sistema lo redirige a la última pantalla de incorporación pendiente.
 
 ---
 
@@ -891,6 +931,38 @@
 
 - **[FA-1]** Si el usuario intenta interactuar con un beneficio bloqueado por nivel insuficiente, el botón "BLOQUEADO" no ejecuta ninguna acción y el sistema muestra el nivel requerido como información.
 - **[FA-2]** Si un beneficio con fecha de vencimiento expiró mientras el usuario estaba en la pantalla, el sistema actualiza el estado de la tarjeta a "EXPIRADO" y deshabilita su botón de acción.
+
+---
+
+---
+
+## CU-005-007: Gestionar Datos de Cuenta
+
+> **Agregado consciente (S2):** Este CU no estaba en E1. Se agrega porque CU-001-000 introdujo credenciales (nombre, email, contraseña) y el usuario necesita un lugar para modificarlas después del onboarding.
+
+**Descripción:** Este caso de uso describe el proceso mediante el cual el usuario consulta y modifica los datos de su cuenta: nombre de usuario, email y contraseña. Es la contraparte administrativa de CU-001-000: mientras ese CU crea las credenciales, este CU permite mantenerlas actualizadas durante la vida del miembro en la plataforma.
+
+**Actores:** Miembro, Sistema SilverBack
+
+**Precondiciones:** El usuario completó el onboarding (CU-001-004) y tiene sesión activa.
+
+**Escenario Principal de Éxito:**
+
+1. El usuario accede a `/perfil/cuenta` desde el menú de perfil.
+2. El sistema presenta el formulario con los campos actuales del miembro: NOMBRE, EMAIL y la opción "CAMBIAR CONTRASEÑA".
+3. El usuario modifica el campo NOMBRE y presiona "GUARDAR CAMBIOS".
+4. El sistema valida que el nombre no esté vacío.
+5. El sistema persiste el cambio y muestra confirmación visual.
+6. Si el usuario quiere cambiar la contraseña, despliega tres campos: CONTRASEÑA ACTUAL, NUEVA CONTRASEÑA, CONFIRMAR NUEVA CONTRASEÑA.
+7. El usuario completa los tres campos y presiona "ACTUALIZAR CONTRASEÑA".
+8. El sistema verifica que la contraseña actual es correcta y que las nuevas coinciden.
+9. El sistema actualiza el hash de contraseña y confirma el cambio.
+
+**Flujos Alternativos:**
+
+- **[FA-1]** Si el nuevo email ya pertenece a otra cuenta, el sistema rechaza el cambio con "Este email ya está en uso."
+- **[FA-2]** Si la contraseña actual es incorrecta, el sistema muestra "Contraseña actual incorrecta." sin revelar información adicional.
+- **[FA-3]** Si la nueva contraseña y su confirmación no coinciden, el sistema resalta ambos campos y no procesa el cambio.
 
 ---
 

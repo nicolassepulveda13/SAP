@@ -9,6 +9,7 @@
 ```mermaid
 flowchart TB
     ROOT(["● Raíz\n/"])
+    P0["**P0** · Login / Crear Cuenta\n/login"]
 
     subgraph OB["INCORPORACIÓN  ·  layout centrado, sin nav"]
         direction TB
@@ -51,7 +52,10 @@ flowchart TB
     end
 
     %% Flujo de incorporación (lineal)
-    ROOT -->|redirect| P1
+    ROOT -->|sin sesión| P0
+    ROOT -->|sesión activa| P4
+    P0 -->|CREAR CUENTA| P1
+    P0 -->|INICIAR SESIÓN| P4
     P1 -->|CONTINUAR| P2
     P2 -->|CONFIRMAR ARQUETIPO| P3
     P3 -->|UNIRSE / INICIAR VIAJE| P4
@@ -83,6 +87,7 @@ flowchart TB
 
     %% Estilos
     style ROOT fill:#F97316,color:#fff,stroke:#EA6800
+    style P0   fill:#2e2e2e,stroke:#F97316,color:#fff
     style OB  fill:#1a1a1a,stroke:#F97316,color:#fff
     style APP fill:#181818,stroke:#333,color:#fff
     style SAN fill:#242424,stroke:#F97316,color:#fff
@@ -158,6 +163,7 @@ Layout persistente con **Topbar** (navegación entre secciones) y **Sidebar** (a
 
 | Código | Nombre | Ruta | Zona |
 |--------|--------|------|------|
+| P0 | Login / Crear Cuenta | `/login` | Autenticación |
 | P1 | Calibración Biométrica | `/onboarding/biometrics` | Onboarding |
 | P2 | Selector de Arquetipo | `/onboarding/archetype` | Onboarding |
 | P3 | Radar de Manadas | `/onboarding/matchmaking` | Onboarding |
@@ -178,6 +184,7 @@ Layout persistente con **Topbar** (navegación entre secciones) y **Sidebar** (a
 | P18 | Monitor de Fatiga | `/perfil/fatiga` | App — Perfil |
 | P19 | Vitrina de Trofeos | `/perfil/trofeos` | App — Perfil |
 | P20 | Beneficios Aliados | `/perfil/beneficios` | App — Perfil |
+| P21 | Datos de Cuenta | `/perfil/cuenta` | App — Perfil |
 
 ---
 
