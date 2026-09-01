@@ -18,7 +18,16 @@
       "Bash(git pull *)",
       "Bash(git fetch *)",
       "Bash(Get-Item \"C:\\\\Users\\\\nico_\\\\Documents\\\\Repo sap\\\\silverback\\\\docs\\\\casos-de-uso.md\")",
-      "Bash(Select-Object LastWriteTime, Length)"
+      "Bash(Select-Object LastWriteTime, Length)",
+      "Bash(gh repo *)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(npx prisma *)",
+      "Bash(xargs sed -i 's|\"@/generated/prisma\"|\"@/generated/prisma/client\"|g')",
+      "Bash(dotnet --version)",
+      "Bash(dotnet --list-sdks)",
+      "Bash(dotnet new *)",
+      "Bash(dotnet add *)"
     ]
   }
 }

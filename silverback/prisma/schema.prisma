@@ -1,0 +1,339 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+// ═══════════════════════════════════════
+// NÚCLEO
+// ═══════════════════════════════════════
+
+model Clan {
+  id               String   @id @default(uuid()) @db.UniqueIdentifier
+  nombre           String   @db.NVarChar(100)
+  liderClanId      String   @db.UniqueIdentifier @map("lider_clan_id")
+  puntajeCer       Decimal  @default(0) @db.Decimal(18, 2) @map("puntaje_cer")
+  cantidadMiembros Int      @default(0) @map("cantidad_miembros")
+  puntosClan       Int      @default(0) @map("puntos_clan")
+
+  miembros        Miembro[]
+  desafios        Desafio[]
+  participaciones ParticipacionGuerra[]
+  mensajes        Mensaje[]
+
+  @@map("CLAN")
+}
+
+model Miembro {
+  id           String  @id @default(uuid()) @db.UniqueIdentifier
+  nombre       String  @db.NVarChar(100)
+  email        String  @unique @db.NVarChar(100)
+  passwordHash String  @db.NVarChar(255) @map("password_hash")
+  arquetipo    String  @default("VOLUMEN") @db.NVarChar(20)
+  rol          String  @default("RECLUTA") @db.NVarChar(20)
+  rango        String  @default("BRONCE") @db.NVarChar(20)
+  xp           Int     @default(0)
+  coins        Int     @default(0)
+  clanId       String? @db.UniqueIdentifier @map("clan_id")
+
+  clan             Clan?               @relation(fields: [clanId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  datosBiometricos DatosBiometricos?
+  datosFatiga      DatosFatiga?
+  racha            Racha?
+  entrenamientos   Entrenamiento[]
+  trofeos          Trofeo[]
+  aceptaciones     AceptacionDesafio[]
+  mensajes         Mensaje[]
+  inversiones      InversionNodo[]
+  cofres           Cofre[]
+  inventario       InventarioItem[]
+  transacciones    TransaccionMarketplace[]
+  beneficios       BeneficioAliado[]
+  suscripciones    SuscripcionActiva[]
+  historial        AdminHistorial[]
+
+  @@map("MIEMBRO")
+}
+
+model DatosBiometricos {
+  miembroId        String @id @db.UniqueIdentifier @map("miembro_id")
+  edad             Int
+  pesoKg           Decimal @db.Decimal(5, 2) @map("peso_kg")
+  alturaCm         Int     @map("altura_cm")
+  nivelExperiencia String  @db.NVarChar(20) @map("nivel_experiencia")
+
+  miembro Miembro @relation(fields: [miembroId], references: [id])
+
+  @@map("DATOS_BIOMETRICOS")
+}
+
+model DatosFatiga {
+  miembroId    String  @id @db.UniqueIdentifier @map("miembro_id")
+  nivelFatiga  String  @default("OPTIMA") @db.NVarChar(20) @map("nivel_fatiga")
+  fcReposo     Int     @default(0) @map("fc_reposo")
+  calidadSueno Int     @default(0) @map("calidad_sueno")
+  cargaSemanal Decimal @default(0) @db.Decimal(10, 2) @map("carga_semanal")
+
+  miembro Miembro @relation(fields: [miembroId], references: [id])
+
+  @@map("DATOS_FATIGA")
+}
+
+model Racha {
+  miembroId          String    @id @db.UniqueIdentifier @map("miembro_id")
+  diasConsecutivos   Int       @default(0) @map("dias_consecutivos")
+  estado             String    @default("ACTIVA") @db.NVarChar(20)
+  ultimoEntrenamiento DateTime? @map("ultimo_entrenamiento")
+
+  miembro Miembro @relation(fields: [miembroId], references: [id])
+
+  @@map("RACHA")
+}
+
+// ═══════════════════════════════════════
+// ARENA
+// ═══════════════════════════════════════
+
+model Entrenamiento {
+  id           String   @id @default(uuid()) @db.UniqueIdentifier
+  miembroId    String   @db.UniqueIdentifier @map("miembro_id")
+  ejercicio    String   @db.NVarChar(100)
+  pesoKg       Decimal  @db.Decimal(6, 2) @map("peso_kg")
+  repeticiones Int
+  puntajeCer   Decimal  @db.Decimal(10, 2) @map("puntaje_cer")
+  fecha        DateTime @default(now())
+
+  miembro Miembro @relation(fields: [miembroId], references: [id])
+
+  @@map("ENTRENAMIENTO")
+}
+
+model GuerraGlobal {
+  id       String   @id @default(uuid()) @db.UniqueIdentifier
+  semana   String   @db.NVarChar(20)
+  estado   String   @default("ACTIVA") @db.NVarChar(20)
+  fechaFin DateTime @map("fecha_fin")
+
+  participaciones ParticipacionGuerra[]
+
+  @@map("GUERRA_GLOBAL")
+}
+
+model ParticipacionGuerra {
+  guerraId   String  @db.UniqueIdentifier @map("guerra_id")
+  clanId     String  @db.UniqueIdentifier @map("clan_id")
+  puntajeCer Decimal @default(0) @db.Decimal(10, 2) @map("puntaje_cer")
+
+  guerra GuerraGlobal @relation(fields: [guerraId], references: [id])
+  clan   Clan         @relation(fields: [clanId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([guerraId, clanId])
+  @@map("PARTICIPACION_GUERRA")
+}
+
+// ═══════════════════════════════════════
+// SANTUARIO
+// ═══════════════════════════════════════
+
+model Desafio {
+  id              String   @id @default(uuid()) @db.UniqueIdentifier
+  clanId          String   @db.UniqueIdentifier @map("clan_id")
+  nombre          String   @db.NVarChar(150)
+  tier            String   @default("BRONCE") @db.NVarChar(20)
+  estado          String   @default("PENDIENTE") @db.NVarChar(20)
+  xpRecompensa    Int      @map("xp_recompensa")
+  fechaExpiracion DateTime @map("fecha_expiracion")
+
+  clan         Clan                @relation(fields: [clanId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  aceptaciones AceptacionDesafio[]
+
+  @@map("DESAFIO")
+}
+
+model AceptacionDesafio {
+  id              String   @id @default(uuid()) @db.UniqueIdentifier
+  desafioId       String   @db.UniqueIdentifier @map("desafio_id")
+  miembroId       String   @db.UniqueIdentifier @map("miembro_id")
+  estado          String   @default("ACTIVO") @db.NVarChar(20)
+  fechaAceptacion DateTime @default(now()) @map("fecha_aceptacion")
+
+  desafio Desafio @relation(fields: [desafioId], references: [id])
+  miembro Miembro @relation(fields: [miembroId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("ACEPTACION_DESAFIO")
+}
+
+model Mensaje {
+  id        String   @id @default(uuid()) @db.UniqueIdentifier
+  clanId    String   @db.UniqueIdentifier @map("clan_id")
+  miembroId String   @db.UniqueIdentifier @map("miembro_id")
+  contenido String   @db.NVarChar(Max)
+  tipo      String   @default("TEXTO") @db.NVarChar(20)
+  timestamp DateTime @default(now())
+
+  clan    Clan    @relation(fields: [clanId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  miembro Miembro @relation(fields: [miembroId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("MENSAJE")
+}
+
+model AdminHistorial {
+  id          String   @id @default(uuid()) @db.UniqueIdentifier
+  miembroId   String   @db.UniqueIdentifier @map("miembro_id")
+  tipo        String   @db.NVarChar(50)
+  descripcion String   @db.NVarChar(Max)
+  timestamp   DateTime @default(now())
+
+  miembro Miembro @relation(fields: [miembroId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("ADMIN_HISTORIAL")
+}
+
+// ═══════════════════════════════════════
+// EVOLUCIÓN
+// ═══════════════════════════════════════
+
+model Nodo {
+  id      String @id @default(uuid()) @db.UniqueIdentifier
+  nombre  String @db.NVarChar(100)
+  costoXp Int    @map("costo_xp")
+  estado  String @default("BLOQUEADO") @db.NVarChar(20)
+
+  inversiones    InversionNodo[]
+  requiere       NodoDependencia[] @relation("NodoRequiere")
+  prerequisitoEn NodoDependencia[] @relation("NodoPrerequisito")
+
+  @@map("NODO")
+}
+
+model NodoDependencia {
+  nodoId         String @db.UniqueIdentifier @map("nodo_id")
+  prerequisitoId String @db.UniqueIdentifier @map("prerequisito_id")
+
+  nodo         Nodo @relation("NodoRequiere", fields: [nodoId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  prerequisito Nodo @relation("NodoPrerequisito", fields: [prerequisitoId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([nodoId, prerequisitoId])
+  @@map("NODO_DEPENDENCIA")
+}
+
+model InversionNodo {
+  miembroId      String   @db.UniqueIdentifier @map("miembro_id")
+  nodoId         String   @db.UniqueIdentifier @map("nodo_id")
+  fechaInversion DateTime @default(now()) @map("fecha_inversion")
+
+  miembro Miembro @relation(fields: [miembroId], references: [id])
+  nodo    Nodo    @relation(fields: [nodoId], references: [id])
+
+  @@id([miembroId, nodoId])
+  @@map("INVERSION_NODO")
+}
+
+model Cofre {
+  id        String   @id @default(uuid()) @db.UniqueIdentifier
+  miembroId String   @db.UniqueIdentifier @map("miembro_id")
+  rareza    String   @default("COMUN") @db.NVarChar(20)
+  estado    String   @default("DISPONIBLE") @db.NVarChar(20)
+
+  miembro Miembro @relation(fields: [miembroId], references: [id])
+
+  @@map("COFRE")
+}
+
+model Item {
+  id        String @id @default(uuid()) @db.UniqueIdentifier
+  nombre    String @db.NVarChar(100)
+  categoria String @db.NVarChar(20)
+  precio    Int
+  rareza    String @default("COMUN") @db.NVarChar(20)
+
+  inventario    InventarioItem[]
+  transacciones TransaccionMarketplace[]
+
+  @@map("ITEM")
+}
+
+model InventarioItem {
+  miembroId      String   @db.UniqueIdentifier @map("miembro_id")
+  itemId         String   @db.UniqueIdentifier @map("item_id")
+  fechaObtencion DateTime @default(now()) @map("fecha_obtencion")
+
+  miembro Miembro @relation(fields: [miembroId], references: [id])
+  item    Item    @relation(fields: [itemId], references: [id])
+
+  @@id([miembroId, itemId])
+  @@map("INVENTARIO_ITEMS")
+}
+
+model TransaccionMarketplace {
+  id        String   @id @default(uuid()) @db.UniqueIdentifier
+  miembroId String   @db.UniqueIdentifier @map("miembro_id")
+  itemId    String   @db.UniqueIdentifier @map("item_id")
+  fecha     DateTime @default(now())
+
+  miembro Miembro @relation(fields: [miembroId], references: [id])
+  item    Item    @relation(fields: [itemId], references: [id])
+
+  @@map("TRANSACCION_MARKETPLACE")
+}
+
+// ═══════════════════════════════════════
+// PERFIL
+// ═══════════════════════════════════════
+
+model Trofeo {
+  id             String   @id @default(uuid()) @db.UniqueIdentifier
+  miembroId      String   @db.UniqueIdentifier @map("miembro_id")
+  nombre         String   @db.NVarChar(100)
+  tipo           String   @db.NVarChar(20)
+  fechaObtencion DateTime @default(now()) @map("fecha_obtencion")
+
+  miembro Miembro @relation(fields: [miembroId], references: [id])
+
+  @@map("TROFEO")
+}
+
+model AliadoComercial {
+  id      String @id @default(uuid()) @db.UniqueIdentifier
+  nombre  String @db.NVarChar(100)
+  urlBase String @db.NVarChar(255) @map("url_base")
+  logoUrl String @db.NVarChar(255) @map("logo_url")
+
+  beneficios    BeneficioAliado[]
+  suscripciones SuscripcionActiva[]
+
+  @@map("ALIADO_COMERCIAL")
+}
+
+model BeneficioAliado {
+  id          String    @id @default(uuid()) @db.UniqueIdentifier
+  aliadoId    String    @db.UniqueIdentifier @map("aliado_id")
+  miembroId   String?   @db.UniqueIdentifier @map("miembro_id")
+  nombre      String    @db.NVarChar(150)
+  tipo        String    @db.NVarChar(20)
+  rangoMinimo String    @db.NVarChar(20) @map("rango_minimo")
+  estado      String    @default("DISPONIBLE") @db.NVarChar(20)
+  fechaReclamo DateTime? @map("fecha_reclamo")
+
+  aliado  AliadoComercial @relation(fields: [aliadoId], references: [id])
+  miembro Miembro?        @relation(fields: [miembroId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("BENEFICIO_ALIADO")
+}
+
+model SuscripcionActiva {
+  id          String   @id @default(uuid()) @db.UniqueIdentifier
+  miembroId   String   @db.UniqueIdentifier @map("miembro_id")
+  aliadoId    String   @db.UniqueIdentifier @map("aliado_id")
+  fechaInicio DateTime @default(now()) @map("fecha_inicio")
+  fechaFin    DateTime @map("fecha_fin")
+
+  miembro Miembro        @relation(fields: [miembroId], references: [id])
+  aliado  AliadoComercial @relation(fields: [aliadoId], references: [id])
+
+  @@map("SUSCRIPCION_ACTIVA")
+}
