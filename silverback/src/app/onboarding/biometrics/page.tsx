@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Calendar, Scale, Ruler } from "lucide-react";
+import { useActionState } from "react";
+import { Calendar, Scale, Ruler, User, Mail, Lock } from "lucide-react";
 import { PageLabel } from "@/components/ui/PageLabel";
+import { saveStep1 } from "@/app/actions/onboarding";
 
 export default function BiometricCalibrationPage() {
-  const router = useRouter();
-  const [form, setForm] = useState({ edad: "", peso: "", altura: "", nivel: "" });
+  const [state, action, pending] = useActionState(saveStep1, undefined);
 
   return (
     <div className="w-full max-w-sm">
@@ -20,15 +19,57 @@ export default function BiometricCalibrationPage() {
           Establece tu línea base para generar tu protocolo óptimo.
         </p>
 
-        <div className="space-y-4">
+        <form action={action} className="space-y-4">
+          <div>
+            <label className="text-xs text-[#9CA3AF] uppercase tracking-wider block mb-1">NOMBRE</label>
+            <div className="relative">
+              <input
+                type="text"
+                name="nombre"
+                placeholder="Tu nombre"
+                required
+                className="w-full bg-white text-[#333] rounded px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#F97316]"
+              />
+              <User size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs text-[#9CA3AF] uppercase tracking-wider block mb-1">EMAIL</label>
+            <div className="relative">
+              <input
+                type="email"
+                name="email"
+                placeholder="tu@email.com"
+                required
+                className="w-full bg-white text-[#333] rounded px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#F97316]"
+              />
+              <Mail size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs text-[#9CA3AF] uppercase tracking-wider block mb-1">CONTRASEÑA</label>
+            <div className="relative">
+              <input
+                type="password"
+                name="password"
+                placeholder="••••••••"
+                required
+                className="w-full bg-white text-[#333] rounded px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#F97316]"
+              />
+              <Lock size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+            </div>
+          </div>
+
           <div>
             <label className="text-xs text-[#9CA3AF] uppercase tracking-wider block mb-1">EDAD</label>
             <div className="relative">
               <input
                 type="number"
+                name="edad"
                 placeholder="00"
-                value={form.edad}
-                onChange={(e) => setForm({ ...form, edad: e.target.value })}
+                required
                 className="w-full bg-white text-[#333] rounded px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#F97316]"
               />
               <Calendar size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
@@ -41,9 +82,9 @@ export default function BiometricCalibrationPage() {
               <div className="relative">
                 <input
                   type="number"
+                  name="pesoKg"
                   placeholder="00.0"
-                  value={form.peso}
-                  onChange={(e) => setForm({ ...form, peso: e.target.value })}
+                  required
                   className="w-full bg-white text-[#333] rounded px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#F97316]"
                 />
                 <Scale size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
@@ -54,9 +95,9 @@ export default function BiometricCalibrationPage() {
               <div className="relative">
                 <input
                   type="number"
+                  name="alturaCm"
                   placeholder="000"
-                  value={form.altura}
-                  onChange={(e) => setForm({ ...form, altura: e.target.value })}
+                  required
                   className="w-full bg-white text-[#333] rounded px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#F97316]"
                 />
                 <Ruler size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
@@ -67,28 +108,33 @@ export default function BiometricCalibrationPage() {
           <div>
             <label className="text-xs text-[#9CA3AF] uppercase tracking-wider block mb-1">NIVEL DE EXPERIENCIA</label>
             <select
-              value={form.nivel}
-              onChange={(e) => setForm({ ...form, nivel: e.target.value })}
+              name="nivelExperiencia"
+              required
+              defaultValue=""
               className="w-full bg-white text-[#333] rounded px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#F97316]"
             >
               <option value="" disabled>Seleccionar Nivel</option>
-              <option value="principiante">Principiante</option>
-              <option value="intermedio">Intermedio</option>
-              <option value="avanzado">Avanzado</option>
-              <option value="elite">Élite</option>
+              <option value="PRINCIPIANTE">Principiante</option>
+              <option value="INTERMEDIO">Intermedio</option>
+              <option value="AVANZADO">Avanzado</option>
+              <option value="ELITE">Élite</option>
             </select>
           </div>
 
+          {state?.error && (
+            <p className="text-red-400 text-xs text-center">{state.error}</p>
+          )}
+
           <button
-            onClick={() => router.push("/onboarding/archetype")}
-            className="w-full bg-[#F97316] hover:bg-[#EA6800] text-white font-heading font-bold uppercase tracking-widest py-3 rounded transition-colors flex items-center justify-center gap-2 mt-2"
+            type="submit"
+            disabled={pending}
+            className="w-full bg-[#F97316] hover:bg-[#EA6800] disabled:opacity-50 text-white font-heading font-bold uppercase tracking-widest py-3 rounded transition-colors flex items-center justify-center gap-2 mt-2"
           >
-            CONTINUAR →
+            {pending ? "GUARDANDO..." : "CONTINUAR →"}
           </button>
-        </div>
+        </form>
       </div>
 
-      {/* Step indicator */}
       <div className="flex justify-center gap-2 mt-4">
         <div className="w-6 h-1 bg-[#F97316] rounded-full" />
         <div className="w-6 h-1 bg-[#444] rounded-full" />

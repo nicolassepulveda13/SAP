@@ -14,6 +14,12 @@ public class ClanRepository(AppDbContext db)
     public Task<List<Clan>> Listar() =>
         db.Clanes.OrderByDescending(c => c.PuntosClan).ToListAsync();
 
+    public Task<List<Clan>> ListarDisponibles(int capacidadMaxima) =>
+        db.Clanes
+            .Where(c => c.CantidadMiembros < capacidadMaxima)
+            .OrderByDescending(c => c.PuntosClan)
+            .ToListAsync();
+
     public async Task<Clan> Crear(Clan clan)
     {
         db.Clanes.Add(clan);

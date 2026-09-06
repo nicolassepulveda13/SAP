@@ -1,40 +1,43 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import { Dumbbell, Flame, Zap, Check } from "lucide-react";
 import { PageLabel } from "@/components/ui/PageLabel";
+import { saveStep2 } from "@/app/actions/onboarding";
 
 const archetypes = [
   {
-    id: "volumen",
+    id: "VOLUMEN",
     icon: <Dumbbell size={20} className="text-[#F97316]" />,
     name: "VOLUMEN",
     subtitle: "EL GORILA",
     desc: "Acumulación de fuerza bruta y masa. Enfoque en movimientos compuestos pesados, sobrecarga progresiva y potencia sin concesiones.",
-    selected: true,
   },
   {
-    id: "definido",
+    id: "DEFINIDO",
     icon: <Flame size={20} className="text-[#F97316]" />,
     name: "DEFINIDO",
     subtitle: "LA PANTERA",
     desc: "Precisión estética y pérdida de grasa. Entrenamiento de intervalos de alta intensidad, hipertrofia dirigida y acondicionamiento metabólico disciplinado.",
-    selected: false,
   },
   {
-    id: "atletico",
+    id: "ATLETICO",
     icon: <Zap size={20} className="text-[#F97316]" />,
     name: "ATLÉTICO",
     subtitle: "EL CHIMPANCÉ",
     desc: "Rendimiento funcional y agilidad. Mezcla de potencia explosiva, resistencia y movilidad para una dominancia atlética total.",
-    selected: false,
   },
 ];
 
 export default function ArchetypeSelectorPage() {
-  const router = useRouter();
-  const [selected, setSelected] = useState("volumen");
+  const [selected, setSelected] = useState("VOLUMEN");
+  const [isPending, startTransition] = useTransition();
+
+  function handleConfirm() {
+    startTransition(async () => {
+      await saveStep2(selected);
+    });
+  }
 
   return (
     <div className="w-full max-w-4xl">
@@ -62,7 +65,7 @@ export default function ArchetypeSelectorPage() {
             )}
             <div className="h-48 bg-[#1a1a1a] flex items-center justify-center">
               <span className="text-6xl opacity-60">
-                {arch.id === "volumen" ? "🦍" : arch.id === "definido" ? "🐆" : "🐒"}
+                {arch.id === "VOLUMEN" ? "🦍" : arch.id === "DEFINIDO" ? "🐆" : "🐒"}
               </span>
             </div>
             <div className="p-4">
@@ -81,17 +84,24 @@ export default function ArchetypeSelectorPage() {
 
       <div className="flex flex-col items-center gap-3">
         <button
-          onClick={() => router.push("/onboarding/matchmaking")}
-          className="bg-[#F97316] hover:bg-[#EA6800] text-white font-heading font-bold uppercase tracking-widest px-12 py-3 rounded transition-colors"
+          onClick={handleConfirm}
+          disabled={isPending}
+          className="bg-[#F97316] hover:bg-[#EA6800] disabled:opacity-50 text-white font-heading font-bold uppercase tracking-widest px-12 py-3 rounded transition-colors"
         >
-          CONFIRMAR ARQUETIPO →
+          {isPending ? "GUARDANDO..." : "CONFIRMAR ARQUETIPO →"}
         </button>
-        <button
-          onClick={() => router.back()}
+        <a
+          href="/onboarding/biometrics"
           className="text-sm text-[#9CA3AF] hover:text-white uppercase tracking-wider font-heading transition-colors"
         >
           VOLVER AL INICIO
-        </button>
+        </a>
+      </div>
+
+      <div className="flex justify-center gap-2 mt-6">
+        <div className="w-6 h-1 bg-[#444] rounded-full" />
+        <div className="w-6 h-1 bg-[#F97316] rounded-full" />
+        <div className="w-6 h-1 bg-[#444] rounded-full" />
       </div>
     </div>
   );

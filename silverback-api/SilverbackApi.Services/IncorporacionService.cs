@@ -51,6 +51,11 @@ public class IncorporacionService(
         return clan;
     }
 
+    private const int CapacidadMaximaClan = 20;
+
+    public Task<List<Clan>> GetClanesDisponibles() =>
+        clanRepo.ListarDisponibles(CapacidadMaximaClan);
+
     public async Task<string> UnirseAClan(Guid miembroId, Guid clanId)
     {
         var clan = await clanRepo.BuscarPorId(clanId)

@@ -8,10 +8,25 @@ namespace SilverbackApi.Api.Controllers;
 [Route("api/incorporacion")]
 public class IncorporacionController(IIncorporacionService svc) : SilverbackControllerBase
 {
+    private const int CapacidadMaximaClan = 20;
+
     public record RegistrarRequest(string Nombre, string Email, string Password, string Arquetipo,
         int Edad, decimal PesoKg, decimal AlturaCm, string NivelExperiencia);
     public record CrearClanRequest(string Nombre);
     public record UnirseRequest(Guid ClanId);
+
+    [HttpGet("clanes")]
+    public async Task<IActionResult> ClanesDisponibles()
+    {
+        var clanes = await svc.GetClanesDisponibles();
+        return Ok(clanes.Select(c => new
+        {
+            c.Id,
+            c.Nombre,
+            c.CantidadMiembros,
+            CapacidadMaxima = CapacidadMaximaClan,
+        }));
+    }
 
     [HttpPost("registrar")]
     public async Task<IActionResult> Registrar([FromBody] RegistrarRequest req)
