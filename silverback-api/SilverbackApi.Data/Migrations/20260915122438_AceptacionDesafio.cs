@@ -11,6 +11,13 @@ namespace SilverbackApi.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AddColumn<bool>(
+                name: "OnboardingCompletado",
+                table: "Miembros",
+                type: "bit",
+                nullable: false,
+                defaultValue: false);
+
             migrationBuilder.CreateTable(
                 name: "AceptacionesDesafio",
                 columns: table => new
@@ -30,6 +37,10 @@ namespace SilverbackApi.Data.Migrations
         {
             migrationBuilder.DropTable(
                 name: "AceptacionesDesafio");
+
+            migrationBuilder.DropColumn(
+                name: "OnboardingCompletado",
+                table: "Miembros");
         }
     }
 }
