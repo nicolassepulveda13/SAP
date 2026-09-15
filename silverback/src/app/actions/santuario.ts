@@ -27,6 +27,38 @@ export async function getPanelClan(clanId: string): Promise<PanelClan> {
   return apiFetch<PanelClan>(`/api/santuario/${clanId}/panel`, { cache: "no-store" });
 }
 
+export async function crearDesafio(
+  _: unknown,
+  formData: FormData
+): Promise<{ error?: string }> {
+  const clanId = formData.get("clanId") as string;
+  const descripcion = (formData.get("descripcion") as string)?.trim();
+  const tier = formData.get("tier") as string;
+  const recompensaXp = Number(formData.get("recompensaXp"));
+  const fechaExpiracion = formData.get("fechaExpiracion") as string;
+
+  if (!descripcion || !tier || !recompensaXp || !fechaExpiracion)
+    return { error: "Completá todos los campos." };
+  if (recompensaXp < 1 || recompensaXp > 10000)
+    return { error: "La recompensa debe estar entre 1 y 10.000 XP." };
+
+  try {
+    await apiFetch(`/api/santuario/${clanId}/desafios`, {
+      method: "POST",
+      body: JSON.stringify({
+        descripcion,
+        tier,
+        recompensaXp,
+        fechaExpiracion: new Date(fechaExpiracion).toISOString(),
+      }),
+    });
+    revalidatePath("/santuario/forja");
+    return {};
+  } catch (e: unknown) {
+    return { error: e instanceof Error ? e.message : "Error al publicar el desafío." };
+  }
+}
+
 export async function aceptarDesafio(
   _: unknown,
   formData: FormData

@@ -20,10 +20,12 @@ export default async function ChallengeForgePage() {
   const clanId = payload?.clanId;
   if (!clanId) redirect("/santuario");
 
+  const esSilverback = payload?.rol === "SILVERBACK";
+
   const [desafios, panel] = await Promise.all([
     getDesafios(clanId),
     getPanelClan(clanId),
   ]);
 
-  return <ForjaClient clanId={clanId} panel={panel} desafios={desafios} />;
+  return <ForjaClient clanId={clanId} panel={panel} desafios={desafios} esSilverback={esSilverback} />;
 }

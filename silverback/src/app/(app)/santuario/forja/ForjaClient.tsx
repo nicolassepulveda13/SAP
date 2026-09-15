@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
-import { aceptarDesafio, type DesafioClan, type PanelClan } from "@/app/actions/santuario";
-import { ArrowLeft } from "lucide-react";
+import { useActionState, useState } from "react";
+import { aceptarDesafio, crearDesafio, type DesafioClan, type PanelClan } from "@/app/actions/santuario";
+import { ArrowLeft, Plus, Flame } from "lucide-react";
 import Link from "next/link";
 import { PageLabel } from "@/components/ui/PageLabel";
 
@@ -24,12 +24,16 @@ export default function ForjaClient({
   clanId,
   panel,
   desafios,
+  esSilverback,
 }: {
   clanId: string;
   panel: PanelClan;
   desafios: DesafioClan[];
+  esSilverback: boolean;
 }) {
-  const [state, action, pending] = useActionState(aceptarDesafio, undefined);
+  const [aceptarState, aceptarAction, aceptarPending] = useActionState(aceptarDesafio, undefined);
+  const [crearState, crearAction, crearPending] = useActionState(crearDesafio, undefined);
+  const [mostrarCrear, setMostrarCrear] = useState(false);
 
   return (
     <div>
@@ -57,8 +61,96 @@ export default function ForjaClient({
         </p>
       </div>
 
-      {state?.error && (
-        <p className="text-red-400 text-xs mb-4">{state.error}</p>
+      {/* Formulario crear desafío — solo Silverback */}
+      {esSilverback && (
+        <div className="border border-[#333] rounded-lg overflow-hidden mb-6">
+          <button
+            type="button"
+            onClick={() => setMostrarCrear((v) => !v)}
+            className="w-full flex items-center justify-between px-4 py-3 text-sm text-[#9CA3AF] hover:text-white hover:bg-[#242424] transition-colors"
+          >
+            <span className="flex items-center gap-2 font-heading uppercase tracking-wider text-[#F97316]">
+              <Flame size={14} /> Publicar nueva directiva
+            </span>
+            <span className="text-xs">{mostrarCrear ? "▲" : "▼"}</span>
+          </button>
+
+          {mostrarCrear && (
+            <form action={crearAction} className="px-4 pb-4 pt-2 bg-[#1a1a1a] space-y-3">
+              <input type="hidden" name="clanId" value={clanId} />
+
+              <div>
+                <label className="text-xs text-[#9CA3AF] uppercase tracking-wider block mb-1">DESCRIPCIÓN</label>
+                <input
+                  name="descripcion"
+                  type="text"
+                  required
+                  maxLength={200}
+                  placeholder="Ej: Levantá 3.000 kg acumulados esta semana"
+                  disabled={crearPending}
+                  className="w-full rounded bg-[#242424] border border-[#333] px-3 py-2 text-white text-sm placeholder-[#555] focus:outline-none focus:border-[#F97316] disabled:opacity-50"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs text-[#9CA3AF] uppercase tracking-wider block mb-1">TIER</label>
+                  <select
+                    name="tier"
+                    required
+                    defaultValue=""
+                    disabled={crearPending}
+                    className="w-full rounded bg-[#242424] border border-[#333] px-3 py-2 text-white text-sm focus:outline-none focus:border-[#F97316] disabled:opacity-50"
+                  >
+                    <option value="" disabled>Tier</option>
+                    <option value="TITAN">TITAN</option>
+                    <option value="ALPHA">ALPHA</option>
+                    <option value="BETA">BETA</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-[#9CA3AF] uppercase tracking-wider block mb-1">XP RECOMPENSA</label>
+                  <input
+                    name="recompensaXp"
+                    type="number"
+                    required
+                    min={1}
+                    max={10000}
+                    placeholder="500"
+                    disabled={crearPending}
+                    className="w-full rounded bg-[#242424] border border-[#333] px-3 py-2 text-white text-sm placeholder-[#555] focus:outline-none focus:border-[#F97316] disabled:opacity-50"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-[#9CA3AF] uppercase tracking-wider block mb-1">EXPIRA</label>
+                  <input
+                    name="fechaExpiracion"
+                    type="date"
+                    required
+                    disabled={crearPending}
+                    className="w-full rounded bg-[#242424] border border-[#333] px-3 py-2 text-white text-sm focus:outline-none focus:border-[#F97316] disabled:opacity-50"
+                  />
+                </div>
+              </div>
+
+              {crearState?.error && (
+                <p className="text-red-400 text-xs">{crearState.error}</p>
+              )}
+
+              <button
+                type="submit"
+                disabled={crearPending}
+                className="w-full bg-[#F97316] hover:bg-[#EA6800] disabled:opacity-50 text-white font-heading font-bold uppercase text-xs tracking-wider py-2 rounded transition-colors"
+              >
+                {crearPending ? "PUBLICANDO..." : "PUBLICAR DIRECTIVA"}
+              </button>
+            </form>
+          )}
+        </div>
+      )}
+
+      {aceptarState?.error && (
+        <p className="text-red-400 text-xs mb-4">{aceptarState.error}</p>
       )}
 
       {desafios.length === 0 ? (
@@ -97,15 +189,15 @@ export default function ForjaClient({
                       PROTOCOLO ASEGURADO
                     </span>
                   ) : (
-                    <form action={action}>
+                    <form action={aceptarAction}>
                       <input type="hidden" name="clanId" value={clanId} />
                       <input type="hidden" name="desafioId" value={d.id} />
                       <button
                         type="submit"
-                        disabled={pending}
+                        disabled={aceptarPending}
                         className="bg-[#F97316] hover:bg-[#EA6800] disabled:opacity-50 text-white font-heading font-bold uppercase text-xs px-4 py-2 rounded tracking-wider transition-colors"
                       >
-                        {pending ? "..." : "ACEPTAR DESAFÍO"}
+                        {aceptarPending ? "..." : "ACEPTAR DESAFÍO"}
                       </button>
                     </form>
                   )}

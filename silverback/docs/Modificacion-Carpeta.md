@@ -39,6 +39,7 @@ E1 cerró en **C-24 (CU-005-006)**. La tabla a continuación documenta los tres 
 | C-25 | CU-001-000 | Crear Cuenta / Iniciar Sesión | S2 | Antes de CU-001-001 (como paso 0 de incorporación) |
 | C-26 | CU-005-007 | Gestionar Datos de Cuenta | S2 | Después de CU-005-006 (al final de la sección CU-005) |
 | C-27 | CU-001-005 | Fundar una Manada | S3 | Después de CU-001-004 (al final de la sección CU-001) |
+| C-28 | CU-002-007 | Publicar Desafío en La Forja | S3 | Después de CU-002-006 (al final de la sección CU-002) |
 
 Los textos completos de cada CU están en `casos-de-uso.md`. Lo que sigue es el contenido listo para insertar en la carpeta impresa/digital.
 

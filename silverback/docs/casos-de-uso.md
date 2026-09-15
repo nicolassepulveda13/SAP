@@ -34,6 +34,7 @@
 | | CU-002-004 | Comunicarse en la Sala de Tácticas | ✅ Aprobado E1 |
 | | CU-002-005 | Asignar Rol a un Miembro del Clan | ✅ Aprobado E1 |
 | | CU-002-006 | Expulsar a un Miembro del Clan | ✅ Aprobado E1 |
+| | CU-002-007 | Publicar Desafío en La Forja | ✅ Implementado S3 |
 | **CU-003 — ARENA** | CU-003-001 | Consultar el Estado de la Guerra Global | ✅ Aprobado E1 |
 | | CU-003-002 | Registrar un Entrenamiento | ✅ Aprobado E1 |
 | | CU-003-003 | Calcular el Puntaje CER | ✅ Aprobado E1 |
@@ -478,6 +479,40 @@
 
 - **[FA-1]** Si el Líder presiona "CANCELAR" en el modal de confirmación, el sistema cierra el modal sin ejecutar ninguna acción y el miembro permanece en el clan.
 - **[FA-2]** Si el Líder intenta expulsar a un miembro con rol SILVERBACK, el botón "EXPULSAR" está deshabilitado en esa fila para proteger la integridad del liderazgo del clan.
+
+---
+
+## CU-002-007: Publicar Desafío en La Forja
+
+> **Agregado consciente (S3):** Este CU no estaba en E1. CU-002-002 y CU-002-003 asumían que los desafíos ya existían, pero no había un CU que describiera su creación. Se agrega para completar el ciclo de vida completo de La Forja.
+
+**Descripción:** Este caso de uso describe el proceso mediante el cual el Líder de Clan (Silverback) publica una nueva directiva semanal en La Forja. Los desafíos publicados quedan disponibles para que todos los miembros del clan los acepten y completen durante el período indicado. Cada desafío tiene un tier de dificultad (TITAN, ALPHA o BETA), una descripción de objetivo, una recompensa en XP y una fecha de expiración.
+
+**Actores:** Líder de Clan (Silverback), Sistema SilverBack
+
+**Precondiciones:** El usuario autenticado posee el rol SILVERBACK dentro del clan y se encuentra en la pantalla de La Forja.
+
+**Escenario Principal de Éxito:**
+
+1. El Silverback accede a La Forja desde el Santuario (`/santuario/forja`).
+2. El sistema muestra, exclusivamente para el Silverback, la sección desplegable "Publicar nueva directiva" en la parte superior de la pantalla.
+3. El Silverback presiona la sección para expandir el formulario de creación.
+4. El sistema presenta cuatro campos: DESCRIPCIÓN, TIER, XP RECOMPENSA y EXPIRA (fecha).
+5. El Silverback ingresa la descripción del objetivo (máximo 200 caracteres).
+6. El Silverback selecciona el tier de dificultad: TITAN (alta exigencia), ALPHA (media) o BETA (introductorio).
+7. El Silverback define la recompensa en XP que recibirán los miembros al completar el desafío (entre 1 y 10.000 XP).
+8. El Silverback selecciona la fecha de expiración del desafío.
+9. El Silverback presiona "PUBLICAR DIRECTIVA".
+10. El sistema valida que todos los campos estén completos y dentro de los rangos permitidos.
+11. El sistema persiste el desafío en la base de datos con estado ACTIVO, vinculado al clan.
+12. El sistema refresca la lista de directivas semanales, mostrando el nuevo desafío disponible para todos los miembros.
+13. Los miembros del clan ya pueden ver y aceptar la nueva directiva.
+
+**Flujos Alternativos:**
+
+- **[FA-1]** Si algún campo está vacío o fuera de rango, el sistema muestra el error específico sin enviar la solicitud al backend.
+- **[FA-2]** Si un miembro sin rol SILVERBACK intenta acceder al formulario de creación (por manipulación directa de la URL), el backend responde con 403 Forbidden y el sistema muestra un mensaje de error.
+- **[FA-3]** Si ocurre un error de red al publicar, el sistema muestra "Error al publicar el desafío." y mantiene el formulario abierto con los datos intactos.
 
 ---
 
