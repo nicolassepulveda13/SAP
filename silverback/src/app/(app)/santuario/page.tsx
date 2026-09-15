@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Flame, Users, Trophy, Swords, Zap, MessageSquare } from "lucide-react";
+import { Flame, Users, Trophy, Swords, Zap, MessageSquare, Shield } from "lucide-react";
 import { PageLabel } from "@/components/ui/PageLabel";
 import { apiFetch } from "@/lib/api-client";
 import { logout } from "@/app/actions/auth";
+import { getPanelClan } from "@/app/actions/santuario";
+import type { PanelClan } from "@/app/actions/santuario";
 
 type DashboardData = {
   miembro: { id: string; nombre: string; rango: string; xp: number; coins: number; clanId: string | null };
@@ -20,6 +22,11 @@ export default async function ClanHubPage() {
   }
 
   const { miembro, estadisticas, clan } = data;
+
+  let panel: PanelClan | null = null;
+  if (clan) {
+    try { panel = await getPanelClan(clan.id); } catch { /* sin panel si falla */ }
+  }
 
   const stats = [
     { icon: <Users size={20} />, value: clan ? "activo" : "—", label: "CLAN" },
@@ -48,12 +55,18 @@ export default async function ClanHubPage() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-8">
+      <div className="grid grid-cols-3 gap-3 mb-8">
         <Link
           href="/arena"
           className="bg-[#F97316] hover:bg-[#EA6800] text-white font-heading font-bold uppercase tracking-wider py-4 rounded flex items-center justify-center gap-2 transition-colors"
         >
-          <Swords size={16} /> IR A LA ARENA
+          <Swords size={16} /> ARENA
+        </Link>
+        <Link
+          href="/santuario/forja"
+          className="border border-[#F97316] hover:bg-[#F97316]/10 text-[#F97316] font-heading font-bold uppercase tracking-wider py-4 rounded flex items-center justify-center gap-2 transition-colors"
+        >
+          <Shield size={16} /> FORJA
         </Link>
         <Link
           href="/santuario/tacticas"
@@ -62,6 +75,28 @@ export default async function ClanHubPage() {
           <MessageSquare size={16} /> CHAT
         </Link>
       </div>
+
+      {panel && (
+        <div className="mb-8">
+          <p className="text-xs text-[#9CA3AF] uppercase tracking-widest mb-3 flex items-center gap-2">
+            <Shield size={12} /> PANEL DEL CLAN
+          </p>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-[#1a1a1a] border border-[#F97316]/30 rounded-xl p-4 flex flex-col items-center gap-1">
+              <span className="font-heading font-bold text-2xl text-[#F97316]">{panel.puntosClan.toLocaleString("es-AR")}</span>
+              <span className="text-xs text-[#9CA3AF] uppercase tracking-wider">PODER</span>
+            </div>
+            <div className="bg-[#1a1a1a] border border-[#F97316]/30 rounded-xl p-4 flex flex-col items-center gap-1">
+              <span className="font-heading font-bold text-2xl text-[#F97316]">#{panel.posicionRanking}</span>
+              <span className="text-xs text-[#9CA3AF] uppercase tracking-wider">RANKING</span>
+            </div>
+            <div className="bg-[#1a1a1a] border border-[#F97316]/30 rounded-xl p-4 flex flex-col items-center gap-1">
+              <span className="font-heading font-bold text-2xl text-[#F97316]">{panel.cantidadMiembros}</span>
+              <span className="text-xs text-[#9CA3AF] uppercase tracking-wider">MIEMBROS</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-4 gap-3 mb-8">
         {stats.map((s) => (

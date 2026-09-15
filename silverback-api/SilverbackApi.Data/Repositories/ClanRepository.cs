@@ -31,6 +31,12 @@ public class ClanRepository(AppDbContext db)
         db.Clanes.Where(c => c.Id == clanId)
             .ExecuteUpdateAsync(s => s.SetProperty(c => c.PuntosClan, c => c.PuntosClan + (int)cer));
 
+    public async Task<int> ObtenerRanking(Guid clanId)
+    {
+        var puntos = await db.Clanes.Where(c => c.Id == clanId).Select(c => c.PuntosClan).FirstOrDefaultAsync();
+        return await db.Clanes.CountAsync(c => c.PuntosClan > puntos) + 1;
+    }
+
     public Task DescontarPuntos(Guid clanId, int puntos) =>
         db.Clanes.Where(c => c.Id == clanId)
             .ExecuteUpdateAsync(s => s.SetProperty(c => c.PuntosClan, c => c.PuntosClan - puntos));

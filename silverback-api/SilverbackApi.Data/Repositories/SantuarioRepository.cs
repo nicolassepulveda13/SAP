@@ -35,4 +35,20 @@ public class SantuarioRepository(AppDbContext db)
         await db.SaveChangesAsync();
         return mensaje;
     }
+
+    public Task<bool> YaAceptoDesafio(Guid desafioId, Guid miembroId) =>
+        db.AceptacionesDesafio.AnyAsync(a => a.DesafioId == desafioId && a.MiembroId == miembroId);
+
+    public async Task AceptarDesafio(Guid desafioId, Guid miembroId)
+    {
+        db.AceptacionesDesafio.Add(new AceptacionDesafio { DesafioId = desafioId, MiembroId = miembroId });
+        await db.SaveChangesAsync();
+    }
+
+    public Task<List<Guid>> ObtenerAceptacionesMiembro(Guid clanId, Guid miembroId) =>
+        db.AceptacionesDesafio
+            .Where(a => a.MiembroId == miembroId &&
+                        db.DesafiosClan.Any(d => d.Id == a.DesafioId && d.ClanId == clanId))
+            .Select(a => a.DesafioId)
+            .ToListAsync();
 }

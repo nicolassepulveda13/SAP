@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SilverbackApi.Domain;
 using SilverbackApi.Domain.Models;
 
 namespace SilverbackApi.Data.Repositories;
@@ -33,4 +34,8 @@ public class MiembroRepository(AppDbContext db)
     public Task CompletarOnboarding(Guid id) =>
         db.Miembros.Where(m => m.Id == id)
             .ExecuteUpdateAsync(s => s.SetProperty(m => m.OnboardingCompletado, true));
+
+    public Task ActualizarRol(Guid id, Rol rol) =>
+        db.Miembros.Where(m => m.Id == id)
+            .ExecuteUpdateAsync(s => s.SetProperty(m => m.Rol, rol));
 }

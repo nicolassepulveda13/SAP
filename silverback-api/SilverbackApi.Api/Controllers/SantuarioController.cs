@@ -23,9 +23,33 @@ public class SantuarioController(ISantuarioService svc) : SilverbackControllerBa
     public async Task<IActionResult> ListarMiembros(Guid clanId) =>
         Ok(await svc.ListarMiembros(clanId));
 
+    [HttpGet("{clanId:guid}/panel")]
+    public async Task<IActionResult> ObtenerPanel(Guid clanId)
+    {
+        try { return Ok(await svc.ObtenerPanelClan(clanId)); }
+        catch (Exception ex) { return NotFound(new { error = ex.Message }); }
+    }
+
     [HttpGet("{clanId:guid}/desafios")]
-    public async Task<IActionResult> ListarDesafios(Guid clanId) =>
-        Ok(await svc.ListarDesafios(clanId));
+    public async Task<IActionResult> ListarDesafios(Guid clanId)
+    {
+        var miembroId = ObtenerMiembroId();
+        if (miembroId is null) return Unauthorized();
+        return Ok(await svc.ListarDesafios(clanId, miembroId.Value));
+    }
+
+    [HttpPost("{clanId:guid}/desafios/{desafioId:guid}/aceptar")]
+    public async Task<IActionResult> AceptarDesafio(Guid clanId, Guid desafioId)
+    {
+        var miembroId = ObtenerMiembroId();
+        if (miembroId is null) return Unauthorized();
+        try
+        {
+            await svc.AceptarDesafio(clanId, desafioId, miembroId.Value);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex) { return Conflict(new { error = ex.Message }); }
+    }
 
     [HttpPost("{clanId:guid}/desafios")]
     public async Task<IActionResult> CrearDesafio(Guid clanId, [FromBody] CrearDesafioRequest req)

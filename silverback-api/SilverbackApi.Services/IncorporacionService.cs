@@ -47,6 +47,7 @@ public class IncorporacionService(
         var clan = new Clan { Nombre = nombre, LiderClanId = liderClanId, CantidadMiembros = 1 };
         await clanRepo.Crear(clan);
         await miembroRepo.ActualizarClan(liderClanId, clan.Id);
+        await miembroRepo.ActualizarRol(liderClanId, Rol.SILVERBACK);
         await clanRepo.ActualizarCantidadMiembros(clan.Id, 0);
         return clan;
     }

@@ -16,8 +16,28 @@ public class SantuarioService(
     public Task<List<Miembro>> ListarMiembros(Guid clanId) =>
         santuarioRepo.ListarMiembros(clanId);
 
-    public Task<List<DesafioClan>> ListarDesafios(Guid clanId) =>
-        santuarioRepo.ListarDesafios(clanId);
+    public async Task<List<DesafioClanDto>> ListarDesafios(Guid clanId, Guid miembroId)
+    {
+        var desafios = await santuarioRepo.ListarDesafios(clanId);
+        var aceptadas = (await santuarioRepo.ObtenerAceptacionesMiembro(clanId, miembroId)).ToHashSet();
+        return desafios.Select(d => new DesafioClanDto(
+            d.Id, d.Descripcion, d.Tier.ToString(), d.RecompensaXp, d.FechaExpiracion,
+            aceptadas.Contains(d.Id))).ToList();
+    }
+
+    public async Task AceptarDesafio(Guid clanId, Guid desafioId, Guid miembroId)
+    {
+        if (await santuarioRepo.YaAceptoDesafio(desafioId, miembroId))
+            throw new InvalidOperationException("Ya aceptaste este desafío.");
+        await santuarioRepo.AceptarDesafio(desafioId, miembroId);
+    }
+
+    public async Task<PanelClan> ObtenerPanelClan(Guid clanId)
+    {
+        var clan = await clanRepo.BuscarPorId(clanId) ?? throw new InvalidOperationException("Clan no encontrado.");
+        var ranking = await clanRepo.ObtenerRanking(clanId);
+        return new PanelClan(clan.Nombre, clan.PuntosClan, clan.CantidadMiembros, ranking);
+    }
 
     public async Task<DesafioClan> CrearDesafio(Guid clanId, Guid silverbackId, string descripcion, string tier, int recompensaXp, DateTime fechaExpiracion)
     {

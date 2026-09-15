@@ -26,6 +26,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Item> Items => Set<Item>();
     public DbSet<InventarioItem> InventarioItems => Set<InventarioItem>();
     public DbSet<MensajeClan> MensajesClan => Set<MensajeClan>();
+    public DbSet<AceptacionDesafio> AceptacionesDesafio => Set<AceptacionDesafio>();
     public DbSet<AdminHistorial> AdminHistorial => Set<AdminHistorial>();
 
     protected override void OnModelCreating(ModelBuilder mb)
@@ -54,6 +55,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         mb.Entity<InversionNodo>().HasKey(i => new { i.MiembroId, i.NodoId });
         mb.Entity<InventarioItem>().HasKey(i => new { i.MiembroId, i.ItemId });
         mb.Entity<ReclamoBeneficio>().HasKey(r => new { r.BeneficioId, r.MiembroId });
+        mb.Entity<AceptacionDesafio>().HasKey(a => new { a.DesafioId, a.MiembroId });
 
         mb.Entity<Clan>()
             .HasMany(c => c.Miembros)
