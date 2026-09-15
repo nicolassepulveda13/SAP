@@ -1,3 +1,7 @@
+// S3-Santuario: Server Actions del Santuario y La Forja
+// getDesafios y getPanelClan: llamadas desde forja/page.tsx y santuario/page.tsx (Server Components)
+// aceptarDesafio: llamado desde ForjaClient via useActionState (Client Component)
+// S3-CrearDesafio: crearDesafio agregado para CU-002-007 — solo visible para Silverback
 "use server";
 
 import { apiFetch } from "@/lib/api-client";

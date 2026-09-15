@@ -1,3 +1,7 @@
+// S1-Onboarding: IncorporacionService — lógica del flujo de registro y asignación a clan
+// S1-Onboarding: Registrar() — hash BCrypt, crea Miembro + DatosBiometricos + Racha + Fatiga; token preliminar (sin clan, onboarding=false)
+// S2-Onboarding: UnirseAClan() — asigna clanId, marca OnboardingCompletado=true; devuelve token definitivo con rol=RECLUTA
+// S3-CrearClan: CrearClan() — crea Clan, asigna rol=SILVERBACK, marca OnboardingCompletado=true; devuelve token definitivo
 using SilverbackApi.Data.Repositories;
 using SilverbackApi.Domain;
 using SilverbackApi.Domain.Models;

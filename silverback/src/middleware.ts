@@ -1,7 +1,13 @@
+// S1-Infraestructura: middleware de Next.js — corre en el Edge antes de cada request
+// S2-Auth: ampliado para leer claims del JWT y redirigir según estado de onboarding
+// S3-Landing: cambiada la landing de /login a /onboarding/biometrics
 import { NextRequest, NextResponse } from "next/server";
 
+// S1-Infraestructura: rutas que no requieren autenticación
 const PUBLIC_ROUTES = ["/login", "/onboarding", "/api/"];
 
+// S2-Auth: decodifica el payload del JWT sin verificar la firma (solo para leer claims en el edge)
+// El backend .NET es el único que verifica la firma — aquí solo leemos onboarding_completado, rol, clanId
 function decodeJwtPayload(token: string): Record<string, string> | null {
   try {
     const payload = token.split(".")[1];
@@ -18,24 +24,25 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("sb_token")?.value;
   const hasToken = Boolean(token);
 
-  // Sin token y ruta protegida → landing = onboarding
+  // S3-Landing: sin token → siempre al onboarding (antes redirigía a /login)
   if (!hasToken && !isPublic) {
     return NextResponse.redirect(new URL("/onboarding/biometrics", request.url));
   }
 
   if (hasToken) {
+    // S2-Auth: leer claim onboarding_completado del JWT para decidir flujo
     const payload = decodeJwtPayload(token!);
     const completado = payload?.onboarding_completado === "true";
 
-    // Login con sesión activa → santuario
+    // S2-Auth: usuario logueado que intenta ir a /login → ya tiene sesión, mandarlo al santuario
     if (pathname.startsWith("/login")) {
       return NextResponse.redirect(new URL("/santuario", request.url));
     }
-    // Onboarding completo intentando volver al onboarding → santuario
+    // S3-CrearClan: onboarding completo intentando volver al onboarding → santuario
     if (completado && isOnboarding) {
       return NextResponse.redirect(new URL("/santuario", request.url));
     }
-    // Onboarding incompleto en ruta protegida → volver al onboarding
+    // S2-Auth: onboarding incompleto intentando acceder a rutas protegidas → forzar onboarding
     if (!completado && !isPublic) {
       return NextResponse.redirect(new URL("/onboarding/biometrics", request.url));
     }

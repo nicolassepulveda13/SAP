@@ -1,3 +1,6 @@
+// S3-Forja: ChallengeForgePage — Server Component, La Forja / Arena Desafíos (P5)
+// Decodifica el JWT localmente (sin verificar firma) para leer clanId y rol sin llamar al backend
+// esSilverback se pasa a ForjaClient para mostrar u ocultar el formulario de creación de desafíos
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getDesafios, getPanelClan } from "@/app/actions/santuario";

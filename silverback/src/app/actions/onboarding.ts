@@ -1,3 +1,7 @@
+// S2-Onboarding: Server Actions del flujo de incorporación (3 pasos)
+// Patrón "draft en cookie": los datos se acumulan en sb_onboarding (JSON, 30 min)
+// y la cuenta real se crea recién en el paso final (joinClan o crearClan).
+// S3-CrearClan: agregadas joinClan y crearClan con patrón "token preliminar"
 "use server";
 
 import { redirect } from "next/navigation";
@@ -26,6 +30,7 @@ type OnboardingDraft = {
   arquetipo?: string;
 };
 
+// S2-Onboarding: leer el draft acumulado de la cookie sb_onboarding
 async function leerDraft(): Promise<OnboardingDraft | null> {
   const cookieStore = await cookies();
   const raw = cookieStore.get("sb_onboarding")?.value;
@@ -37,6 +42,7 @@ async function leerDraft(): Promise<OnboardingDraft | null> {
   }
 }
 
+// S2-Onboarding: persistir el draft en cookie HTTP-only con TTL de 30 minutos
 async function guardarDraft(draft: OnboardingDraft): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set("sb_onboarding", JSON.stringify(draft), {
@@ -47,6 +53,9 @@ async function guardarDraft(draft: OnboardingDraft): Promise<void> {
   });
 }
 
+// S2-Onboarding: saveStep1 — valida biometría + credenciales y guarda en draft cookie
+// Paso 1 de 3. Llamado desde BiometricCalibrationPage via useActionState.
+// NO crea cuenta todavía — solo persiste datos para el paso final.
 export async function saveStep1(
   _state: OnboardingState,
   formData: FormData
@@ -77,6 +86,8 @@ export async function saveStep1(
   redirect("/onboarding/archetype");
 }
 
+// S2-Onboarding: saveStep2 — agrega el arquetipo al draft y avanza al paso 3
+// Llamado directamente (no via useActionState) desde ArchetypeSelectorPage con useTransition
 export async function saveStep2(arquetipo: string): Promise<void> {
   const draft = await leerDraft();
   if (!draft) redirect("/onboarding/biometrics");
@@ -101,6 +112,9 @@ export async function getClanesDisponibles(): Promise<ClanDisponible[]> {
   }
 }
 
+// S2-Onboarding: joinClan — paso final cuando el usuario elige unirse a un clan existente
+// Patrón "token preliminar": registrar() devuelve tokenPreliminar (sin clan, sin onboarding),
+// ese token se usa como Bearer para llamar a /unirse. El token final SÍ tiene onboarding=true.
 export async function joinClan(
   _state: OnboardingState,
   formData: FormData
@@ -162,6 +176,8 @@ export async function joinClan(
   redirect("/santuario");
 }
 
+// S3-CrearClan: crearClan — paso final cuando el usuario funda su propia manada (CU-001-005)
+// Mismo patrón "token preliminar" que joinClan, pero el token final tiene rol=SILVERBACK
 export async function crearClan(
   _state: OnboardingState,
   formData: FormData

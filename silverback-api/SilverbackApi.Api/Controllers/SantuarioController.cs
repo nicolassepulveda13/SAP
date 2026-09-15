@@ -1,3 +1,7 @@
+// S3-Santuario: SantuarioController — rutas del Santuario y La Forja (todas requieren [Authorize])
+// S3-AceptarDesafio: POST /{clanId}/desafios/{desafioId}/aceptar — persiste AceptacionDesafio, devuelve 204
+// S3-CrearDesafio: POST /{clanId}/desafios — solo SILVERBACK; validado en SantuarioService (lanza UnauthorizedAccessException)
+// S3-PanelClan: GET /{clanId}/panel — devuelve nombre, puntosClan, cantidadMiembros, posicionRanking
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SilverbackApi.Services.Interfaces;

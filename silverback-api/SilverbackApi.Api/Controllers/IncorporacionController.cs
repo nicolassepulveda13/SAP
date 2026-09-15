@@ -1,3 +1,7 @@
+// S1-Onboarding: IncorporacionController — rutas públicas + semi-autenticadas del flujo de registro
+// S2-Onboarding: GET /clanes (público), POST /registrar (público — devuelve token preliminar sin clan)
+// S3-CrearClan: POST /clan (requiere token preliminar — crea clan, asigna SILVERBACK, devuelve token definitivo)
+// S3-UnirseAClan: POST /unirse (requiere token preliminar — asigna clan, devuelve token definitivo con onboarding=true)
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SilverbackApi.Services.Interfaces;

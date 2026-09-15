@@ -1,3 +1,7 @@
+// S2-Onboarding: MatchmakingClient — Paso 3/3 del onboarding (P3), Client Component
+// S2-Onboarding: joinClan via useActionState — lee el draft cookie y registra+une al clan en un paso
+// S3-CrearClan: crearClan via useActionState — patrón token preliminar: registrar() → crearClan() → token definitivo con rol=SILVERBACK
+// useState(mostrarCrear) controla el formulario colapsable de fundación de clan
 "use client";
 
 import { useActionState, useState } from "react";

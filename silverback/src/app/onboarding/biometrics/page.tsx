@@ -1,3 +1,6 @@
+// S2-Onboarding: BiometricCalibrationPage — Paso 1/3 del onboarding (P1)
+// useActionState(saveStep1) valida biometría+credenciales y persiste en cookie sb_onboarding (draft, 30min)
+// NO crea cuenta — solo acumula datos para el paso final
 "use client";
 
 import { useActionState } from "react";

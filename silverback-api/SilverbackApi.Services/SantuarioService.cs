@@ -1,3 +1,7 @@
+// S3-Santuario: SantuarioService — lógica del Santuario y La Forja
+// S3-AceptarDesafio: AceptarDesafio() — valida que el miembro no haya aceptado antes, persiste AceptacionDesafio
+// S3-CrearDesafio: CrearDesafio() — verifica Rol.SILVERBACK antes de persistir; lanza UnauthorizedAccessException si no
+// S3-Santuario: ListarDesafios() — mezcla DesafioClan con las aceptaciones del miembro para calcular aceptadoPorMi
 using SilverbackApi.Data.Repositories;
 using SilverbackApi.Domain;
 using SilverbackApi.Domain.Models;

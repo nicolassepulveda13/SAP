@@ -1,3 +1,6 @@
+// S3-Forja: ForjaClient — Client Component para La Forja / Arena Desafíos (P5)
+// S3-AceptarDesafio: useActionState(aceptarDesafio) — llama POST /{clanId}/desafios/{desafioId}/aceptar
+// S3-CrearDesafio: useActionState(crearDesafio) + useState(mostrarCrear) — formulario colapsable solo para SILVERBACK
 "use client";
 
 import { useActionState, useState } from "react";

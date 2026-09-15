@@ -1,3 +1,6 @@
+// S2-Onboarding: ArchetypeSelectorPage — Paso 2/3 del onboarding (P2)
+// Usa useTransition + saveStep2(arquetipo) directamente (no via form) porque la elección es un click, no un submit
+// saveStep2 agrega el arquetipo al draft cookie y redirige a /onboarding/matchmaking
 "use client";
 
 import { useState, useTransition } from "react";

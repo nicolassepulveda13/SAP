@@ -1,3 +1,5 @@
+// S1-Auth: LoginPage — Client Component. useActionState(login, undefined) conecta el <form> al Server Action
+// El Server Action login() corre en el servidor, llama a POST /api/auth/login y guarda el JWT en cookie
 "use client";
 import { useActionState } from "react";
 import { login } from "@/app/actions/auth";

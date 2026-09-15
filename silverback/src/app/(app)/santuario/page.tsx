@@ -1,3 +1,7 @@
+// S1-Santuario: ClanHubPage — Server Component, hub principal post-login (P4)
+// Llama a GET /api/perfil/dashboard para obtener miembro + estadísticas + clan
+// S3-Santuario: si el usuario tiene clan, llama getPanelClan() y muestra puntosClan, posicionRanking, cantidadMiembros
+// Los tres botones de acción (ARENA, FORJA, CHAT) son Links — ARENA y CHAT son pantallas mock (S3 no los implementa)
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Flame, Users, Trophy, Swords, Zap, MessageSquare, Shield } from "lucide-react";

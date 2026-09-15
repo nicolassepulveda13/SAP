@@ -1,3 +1,6 @@
+// S1-Auth: AuthController — POST /api/auth/login
+// Valida credenciales via IAuthService.Login(), devuelve JWT + datos del miembro
+// El JWT incluye claims: sub (miembroId), rol, clanId, onboarding_completado
 using Microsoft.AspNetCore.Mvc;
 using SilverbackApi.Services.Interfaces;
 
