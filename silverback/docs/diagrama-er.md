@@ -124,12 +124,10 @@ entity DESAFIO {
 }
 
 entity ACEPTACION_DESAFIO {
-  * id : UUID <<PK>>
+  * desafio_id : UUID <<PK,FK>>
+  * miembro_id : UUID <<PK,FK>>
   --
-  * desafio_id : UUID <<FK>>
-  * miembro_id : UUID <<FK>>
-  * estado : ENUM(ACTIVO,COMPLETADO,EXPIRADO)
-  * fecha_aceptacion : TIMESTAMP DEFAULT NOW()
+  * aceptado_en : TIMESTAMP DEFAULT NOW()
 }
 
 entity MENSAJE {

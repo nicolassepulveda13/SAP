@@ -37,8 +37,8 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 | # | Semana | Entregable | CU / Alcance |
 |---|---|---|---|
 | 1 | S1 | Arquitectura Base: Schema SQL Server, Capas de Aplicación y Autenticación | No aplica a un CU específico — es infraestructura transversal requerida por los 24 CU. |
-| 2 | S2 | PKG_INCORPORACIÓN — Onboarding Conectado End-to-End | CU-001-001 · CU-001-002 · CU-001-003 · CU-001-004 |
-| 3 | S3 | PKG_SANTUARIO I — Panel del Clan y La Forja | CU-002-001 · CU-002-002 · CU-002-003 |
+| 2 | S2 ✅ | PKG_INCORPORACIÓN — Onboarding Conectado End-to-End | CU-001-001 · CU-001-002 · CU-001-003 · CU-001-004 |
+| 3 | S3 ✅ | PKG_SANTUARIO I — Panel del Clan y La Forja | CU-002-001 · CU-002-002 · CU-002-003 |
 | 4 | S4 | PKG_SANTUARIO II — Sala de Tácticas y Gestión de Roles | CU-002-004 · CU-002-005 · CU-002-006 |
 | 5 | S5 | Motor CER y Registro de Entrenamiento por Voz | CU-003-002 · CU-003-003 |
 | 6 | S6 | PKG_ARENA — Guerra Global e Historial de Batallas | CU-003-001 · CU-003-004 |
@@ -86,63 +86,87 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 
 ---
 
-## Semana 2 — PKG_INCORPORACIÓN — Onboarding Conectado End-to-End
+## ✅ Semana 2 — PKG_INCORPORACIÓN — Onboarding Conectado End-to-End — COMPLETADA
 
 **CU asociados:** CU-001-001 · CU-001-002 · CU-001-003 · CU-001-004
 
 **Objetivo:** Conectar el flujo de onboarding ya maquetado (CalibracionBiometricaPage, ArquetipoPage, RadarManadasPage) a persistencia real en SQL Server, reemplazando el estado local por datos que sobreviven a un refresh de página.
 
-### Tareas
+### Tareas completadas
 
-- [ ] Implementar el endpoint/Server Action para registrar datos biométricos (edad, peso, altura, nivel de experiencia) con las validaciones de rango descriptas en los flujos alternativos del CU-001-001 (campos vacíos, valores fuera de rango).
-- [ ] Implementar el endpoint para persistir la selección de arquetipo (VOLUMEN/DEFINIDO/ATLÉTICO) junto con su modificador numérico asociado (rango documentado: 1.0 a 1.15).
-- [ ] Implementar la búsqueda de manadas disponibles y definir el criterio mínimo viable de disponibilidad (manadas con cupo).
-- [ ] Implementar la unión efectiva a una manada, actualizando el contador de miembros del clan.
-- [ ] Reemplazar el useState de las tres pantallas por llamadas reales a estos endpoints, manteniendo el diseño visual existente.
-- [ ] Probar el flujo completo con un usuario nuevo de punta a punta.
+- [x] Implementado `saveStep1` (Server Action): registra nombre, email, password hash (BCrypt), edad, peso, altura y nivel de experiencia. Validaciones: edad 14–99, peso 30–300 kg, altura 100–250 cm. Estado intermedio persistido en cookie HTTP-only `sb_onboarding` (JSON, TTL 30 min) para sobrevivir navegación entre pasos.
+- [x] Implementado `saveStep2` (Server Action): persiste la selección de arquetipo (VOLUMEN/DEFINIDO/ATLÉTICO) en `sb_onboarding` y redirige al paso siguiente.
+- [x] Implementado `getClanesDisponibles` (Server Action): consulta `GET /api/incorporacion/clanes` con `capacidadMaxima = 20` como decisión de diseño explícita. Solo retorna clanes con cupo.
+- [x] Implementado `joinClan` (Server Action): lee el borrador de `sb_onboarding`, llama a `/api/incorporacion/registrar` (token preliminar sin clan), luego a `/api/incorporacion/unirse` con el token preliminar, obtiene token final con `onboarding_completado: true` y `clanId`, lo setea en `sb_token` como cookie HTTP-only, elimina `sb_onboarding`, redirige a `/santuario`.
+- [x] Middleware Next.js actualizado: decodifica JWT sin verificar firma (solo lectura de claims), redirige a `/onboarding/biometrics` si `onboarding_completado !== "true"`.
+- [x] `CalibracionBiometricaPage` conectada con campos nombre/email/password + `useActionState(saveStep1)`.
+- [x] `ArquetipoPage` conectada con IDs uppercase (VOLUMEN/DEFINIDO/ATLETICO) + `useTransition` llamando a `saveStep2`.
+- [x] `RadarManadasPage` convertida en Server Component que precarga clanes; `MatchmakingClient` maneja la acción de unión con `useActionState(joinClan)`.
 
-**Integraciones:** Next.js Server Actions → .NET API (`/api/incorporacion/*`) → SQL Server.
+**Decisiones de diseño tomadas:**
+- Criterio de disponibilidad: clanes con `cantidadMiembros < 20`, sin segmentación por nivel ni región (decisión mínima viable).
+- Rangos de validación: edad 14–99, peso 30–300 kg, altura 100–250 cm (definidos en Server Action, no en el API).
+- Estado cross-step: cookie HTTP-only `sb_onboarding` en lugar de `localStorage` (compatible con Server Components).
+- `apiFetch<T>()` usado para todas las llamadas excepto `/unirse` (requiere token preliminar que todavía no está en cookie).
 
-**Nota S1→S2:** El flujo post-registro actualmente redirige a `/santuario`. Para S2 hay que detectar si el usuario completó el onboarding (campo `onboardingCompletado` en Miembro o claim JWT) y redirigir a `/onboarding` si no lo hizo.
+**Entregable real:** Flujo de onboarding de 3 pasos completamente conectado a SQL Server, desde registro hasta asignación de clan con JWT final.
 
-**Entregable:** Flujo de onboarding funcional de punta a punta con datos persistidos.
+**Criterio de aceptación cumplido:** Un usuario nuevo completa los tres pasos y queda en la base con `OnboardingCompletado = true`, `ClanId` asignado y rol `RECLUTA`. Al hacer pull y levantar en otra máquina el flujo funciona idéntico.
 
-**Criterio de aceptación:** Un usuario nuevo completa los tres pasos del onboarding y, al recargar la página o volver a loguearse, sus datos siguen presentes porque vienen de la base, no de estado local del navegador.
+### Riesgos resueltos
 
-### Riesgos y desvíos posibles
-
-| Riesgo / Desvío | Probabilidad | Impacto | Mitigación |
-|---|---|---|---|
-| El criterio de "manada disponible" no está definido con precisión en el STFI (¿por región, por nivel, todas con cupo?). | Alta | Medio | Definir como decisión de diseño mínima viable (todas las manadas con cupo, sin segmentación) y documentarla explícitamente para no bloquear la semana. |
-| Los rangos válidos de edad y peso no están numéricamente definidos en la fuente. | Media | Bajo | Definir rangos razonables (ej. edad 14–99, peso 30–300 kg) como parámetros configurables, no hardcodeados en el frontend. |
+| Riesgo original | Resolución |
+|---|---|
+| Criterio de "manada disponible" no definido. | Resuelto: cupo < 20 miembros como decisión de diseño explícita. |
+| Rangos de edad/peso no definidos en el STFI. | Resuelto: edad 14–99, peso 30–300 kg, altura 100–250 cm. Validación en Server Action. |
+| Estado cross-step entre pantallas de onboarding. | Resuelto: cookie HTTP-only `sb_onboarding` con JSON, TTL 30 min. |
 
 ---
 
-## Semana 3 — PKG_SANTUARIO I — Panel del Clan y La Forja
+## ✅ Semana 3 — PKG_SANTUARIO I — Panel del Clan y La Forja — COMPLETADA
 
 **CU asociados:** CU-002-001 · CU-002-002 · CU-002-003
 
 **Objetivo:** Conectar el panel central del clan (SantuarioPage) y el sistema de desafíos de La Forja (ForjaPage) a datos reales, incluyendo la creación de desafíos por el Líder y su aceptación por los miembros.
 
-### Tareas
+### Tareas completadas
 
-- [ ] Implementar el cálculo y la consulta de los indicadores del panel: poder colectivo, cantidad de miembros, posición en la competencia activa.
-- [ ] Implementar la creación de desafíos semanales desde La Forja, restringida al rol de Líder de Clan.
-- [ ] Implementar la aceptación de desafíos por parte de los miembros, con control de que un mismo desafío no se acepte dos veces.
-- [ ] Conectar SantuarioPage y ForjaPage a estos endpoints reemplazando los datos de maqueta.
+- [x] Implementado `GET /api/santuario/{clanId}/panel`: retorna `PanelClan { nombre, puntosClan, cantidadMiembros, posicionRanking }`. Ranking calculado como `COUNT(clanes con puntos > este clan) + 1` — consulta atómica, sin races.
+- [x] Fix crítico: `IncorporacionService.CrearClan` ahora llama a `miembroRepo.ActualizarRol(liderClanId, Rol.SILVERBACK)` inmediatamente tras crear el clan. Sin este fix, nadie podía crear desafíos.
+- [x] Nueva entidad `AceptacionDesafio` con PK compuesta `(DesafioId, MiembroId)` — la restricción de unicidad es a nivel de base de datos, sin posibilidad de duplicado. Migración EF aplicada.
+- [x] `SantuarioRepository` extendido: `AceptarDesafio`, `YaAceptoDesafio`, `ObtenerAceptacionesMiembro`.
+- [x] `ISantuarioService` / `SantuarioService` actualizados: `ListarDesafios(clanId, miembroId)` ahora retorna `DesafioClanDto[]` con campo `AceptadoPorMi: bool`. `AceptarDesafio` verifica duplicado antes de insertar. `ObtenerPanelClan` calcula ranking.
+- [x] `POST /api/santuario/{clanId}/desafios/{desafioId}/aceptar`: 204 NoContent en éxito, 409 Conflict si ya aceptó.
+- [x] `GET /api/santuario/{clanId}/desafios` actualizado para pasar `miembroId` del token.
+- [x] Frontend `santuario/page.tsx`: sección "PANEL DEL CLAN" con Poder Colectivo, Ranking y Miembros. Botón directo a Forja en la grilla de acciones.
+- [x] `ForjaPage` reemplaza hardcoded: Server Component que decodifica JWT para obtener `clanId`, hace `Promise.all([getDesafios, getPanelClan])`, pasa datos a `ForjaClient`.
+- [x] `ForjaClient` (Client Component): `useActionState(aceptarDesafio)`, cada desafío en su propio `<form>`. Botón ACEPTAR → POST a la API → `revalidatePath`.
 
-**Integraciones:** SQL Server · Validación de permisos por rol (Líder vs. Miembro).
+**Decisiones de diseño tomadas:**
+- Poder colectivo del clan = `puntosClan` (acumulado de CER vía `SumarCER`). Fórmula: el campo ya existe y se actualiza transaccionalmente con cada entrenamiento. No se recalcula en tiempo real.
+- Ranking: posición cardinal entre todos los clanes por `puntosClan DESC`. Sin empates: si dos clanes tienen el mismo puntaje, comparten posición (comportamiento natural de `COUNT > puntaje`).
+- Anti-duplicado de aceptación: PK compuesta en DB (no solo validación de aplicación), garantía a nivel de constraints.
+- `AceptacionDesafio` no tiene `estado` propio: un desafío aceptado no necesita rastreo de completado a nivel de aceptación individual en este sprint; los estados de completado/expirado son del `DesafioClan`, no de la aceptación.
 
-**Entregable:** Panel del clan y La Forja operando con datos reales y persistentes.
+**Entregable real:** Panel del clan con indicadores reales, Forja conectada con desafíos de la base, aceptación persistida con unicidad garantizada por constraint de DB.
 
-**Criterio de aceptación:** Un desafío creado por el Líder es visible para todos los miembros del clan y puede ser aceptado, quedando reflejado el cambio de estado en la base de datos.
+**Criterio de aceptación cumplido:** Un desafío creado por el SILVERBACK es visible para todos los miembros. Un miembro lo acepta y el botón cambia a "PROTOCOLO ASEGURADO". Un segundo intento de aceptación retorna 409 y muestra error en la UI.
 
-### Riesgos y desvíos posibles
+### Riesgos resueltos
 
-| Riesgo / Desvío | Probabilidad | Impacto | Mitigación |
-|---|---|---|---|
-| El "poder colectivo del clan" no tiene una fórmula explícita en el STFI más allá de mencionarlo como indicador. | Alta | Medio | Definir operativamente como la suma del CER histórico de todos los miembros del clan, y documentar esta decisión de diseño. |
-| Condición de carrera si dos miembros aceptan el mismo desafío al mismo tiempo. | Baja | Medio | Usar transacciones atómicas o locks optimistas al escribir el estado del desafío. |
+| Riesgo original | Resolución |
+|---|---|
+| "Poder colectivo" sin fórmula definida. | Resuelto: `puntosClan` del clan, acumulado de CER por `ExecuteUpdateAsync` atómico. |
+| Condición de carrera en aceptación simultánea. | Resuelto: PK compuesta (DesafioId, MiembroId) en SQL Server garantiza unicidad a nivel de motor, sin necesidad de locks de aplicación. |
+| Bug oculto: fundador de clan nunca era SILVERBACK. | Fix aplicado en S3: `IncorporacionService.CrearClan` ahora promueve al fundador. |
+
+### Actualización de diagramas (S2 + S3)
+
+| Diagrama | Cambio |
+|---|---|
+| `diagrama-er.md` | `ACEPTACION_DESAFIO` actualizado: PK compuesta (desafio_id, miembro_id), sin campo `id` ni `estado`, columna `aceptado_en`. |
+| `diagrama-paquetes.md` | Agregado `PKG_ACTIONS` en el nodo Next.js (Server Actions como capa entre Pages y HTTP REST). |
+| `diagrama-clases.md` | Pendiente: `DesafioRepository` y `MensajeRepository` del diagrama están consolidados en `SantuarioRepository` en el código. Diferencia de nomenclatura menor, sin impacto en arquitectura. Actualizar en S11. |
 
 ---
 

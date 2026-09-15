@@ -49,6 +49,12 @@ node "silverback/\n(Next.js 16 — Puerto 3000)" as NEXTJS {
     class TrofeosPage
     class BeneficiosPage
   }
+
+  package "PKG_ACTIONS\n(Server Actions — src/app/actions/)" as PACT {
+    class OnboardingActions
+    class SantuarioActions
+    class AuthActions
+  }
 }
 
 node "silverback-api/\n(ASP.NET Core 9 — Puerto 5057)" as DOTNET {
@@ -98,11 +104,15 @@ node "silverback-api/\n(ASP.NET Core 9 — Puerto 5057)" as DOTNET {
   }
 }
 
-PINC ..> PAPI : HTTP REST\nBearer JWT
-PSAN ..> PAPI : HTTP REST\nBearer JWT
-PARE ..> PAPI : HTTP REST\nBearer JWT
-PEVO ..> PAPI : HTTP REST\nBearer JWT
-PPER ..> PAPI : HTTP REST\nBearer JWT
+PINC ..> PACT : llama
+PSAN ..> PACT : llama
+PARE ..> PACT : llama
+PEVO ..> PACT : llama
+PPER ..> PACT : llama
+PACT ..> PAPI : HTTP REST\nBearer JWT
+
+PINC ..> PAPI : HTTP REST\nBearer JWT (directo para GET)
+PSAN ..> PAPI : HTTP REST\nBearer JWT (directo para GET)
 
 PAPI ..> PSVC : inyección DI
 PSVC ..> PREP : inyección DI
