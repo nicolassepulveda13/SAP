@@ -27,6 +27,7 @@
 | | CU-001-002 | Seleccionar Arquetipo de Entrenamiento | ✅ Aprobado E1 |
 | | CU-001-003 | Buscar Manadas Disponibles | ✅ Aprobado E1 |
 | | CU-001-004 | Unirse a una Manada | ✅ Aprobado E1 |
+| | CU-001-005 | Fundar una Manada | ✅ Implementado S3 |
 | **CU-002 — SANTUARIO** | CU-002-001 | Visualizar el Panel del Santuario | ✅ Aprobado E1 |
 | | CU-002-002 | Consultar Desafíos en La Forja | ✅ Aprobado E1 |
 | | CU-002-003 | Aceptar un Desafío Semanal | ✅ Aprobado E1 |
@@ -232,6 +233,40 @@
 
 - **[FA-1]** Si el clan alcanzó su capacidad máxima entre que el usuario lo seleccionó y confirmó, el sistema muestra un mensaje de error indicando que el clan ya no tiene cupos disponibles y sugiere elegir otra manada.
 - **[FA-2]** Si el usuario presiona "UNIRSE" en un clan con estado LLENO, el botón permanece deshabilitado y no se ejecuta ninguna acción.
+
+---
+
+## CU-001-005: Fundar una Manada
+
+**Descripción:** Este caso de uso describe el proceso mediante el cual un usuario, al no encontrar clanes disponibles o preferir liderar en lugar de seguir, funda su propia manada desde el Radar de Manadas. Al fundar un clan, el usuario se convierte automáticamente en su primer miembro y en el Silverback (líder de la manada), completando así el flujo de incorporación con permisos de administración completos. Este caso de uso fue introducido en S3 para resolver el problema de arranque en frío del sistema: sin clanes existentes, ningún usuario podría completar el onboarding.
+
+**Actores:** Miembro, Sistema SilverBack
+
+**Precondiciones:** El usuario completó los pasos previos de incorporación (CU-001-000 a CU-001-002, incluyendo arquetipo). Puede o no haber clanes disponibles en el sistema.
+
+**Escenario Principal de Éxito:**
+
+1. El usuario accede a la pantalla del Radar de Manadas (paso 3 del onboarding) y visualiza el listado de clanes disponibles (puede estar vacío).
+2. El usuario decide no unirse a ningún clan existente y presiona la opción desplegable "Fundar mi propio clan" en la parte inferior de la pantalla.
+3. El sistema expande un formulario con un campo de texto para ingresar el nombre del clan.
+4. El sistema muestra el mensaje: "Serás el SILVERBACK — líder de tu manada."
+5. El usuario ingresa un nombre único para su clan (máximo 50 caracteres).
+6. El usuario presiona el botón "FUNDAR CLAN".
+7. El sistema registra la cuenta del usuario en la base de datos utilizando los datos acumulados del onboarding (biometría, arquetipo, credenciales).
+8. El sistema crea el nuevo clan con el nombre indicado, vincula al usuario como primer miembro y lo designa líder.
+9. El sistema promueve automáticamente al usuario al rol de SILVERBACK.
+10. El sistema marca el onboarding del usuario como completado.
+11. El sistema genera un nuevo token JWT con los claims actualizados: `rol=SILVERBACK`, `clanId` asignado, `onboarding_completado=true`.
+12. El sistema establece la cookie de sesión `sb_token` con el token actualizado.
+13. El sistema elimina la cookie temporal de onboarding (`sb_onboarding`).
+14. El sistema redirige al usuario al Santuario (/santuario) con permisos de Silverback activos.
+15. El usuario accede por primera vez al hub del clan con capacidad para crear desafíos, gestionar roles y administrar la manada.
+
+**Flujos Alternativos:**
+
+- **[FA-1]** Si el nombre ingresado ya está en uso por otro clan, el sistema muestra un mensaje de error "El nombre ya está en uso. Elegí otro." y mantiene el formulario abierto.
+- **[FA-2]** Si el usuario deja el campo de nombre vacío y presiona "FUNDAR CLAN", el sistema impide el envío con validación de campo requerido sin comunicarse con el backend.
+- **[FA-3]** Si ocurre un error de red o del servidor durante la creación del clan, el sistema muestra "No se pudo crear el clan." y permite al usuario reintentar sin perder los datos del formulario.
 
 ---
 

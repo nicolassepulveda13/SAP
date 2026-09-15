@@ -135,6 +135,13 @@ export default function BiometricCalibrationPage() {
         </form>
       </div>
 
+      <p className="text-center text-[#9CA3AF] text-xs mt-4">
+        ¿Ya tenés cuenta?{" "}
+        <a href="/login" className="text-[#F97316] hover:underline">
+          Iniciá sesión
+        </a>
+      </p>
+
       <div className="flex justify-center gap-2 mt-4">
         <div className="w-6 h-1 bg-[#F97316] rounded-full" />
         <div className="w-6 h-1 bg-[#444] rounded-full" />

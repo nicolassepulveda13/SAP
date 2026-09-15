@@ -161,3 +161,62 @@ export async function joinClan(
 
   redirect("/santuario");
 }
+
+export async function crearClan(
+  _state: OnboardingState,
+  formData: FormData
+): Promise<OnboardingState> {
+  const nombre = (formData.get("nombreClan") as string)?.trim();
+  if (!nombre) return { error: "Ingresá un nombre para tu clan." };
+
+  const draft = await leerDraft();
+  if (!draft?.arquetipo) redirect("/onboarding/biometrics");
+
+  // 1. Registrar cuenta con el draft acumulado
+  let tokenPreliminar: string;
+  try {
+    const data = await apiFetch<{ token: string; id: string }>(
+      "/api/incorporacion/registrar",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          nombre: draft!.nombre,
+          email: draft!.email,
+          password: draft!.password,
+          arquetipo: draft!.arquetipo,
+          edad: Number(draft!.edad),
+          pesoKg: Number(draft!.pesoKg),
+          alturaCm: Number(draft!.alturaCm),
+          nivelExperiencia: draft!.nivelExperiencia,
+        }),
+      }
+    );
+    tokenPreliminar = data.token;
+  } catch (e) {
+    return { error: (e as Error).message ?? "Error al registrarse." };
+  }
+
+  // 2. Crear clan con el token preliminar (aún no está en cookie)
+  try {
+    const res = await fetch(`${API_BASE}/api/incorporacion/clan`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${tokenPreliminar}`,
+      },
+      body: JSON.stringify({ nombre }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      return { error: (err as { error?: string }).error ?? "Error al crear el clan." };
+    }
+    const data = await res.json();
+    await setToken(data.token);
+  } catch {
+    return { error: "No se pudo crear el clan." };
+  }
+
+  const cookieStore = await cookies();
+  cookieStore.delete("sb_onboarding");
+  redirect("/santuario");
+}

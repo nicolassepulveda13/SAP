@@ -51,8 +51,9 @@ public class IncorporacionController(IIncorporacionService svc) : SilverbackCont
         if (miembroId is null) return Unauthorized();
         try
         {
-            var clan = await svc.CrearClan(req.Nombre, miembroId.Value);
-            return CreatedAtAction(nameof(CrearClan), new { id = clan.Id }, new { clan.Id, clan.Nombre });
+            var result = await svc.CrearClan(req.Nombre, miembroId.Value);
+            return CreatedAtAction(nameof(CrearClan), new { id = result.Clan.Id },
+                new { result.Clan.Id, result.Clan.Nombre, token = result.Token });
         }
         catch (Exception ex) { return BadRequest(new { error = ex.Message }); }
     }

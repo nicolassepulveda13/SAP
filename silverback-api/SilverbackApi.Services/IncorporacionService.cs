@@ -42,14 +42,16 @@ public class IncorporacionService(
         return new RegistrarResult(miembro, token);
     }
 
-    public async Task<Clan> CrearClan(string nombre, Guid liderClanId)
+    public async Task<CrearClanResult> CrearClan(string nombre, Guid liderClanId)
     {
         var clan = new Clan { Nombre = nombre, LiderClanId = liderClanId, CantidadMiembros = 1 };
         await clanRepo.Crear(clan);
         await miembroRepo.ActualizarClan(liderClanId, clan.Id);
         await miembroRepo.ActualizarRol(liderClanId, Rol.SILVERBACK);
+        await miembroRepo.CompletarOnboarding(liderClanId);
         await clanRepo.ActualizarCantidadMiembros(clan.Id, 0);
-        return clan;
+        var token = authService.GenerarToken(liderClanId, Rol.SILVERBACK.ToString(), clan.Id, true);
+        return new CrearClanResult(clan, token);
     }
 
     private const int CapacidadMaximaClan = 20;
