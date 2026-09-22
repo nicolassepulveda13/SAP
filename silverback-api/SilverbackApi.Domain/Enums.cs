@@ -7,7 +7,7 @@ public enum NivelExperiencia { PRINCIPIANTE, INTERMEDIO, AVANZADO, ELITE }
 public enum EstadoFatiga { OPTIMA, MODERADA, ELEVADA, CRITICA }
 public enum EstadoRacha { ACTIVA, EN_RIESGO, ROTA }
 public enum EstadoGuerra { ACTIVA, FINALIZADA }
-public enum TierDesafio { BRONCE, PLATA, ORO }
+public enum TierDesafio { TITAN, ALPHA, BETA }
 public enum EstadoDesafio { PENDIENTE, ACTIVO, COMPLETADO, EXPIRADO }
 public enum TipoMensaje { TEXTO, SISTEMA, DESAFIO }
 public enum EstadoNodo { BLOQUEADO, DISPONIBLE, DESBLOQUEADO }

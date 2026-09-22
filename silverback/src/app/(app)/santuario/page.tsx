@@ -12,7 +12,7 @@ import { getPanelClan } from "@/app/actions/santuario";
 import type { PanelClan } from "@/app/actions/santuario";
 
 type DashboardData = {
-  miembro: { id: string; nombre: string; rango: string; xp: number; coins: number; clanId: string | null };
+  miembro: { id: string; nombre: string; rango: string; arquetipo: string; xp: number; coins: number; clanId: string | null };
   estadisticas: { totalSesiones: number; cargaSemanal: number; cerPromedio: number };
   clan: { id: string; nombre: string; puntosClan: number } | null;
 };

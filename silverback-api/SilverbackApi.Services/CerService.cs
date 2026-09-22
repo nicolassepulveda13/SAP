@@ -1,3 +1,6 @@
+// S4-CER: CerService — fórmula de Capacidad de Esfuerzo Registrado (CU-003-003)
+// Fórmula: puntaje = pesoKg × repeticiones × modificador(arquetipo)
+// Modificadores: VOLUMEN=1.1, DEFINIDO=1.05, ATLETICO=1.0
 using SilverbackApi.Domain;
 using SilverbackApi.Domain.Models;
 using SilverbackApi.Services.Interfaces;

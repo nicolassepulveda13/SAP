@@ -29,6 +29,7 @@ public class PerfilController(IPerfilService svc) : SilverbackControllerBase
                     d.Miembro.Email,
                     Rol = d.Miembro.Rol.ToString(),
                     Rango = d.Miembro.Rango.ToString(),
+                    Arquetipo = d.Miembro.Arquetipo?.ToString() ?? "ATLETICO",
                     d.Miembro.Xp,
                     d.Miembro.Coins,
                     d.Miembro.ClanId,

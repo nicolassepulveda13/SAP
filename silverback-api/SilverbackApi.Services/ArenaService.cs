@@ -1,3 +1,6 @@
+// S4-Arena: ArenaService — lógica del registro de entrenamiento y racha
+// S4-RegistrarEntrenamiento: calcula CER via ICerService, persiste Entrenamiento, acumula CER al Clan y a la GuerraGlobal activa
+// S4-Racha: ActualizarRacha() — incrementa racha si el último entrenamiento fue ayer; resetea si hubo salto de días
 using SilverbackApi.Data.Repositories;
 using SilverbackApi.Domain;
 using SilverbackApi.Domain.Models;
