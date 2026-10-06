@@ -10,9 +10,9 @@ import Link from "next/link";
 import { PageLabel } from "@/components/ui/PageLabel";
 
 const TIER_COLORS: Record<string, string> = {
-  TITAN: "#F97316",
-  ALPHA: "#a78bfa",
-  BETA: "#60a5fa",
+  ORO: "#F97316",
+  PLATA: "#a78bfa",
+  BRONCE: "#60a5fa",
 };
 
 function tierColor(tier: string): string {
@@ -106,9 +106,9 @@ export default function ForjaClient({
                     className="w-full rounded bg-[#242424] border border-[#333] px-3 py-2 text-white text-sm focus:outline-none focus:border-[#F97316] disabled:opacity-50"
                   >
                     <option value="" disabled>Tier</option>
-                    <option value="TITAN">TITAN</option>
-                    <option value="ALPHA">ALPHA</option>
-                    <option value="BETA">BETA</option>
+                    <option value="ORO">ORO</option>
+                    <option value="PLATA">PLATA</option>
+                    <option value="BRONCE">BRONCE</option>
                   </select>
                 </div>
                 <div>
