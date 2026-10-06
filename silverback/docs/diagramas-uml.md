@@ -24,7 +24,7 @@
 ## Notas de arquitectura
 
 - **Patrón de capas:** Pages (Next.js App Router) → Services (lógica de negocio) → Repositories (acceso a base de datos)
-- **Base de datos:** PostgreSQL o SQL Server — base de datos relacional. Los repositorios ejecutan SQL via ORM o driver nativo.
+- **Base de datos:** SQL Server — base de datos relacional. Los repositorios ejecutan SQL via ORM o driver nativo.
 - **Autenticación:** sesiones almacenadas en base de datos, validadas por HTTP (cookie de sesión).
 - **Actores:** Miembro (usuario estándar), LiderClan (rol SILVERBACK), Sistema SilverBack, Aliado Comercial (externo)
 - **Coherencia:** Todos los diagramas usan la misma nomenclatura canónica (PascalCase clases, camelCase métodos)

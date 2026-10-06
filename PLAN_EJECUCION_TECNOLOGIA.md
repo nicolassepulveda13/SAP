@@ -27,25 +27,27 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 
 | # | Discrepancia | Fuente A | Fuente B | Resolver antes de |
 |---|---|---|---|---|
-| 1 | Roles del clan | STFI: binario (Miembro/Líder) | `diagrama-clases.md`: SILVERBACK/BETA/EXPLORADOR/RECLUTA | Semana 4 |
+| 1 | Roles del clan | STFI: binario (Miembro/Líder) | `diagrama-clases.md`: SILVERBACK/BETA/EXPLORADOR/RECLUTA | ✅ Resuelto S4: se implementan los 4 roles; solo SILVERBACK tiene permisos de administración (el STFI queda como simplificación "Líder = SILVERBACK"). |
 | 2 | Rangos de evolución | STFI: BRONCE→PLATA→ORO | `diagrama-clases.md`: +RANGO_S | Semana 7 |
 | 3 | Tipos de cofre | STFI: ALPHA/TITANIO/OMEGA | `diagrama-clases.md`: COMÚN/RARO/ÉPICO/LEGENDARIO | Semana 7 |
-| 4 | Modificador CER 1.15x | Atribuido a "Silverback" (¿rol o arquetipo?) | Arquetipos son VOLUMEN/DEFINIDO/ATLÉTICO | Semana 5 |
+| 4 | Modificador CER 1.15x | Atribuido a "Silverback" (¿rol o arquetipo?) | Arquetipos son VOLUMEN/DEFINIDO/ATLÉTICO | ✅ Resuelto S4: VOLUMEN 1.10 · DEFINIDO 1.05 · ATLÉTICO 1.00 (`CerService`). El 1.15 no se usa. |
 
 ## Resumen ejecutivo
 
+> **Estado real al 22/09/2026:** el CU total es **28** (24 aprobados en E1 + CU-001-000, CU-001-005, CU-002-007, CU-005-007). En S4 se adelantó el núcleo de Arena (planificado para S5/S6) en paralelo con Santuario II.
+
 | # | Semana | Entregable | CU / Alcance |
 |---|---|---|---|
-| 1 | S1 | Arquitectura Base: Schema SQL Server, Capas de Aplicación y Autenticación | No aplica a un CU específico — es infraestructura transversal requerida por los 24 CU. |
-| 2 | S2 ✅ | PKG_INCORPORACIÓN — Onboarding Conectado End-to-End | CU-001-001 · CU-001-002 · CU-001-003 · CU-001-004 |
-| 3 | S3 ✅ | PKG_SANTUARIO I — Panel del Clan y La Forja | CU-002-001 · CU-002-002 · CU-002-003 |
-| 4 | S4 | PKG_SANTUARIO II — Sala de Tácticas y Gestión de Roles | CU-002-004 · CU-002-005 · CU-002-006 |
-| 5 | S5 | Motor CER y Registro de Entrenamiento por Voz | CU-003-002 · CU-003-003 |
-| 6 | S6 | PKG_ARENA — Guerra Global e Historial de Batallas | CU-003-001 · CU-003-004 |
+| 1 | S1 ✅ | Arquitectura Base: Schema SQL Server, Capas de Aplicación y Autenticación | No aplica a un CU específico — es infraestructura transversal requerida por los 28 CU. |
+| 2 | S2 ✅ | PKG_INCORPORACIÓN — Onboarding Conectado End-to-End | CU-001-000 · CU-001-001 · CU-001-002 · CU-001-003 · CU-001-004 |
+| 3 | S3 ✅ | PKG_SANTUARIO I — Panel del Clan y La Forja | CU-002-001 · CU-002-002 · CU-002-003 · CU-002-007 · CU-001-005 |
+| 4 | S4 ✅ | PKG_SANTUARIO II — Sala de Tácticas y Gestión de Roles **+ Arena adelantada** | CU-002-004 · CU-002-005 · CU-002-006 · (CU-003-002 · CU-003-003 adelantados) |
+| 5 | S5 🧪 | Motor CER y Registro de Entrenamiento por Voz | CU-003-002 · CU-003-003 — voz + XP implementados (05/10); **falta prueba en ejecución** |
+| 6 | S6 🧪 | PKG_ARENA — Guerra Global e Historial de Batallas | CU-003-001 · CU-003-004 — ciclo semanal + historial de batallas implementados (05/10); **falta prueba en ejecución** |
 | 7 | S7 | PKG_EVOLUCIÓN / BÓVEDA — Progresión, Árbol de Habilidades y Marketplace | CU-004-001 · CU-004-002 · CU-004-003 · CU-004-004 |
 | 8 | S8 | PKG_PERFIL — Dashboard, Racha, Fatiga, Trofeos y Beneficios | CU-005-001 · CU-005-002 · CU-005-003 · CU-005-004 · CU-005-005 · CU-005-006 |
 | 9 | S9 | Análisis de Entorno de Despliegue en Máquinas de Facultad | No aplica a un CU — es una tarea de infraestructura y viabilidad de despliegue. |
-| 10 | S10 | Integración Final y Hardening | Los 24 CU en conjunto. |
+| 10 | S10 | Integración Final y Hardening | Los 28 CU en conjunto. |
 | 11 | S11 | Despliegue Final y Documentación Técnica | No aplica a un CU — es la instancia de entrega. |
 
 ---
@@ -54,7 +56,7 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 
 ## ✅ Semana 1 — Arquitectura Base: Schema SQL Server, Clean Architecture y Autenticación JWT — COMPLETADA
 
-**CU asociados:** No aplica a un CU específico — es infraestructura transversal requerida por los 24 CU.
+**CU asociados:** No aplica a un CU específico — es infraestructura transversal requerida por los 28 CU.
 
 **Decisión de arquitectura:** Se optó por Clean Architecture con ASP.NET Core 9 Web API separado de Next.js (en lugar de Next.js full-stack). Justificación: independencia de despliegue, debugging real con Swagger, separación de contratos HTTP explícita. Ver `docs/diagrama-componentes.md` para la justificación completa.
 
@@ -170,19 +172,37 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 
 ---
 
-## Semana 4 — PKG_SANTUARIO II — Sala de Tácticas y Gestión de Roles
+## ✅ Semana 4 — PKG_SANTUARIO II — Sala de Tácticas y Gestión de Roles (+ Arena adelantada) — COMPLETADA
 
-**CU asociados:** CU-002-004 · CU-002-005 · CU-002-006
+**CU asociados:** CU-002-004 · CU-002-005 · CU-002-006 · adelantados de S5/S6: CU-003-002 · CU-003-003
 
 **Objetivo:** Conectar la comunicación interna del clan (TacticasPage) y la administración jerárquica (RolesPage), resolviendo antes de implementar la discrepancia detectada entre la cantidad de roles documentada en el STFI y la definida en el Diagrama de Clases del repo (ver Sección 3 de este documento).
 
-### Tareas
+> **Nota de ejecución:** S4 se trabajó en dos frentes en paralelo. El frente Arena quedó en el commit `5375df1`; el frente Santuario II se desarrolló en otra copia local y se integró el 22/09 sobre `origin/main` (solo la parte de S4 — lo de S2/S3 de esa copia estaba duplicado y se descartó).
 
-- [ ] Resolver y documentar el modelo de roles definitivo a implementar (ver riesgo de discrepancia abajo) antes de escribir el endpoint de asignación de roles.
-- [ ] Implementar el chat persistido de la Sala de Tácticas: mensajes con autor, timestamp y tipo (texto/sistema/desafío).
-- [ ] Implementar la asignación de rol a un miembro, restringida al Líder de Clan.
-- [ ] Implementar la expulsión de un miembro del clan, con las validaciones de permiso correspondientes.
-- [ ] Conectar TacticasPage y RolesPage a estos endpoints.
+### Tareas — Santuario II
+
+- [x] Modelo de roles definitivo: **4 roles** (SILVERBACK / BETA / EXPLORADOR / RECLUTA). Solo SILVERBACK administra. Decisión registrada en la tabla de discrepancias (#1).
+- [x] Chat persistido de la Sala de Tácticas: `GET/POST /api/santuario/{clanId}/mensajes`, devuelve autor (`autorNombre`), timestamp (`enviadoEn`) y tipo (`TEXTO`/`SISTEMA`/`DESAFIO`). Mensajes de tipo SISTEMA se renderizan como alerta.
+- [x] Asignación de rol: `PUT /api/santuario/{clanId}/miembros/{miembroId}/rol`. `SantuarioService.AsignarRol` valida que quien asigna sea SILVERBACK **del mismo clan** y que el destino pertenezca al clan → 403 si no.
+- [x] Expulsión: `DELETE /api/santuario/{clanId}/miembros/{miembroId}`. Desvincula (`ClanId = null`), baja a RECLUTA y decrementa `CantidadMiembros`. No permite auto-expulsión.
+- [x] `TacticasPage` y `RolesPage` convertidas a Server Components con datos reales. Nuevo helper `src/lib/clan-context.ts` (`requireClan()`): obtiene el clan y el **rol actual desde la base** vía `/api/perfil/dashboard`, no desde el JWT (el rol puede cambiar después de emitido el token).
+- [x] Server Actions `enviarMensaje`, `asignarRol`, `expulsarMiembro` en `actions/santuario.ts`.
+- [x] `GET /miembros` y `GET /mensajes` devuelven DTOs proyectados (evita ciclos de serialización de EF y no expone `PasswordHash`).
+
+### Tareas — Arena adelantada (commit `5375df1`)
+
+- [x] `CerService`: `CER = PesoKg × Repeticiones × Modificador(arquetipo)` con VOLUMEN 1.10 / DEFINIDO 1.05 / ATLÉTICO 1.00.
+- [x] `RegistrarEntrenamientoPage` (manual) y `CalculadoraCERPage` conectadas; eliminado el valor hardcodeado `24.8`.
+- [x] CER acumulado al `PuntosClan` y a la `GuerraGlobal` activa; actualización de racha.
+- [x] `ArenaPage` (lectura de guerra activa) e `HistorialPage` con datos reales.
+- [x] `TierDesafio`: el commit `5375df1` lo había renombrado a `TITAN/ALPHA/BETA`; el 22/09 se **revirtió a `BRONCE/PLATA/ORO`** para respetar la carpeta aprobada (enum, UI de La Forja, CU-002-007, Guía Técnica; sin migración: la base nunca tuvo valores TITAN).
+
+### Pendiente arrastrado
+
+- [ ] Chat: refresco automático (polling 3–5 s). Hoy se actualiza al enviar o recargar.
+- [ ] Rol cambiado/expulsión no invalida el JWT del afectado: la UI usa el rol de la base, pero el claim `clanId` del token del expulsado sigue hasta re-login.
+- [ ] Probar end-to-end con 2 usuarios (Silverback + Recluta) el criterio de aceptación de 403.
 
 **Integraciones:** SQL Server · Validación de permisos jerárquicos.
 
@@ -207,13 +227,15 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 
 ### Tareas
 
-- [ ] Implementar el CERService: CER = Kilogramos × Repeticiones × Modificador_Arquetipo, con el modificador leído del arquetipo real del usuario (rango 1.0–1.15).
-- [ ] Definir y documentar los tres valores numéricos exactos del modificador (uno por arquetipo: Volumen, Definido, Atlético) — la fuente solo confirma 1.15x asociado al término "Silverback", que en el resto del sistema es un Rol y no un Arquetipo; hay que resolver esta ambigüedad antes de fijar los valores.
-- [ ] Conectar RegistrarEntrenamientoPage y CalculadoraCERPage al servicio real, eliminando el dato de maqueta.
-- [ ] Integrar Web Speech API para la carga de ejercicio, peso y repeticiones por voz.
-- [ ] Implementar extracción de valores numéricos desde el texto reconocido, con confirmación visual antes de guardar.
-- [ ] Implementar fallback de carga manual siempre visible, no oculto, para navegadores sin soporte de Web Speech API.
-- [ ] Acumular el CER calculado al marcador de clan correspondiente.
+- [x] Implementar el CERService: CER = Kilogramos × Repeticiones × Modificador_Arquetipo, con el modificador leído del arquetipo real del usuario (rango 1.0–1.15). *(hecho en S4)*
+- [x] Definir y documentar los tres valores numéricos exactos del modificador: VOLUMEN 1.10 / DEFINIDO 1.05 / ATLÉTICO 1.00. *(hecho en S4)*
+- [x] Conectar RegistrarEntrenamientoPage y CalculadoraCERPage al servicio real, eliminando el dato de maqueta. *(hecho en S4)*
+- [x] Integrar Web Speech API para la carga de ejercicio, peso y repeticiones por voz. Botón "DICTAR" en `RegistrarClient.tsx`, `lang = es-AR`.
+- [x] Implementar extracción de valores numéricos desde el texto reconocido, con confirmación visual antes de guardar. `src/lib/voz.ts` → `interpretarDictado()`: números en dígitos o palabras ("cuarenta y cinco"), decimales con coma, unidades kilos/kg y repeticiones/reps/veces, dictado sin unidades ("sentadilla 80 10"). Se muestra lo entendido con "USAR ESTOS DATOS" / "DESCARTAR".
+- [x] Implementar fallback de carga manual siempre visible, no oculto, para navegadores sin soporte de Web Speech API. Sin soporte se muestra un aviso y el botón no aparece.
+- [x] Acumular el CER calculado al marcador de clan correspondiente. *(hecho en S4)*
+- [x] Sumar XP al miembro (lo pide la secuencia aprobada): 1 XP cada 10 de CER. La pantalla de éxito muestra "+N XP".
+- [ ] **Probar en ejecución:** dictado en Chrome con micrófono real; aviso en Firefox.
 
 **Integraciones:** Web Speech API (nativa del navegador) · SQL Server.
 
@@ -239,10 +261,13 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 
 ### Tareas
 
-- [ ] Definir la regla mínima viable de ciclo de la Guerra Global (duración de un enfrentamiento y criterio de emparejamiento entre clanes), ya que no está especificada en el STFI.
-- [ ] Implementar la actualización atómica del puntaje del clan cada vez que se confirma un CER (evitar lecturas y escrituras separadas que generen inconsistencias).
-- [ ] Implementar el cierre de una batalla y el registro de resultado (victoria/derrota) en el historial.
-- [ ] Conectar GuerraGlobalPage y HistorialBatallasPage a estos datos reales.
+- [x] Regla mínima viable del ciclo: **semanal** (lunes 00:00 → lunes 00:00, hora Argentina); rival = **pareja consecutiva del ranking** (1º vs 2º, 3º vs 4º…); impar → "SIN RIVAL ASIGNADO". Detalle en `Modificacion-Carpeta.md` §4.5.
+- [x] Actualización atómica: `GuerraRepository.SumarCER` usa `ExecuteUpdate` (`CerAcumulado = CerAcumulado + @cer`); si el clan aún no participa inserta, y si dos requests insertan a la vez la PK compuesta rechaza la segunda y se reintenta como UPDATE. La creación de la guerra de la semana está protegida por el índice único en `Semana`.
+- [x] Cierre y resultado: `GuerraService.AsegurarGuerraActiva()` cierra las guerras vencidas (fija `Posicion`, estado FINALIZADA) y abre la de la semana. Se ejecuta al entrar a la Arena, al Historial y al registrar un entrenamiento (sin jobs).
+- [x] `GuerraGlobalPage`: NUESTRA MANADA vs CLAN RIVAL, barras relativas al líder, cuenta regresiva, top 10. `GET /api/arena/guerra` (el `clanId` sale de la base).
+- [x] `HistorialBatallasPage`: estadísticas (total, tasa de victoria, racha) + batallas cerradas (`GET /api/arena/batallas`) + sesiones con filtro por ejercicio (`GET /api/arena/historial?ejercicio=`).
+- [x] Guerra Global vuelve a ser visible (se sacó de `PANTALLAS_OCULTAS` en `lib/features.ts`).
+- [ ] **Probar en ejecución:** apertura automática, ranking con 2+ clanes, cierre de una semana vencida y resultado en el historial de ambos clanes.
 
 **Integraciones:** SQL Server · Motor CER (Semana 5) como dependencia directa.
 
@@ -360,7 +385,7 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 
 ## Semana 10 — Integración Final y Hardening
 
-**CU asociados:** Los 24 CU en conjunto.
+**CU asociados:** Los 28 CU en conjunto.
 
 **Objetivo:** Validar el sistema completo como un todo integrado: los cinco flujos (Incorporación → Santuario → Arena → Evolución/Bóveda → Perfil) funcionando en secuencia real, sin datos mockeados remanentes de ninguna semana anterior.
 

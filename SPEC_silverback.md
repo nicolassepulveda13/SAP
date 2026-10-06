@@ -1,4 +1,10 @@
 # SPEC — SilverBack Web App
+
+> ⚠️ **DOCUMENTO HISTÓRICO — DESACTUALIZADO.** Es la SPEC inicial de las maquetas (mayo 2026). No usar como fuente de verdad:
+> - El stack real es **Next.js 16 + ASP.NET Core 9 + SQL Server** (no Supabase).
+> - Los casos de uso vigentes son **28**, con numeración `CU-XXX-XXX` (no CU01–CU20): ver `silverback/docs/casos-de-uso.md`.
+> - El estado del desarrollo está en `PLAN_EJECUCION_TECNOLOGIA.md`.
+
 > Stack: Next.js + React (App Router) + Supabase + TypeScript
 > Web-first. Responsive. Mobile como mejora progresiva.
 

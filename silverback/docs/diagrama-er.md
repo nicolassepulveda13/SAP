@@ -2,7 +2,7 @@
 
 **Proyecto:** SILVERBACK  
 **Tipo:** Diagrama ER — Notación pata de gallo (Information Engineering)  
-**Base de datos:** PostgreSQL / SQL Server  
+**Base de datos:** SQL Server  
 **Descripción:** Modelo relacional completo. Cardinalidades en notación crow's foot.
 
 ---
@@ -106,6 +106,7 @@ entity PARTICIPACION_GUERRA {
   * clan_id : UUID <<PK,FK>>
   --
   * puntaje_cer : DECIMAL DEFAULT 0
+  * posicion : INTEGER DEFAULT 0
 }
 
 ' ════════════════════════════════════════

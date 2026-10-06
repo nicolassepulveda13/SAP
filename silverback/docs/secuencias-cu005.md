@@ -1,7 +1,7 @@
 ﻿# 10.5.4 — Diagramas de Secuencia: CU-005 PERFIL
 
 **Tipo:** Diagramas de secuencia de diseño (no de sistema)
-**Convención:** Page → Service → Repository → PostgreSQL (DB)
+**Convención:** Page → Service → Repository → SQL Server (DB)
 **Actor:** Miembro (usuario estándar)
 
 ---
@@ -32,7 +32,7 @@ box "Repositorios" #2E1C10
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
 Miembro -> Page: navegar a Perfil
@@ -86,7 +86,7 @@ box "Repositorios" #2E1C10
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
 Miembro -> Page: navegar a sección Racha
@@ -132,7 +132,7 @@ box "Repositorios" #2E1C10
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
 Miembro -> Page: presiona "SALVAR RACHA"
@@ -194,7 +194,7 @@ box "Repositorios" #2E1C10
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
 Miembro -> Page: navegar a sección Fatiga
@@ -253,7 +253,7 @@ box "Repositorios" #2E1C10
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
 Miembro -> Page: navegar a sección Trofeos
@@ -307,7 +307,7 @@ box "Externo" #2E2E10
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
 Miembro -> Page: navegar a sección Beneficios
@@ -363,3 +363,128 @@ end
 
 @enduml
 ```
+
+---
+
+### CU-005-007 — Gestionar Datos de Cuenta
+
+> **Agregado S2 (C-26).** Origen: `Modificacion-Carpeta.md`.
+
+```plantuml
+@startuml CU-005-007
+
+actor Miembro
+
+box "Presentación" #1C1C2E
+  participant "CuentaPage\n(/perfil/cuenta)" as Page
+end box
+
+box "Server Actions" #1C2E2E
+  participant "actualizarCuenta()\n[perfil.ts]" as Action
+end box
+
+box "API Controller" #2E1C10
+  participant "PerfilController" as Ctrl
+end box
+
+box "Servicios" #1C2E1C
+  participant "PerfilService" as Svc
+end box
+
+box "Repositorios" #3E2E10
+  participant "MiembroRepository" as Repo
+end box
+
+box "Base de Datos" #2E2E2E
+  database "SQL Server" as DB
+end box
+
+Miembro -> Page: abrirPantalla(/perfil/cuenta)
+Page -> Action: getMiembroPerfil(miembroId)
+Action -> Ctrl: GET /api/perfil/cuenta\nAuthorization: Bearer sb_token
+Ctrl -> Svc: ObtenerDatosCuenta(miembroId)
+Svc -> Repo: ObtenerPorId(miembroId)
+Repo -> DB: SELECT nombre, email FROM Miembros WHERE Id = miembroId
+DB --> Repo: Miembro
+Repo --> Svc: Miembro
+Svc --> Ctrl: { nombre, email }
+Ctrl --> Action: 200 OK { nombre, email }
+Action --> Page: datos actuales
+Page --> Miembro: mostrarFormulario(nombre, email, secciónContraseña)
+
+== Cambio de nombre / email ==
+
+Miembro -> Page: modificarCampo(nombre | email)
+Miembro -> Page: presionarGuardarCambios()
+Page -> Action: actualizarCuenta(formData)
+Action -> Action: validarCampos(nombre, email)
+
+alt campo inválido
+    Action --> Page: { error: mensaje }
+    Page --> Miembro: mostrarError(mensaje)
+else campos válidos
+    Action -> Ctrl: PATCH /api/perfil/cuenta\n{ nombre?, email? }\nAuthorization: Bearer sb_token
+    Ctrl -> Svc: ActualizarDatos(miembroId, nombre, email)
+    Svc -> Repo: Actualizar(miembroId, datos)
+    Repo -> DB: UPDATE Miembros SET nombre, email WHERE Id = miembroId
+
+    alt email ya en uso
+        DB --> Repo: UniqueConstraintException
+        Repo --> Svc: throw RepositoryException("email duplicado")
+        Svc --> Ctrl: throw ServiceException
+        Ctrl --> Action: 409 Conflict { error: "Este email ya está en uso." }
+        Action --> Page: { error: "Este email ya está en uso." }
+        Page --> Miembro: mostrarError()
+    else actualización exitosa
+        DB --> Repo: ok
+        Repo --> Svc: ok
+        Svc --> Ctrl: ok
+        Ctrl --> Action: 200 OK
+        Action --> Page: éxito
+        Page --> Miembro: mostrarConfirmacion("Datos actualizados correctamente.")
+    end
+end
+
+== Cambio de contraseña ==
+
+Miembro -> Page: expandirSeccionContrasena()
+Miembro -> Page: ingresarDatos(passwordActual, passwordNueva, passwordConfirm)
+Miembro -> Page: presionarActualizarContrasena()
+
+Page -> Action: cambiarPassword(formData)
+Action -> Action: validar(passwordNueva === passwordConfirm)
+
+alt contraseñas no coinciden
+    Action --> Page: { error: "Las contraseñas no coinciden." }
+    Page --> Miembro: resaltarCamposError()
+else coinciden
+    Action -> Ctrl: PATCH /api/perfil/contrasena\n{ passwordActual, passwordNueva }\nAuthorization: Bearer sb_token
+    Ctrl -> Svc: CambiarPassword(miembroId, passwordActual, passwordNueva)
+    Svc -> Repo: ObtenerHashPassword(miembroId)
+    Repo -> DB: SELECT password_hash FROM Miembros WHERE Id = miembroId
+    DB --> Repo: hash
+    Repo --> Svc: hash
+    Svc -> Svc: verificarBcrypt(passwordActual, hash)
+
+    alt contraseña actual incorrecta
+        Svc --> Ctrl: throw UnauthorizedException
+        Ctrl --> Action: 401 { error: "Contraseña actual incorrecta." }
+        Action --> Page: { error: "Contraseña actual incorrecta." }
+        Page --> Miembro: mostrarError()
+    else contraseña correcta
+        Svc -> Svc: hashBcrypt(passwordNueva)
+        Svc -> Repo: ActualizarPassword(miembroId, nuevoHash)
+        Repo -> DB: UPDATE Miembros SET password_hash WHERE Id = miembroId
+        DB --> Repo: ok
+        Repo --> Svc: ok
+        Svc --> Ctrl: ok
+        Ctrl --> Action: 200 OK
+        Action --> Page: éxito
+        Page --> Miembro: mostrarConfirmacion("Contraseña actualizada.")
+    end
+end
+
+@enduml
+```
+
+---

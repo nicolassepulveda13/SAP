@@ -1,7 +1,7 @@
 ﻿# 10.5.4 — Diagramas de Secuencia: CU-001 INCORPORACIÓN + CU-002 SANTUARIO
 
 **Tipo:** Diagramas de secuencia de diseño (no de sistema)
-**Convención:** Page → Service → Repository → PostgreSQL (DB)
+**Convención:** Page → Service → Repository → SQL Server (DB)
 **Actores:** Miembro, LiderClan
 
 ---
@@ -9,6 +9,99 @@
 ## CU-001 — INCORPORACIÓN
 
 *Flujo lineal de onboarding. El Miembro completa los 4 CUs en secuencia antes de acceder a la app principal. Layout centrado, sin Topbar ni Sidebar.*
+
+---
+
+### CU-001-000 — Crear Cuenta / Iniciar Sesión
+
+> **Agregado S2 (C-25).** Origen: `Modificacion-Carpeta.md`.
+
+```plantuml
+@startuml CU-001-000
+
+actor Miembro
+
+box "Presentación" #1C1C2E
+  participant "CalibracionBiometricaPage" as Page
+end box
+
+box "Server Actions" #1C2E2E
+  participant "saveStep1()\n[onboarding.ts]" as Action
+end box
+
+box "Infraestructura" #2E2E2E
+  participant "Cookie sb_onboarding\n(HTTP-only, 30 min)" as Cookie
+end box
+
+== Flujo: Usuario nuevo ==
+
+Miembro -> Page: abrirPantalla()\n[middleware redirige desde / sin token]
+Page --> Miembro: mostrarFormulario(nombre, email, password, edad, pesoKg, alturaCm, nivelExperiencia)
+
+Miembro -> Page: completarFormulario(datos)
+Miembro -> Page: presionarContinuar()
+
+Page -> Action: saveStep1(formData)
+Action -> Action: validarCampos(datos)
+
+alt campos vacíos o fuera de rango
+    Action --> Page: { error: "mensaje de validación" }
+    Page --> Miembro: mostrarError(mensaje)
+else datos válidos
+    Action -> Cookie: set("sb_onboarding", JSON.stringify(draft), { httpOnly, maxAge: 1800 })
+    Cookie --> Action: ok
+    Action --> Page: redirect("/onboarding/archetype")
+    Page --> Miembro: redirigirA(ArquetipoPage)
+end
+
+note right of Cookie
+  Los datos NO se persisten en DB todavía.
+  La cuenta se crea en CU-001-004 o CU-001-005
+  cuando el usuario elige o funda su clan.
+end note
+
+== Flujo: Usuario existente (accede a /login) ==
+
+Miembro -> Page: clickEnlace("¿Ya tenés cuenta? Iniciá sesión")
+Page --> Miembro: redirigirA(/login)
+
+actor Miembro2 as "Miembro (login)"
+Miembro2 -> LoginPage: ingresarCredenciales(email, password)
+LoginPage -> AuthAction: login(formData)
+
+box "API Controller" #2E1C10
+  participant "AuthController" as AuthCtrl
+end box
+
+box "Servicios" #1C2E1C
+  participant "AuthService" as AuthSvc
+end box
+
+box "Base de Datos" #2E2E2E
+  database "SQL Server" as DB
+end box
+
+AuthAction -> AuthCtrl: POST /api/auth/login { email, password }
+AuthCtrl -> AuthSvc: Login(email, password)
+AuthSvc -> DB: SELECT miembro WHERE email = email
+DB --> AuthSvc: Miembro
+
+alt credenciales inválidas
+    AuthSvc --> AuthCtrl: throw UnauthorizedException
+    AuthCtrl --> AuthAction: 401 Unauthorized
+    AuthAction --> LoginPage: { error: "Email o contraseña incorrectos." }
+    LoginPage --> Miembro2: mostrarError()
+else credenciales válidas
+    AuthSvc -> AuthSvc: generarToken(miembro)
+    AuthSvc --> AuthCtrl: { token }
+    AuthCtrl --> AuthAction: 200 OK { token }
+    AuthAction -> Cookie: set("sb_token", token, { httpOnly, sameSite: lax })
+    AuthAction --> LoginPage: redirect("/santuario")
+    LoginPage --> Miembro2: redirigirA(SantuarioPage)
+end
+
+@enduml
+```
 
 ---
 
@@ -32,7 +125,7 @@ box "Repositorios" #2E1C10
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
 Miembro -> Page: ingresaDatos(edad, peso, altura, nivelExperiencia)
@@ -85,7 +178,7 @@ box "Repositorios" #2E1C10
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
 Miembro -> Page: abrirPantalla()
@@ -137,7 +230,7 @@ box "Repositorios" #2E1C10
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
 Miembro -> Page: abrirPantalla()
@@ -190,7 +283,7 @@ box "Repositorios" #2E1C10
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
 Miembro -> Page: seleccionarClan(clanId: string)
@@ -216,6 +309,113 @@ else clan disponible
     ClanRepo --> Svc: Clan
     Svc --> Page: Clan
     Page --> Miembro: redirigirA(SantuarioPage)
+end
+
+@enduml
+```
+
+---
+
+### CU-001-005 — Fundar una Manada
+
+> **Agregado S3 (C-27).** Origen: `Modificacion-Carpeta.md`.
+
+```plantuml
+@startuml CU-001-005
+
+actor Miembro
+
+box "Presentación" #1C1C2E
+  participant "MatchmakingClient\n(RadarManadasPage)" as Page
+end box
+
+box "Server Actions" #1C2E2E
+  participant "crearClan()\n[onboarding.ts]" as Action
+end box
+
+box "API Controllers" #2E1C10
+  participant "IncorporacionController" as Ctrl
+end box
+
+box "Servicios" #1C2E1C
+  participant "IncorporacionService" as Svc
+end box
+
+box "Repositorios" #3E2E10
+  participant "MiembroRepository" as MRepo
+  participant "ClanRepository" as CRepo
+end box
+
+box "Base de Datos" #2E2E2E
+  database "SQL Server" as DB
+end box
+
+Miembro -> Page: abrirPantalla()\n[no hay clanes o prefiere liderar]
+Page --> Miembro: mostrarListaClanes() + boton "Fundar mi propio clan"
+
+Miembro -> Page: clickExpandir("Fundar mi propio clan")
+Page --> Miembro: mostrarFormulario(nombreClan)
+
+Miembro -> Page: ingresarNombreClan(nombre)
+Miembro -> Page: presionarFundarClan()
+
+Page -> Action: crearClan(formData)
+Action -> Action: validarNombre(nombre): ¿no vacío?
+
+alt nombre vacío
+    Action --> Page: { error: "Ingresá un nombre para tu clan." }
+    Page --> Miembro: mostrarError()
+else nombre válido
+    Action -> Action: leerDraft()\n[cookie sb_onboarding]
+
+    alt draft sin arquetipo (sesión expirada)
+        Action --> Page: redirect("/onboarding/biometrics")
+    else draft completo
+
+        note over Action, Ctrl
+          Paso 1: Registrar cuenta (aún sin token en cookie)
+        end note
+
+        Action -> Ctrl: POST /api/incorporacion/registrar\n{ nombre, email, password, arquetipo,\n  edad, pesoKg, alturaCm, nivelExperiencia }
+        Ctrl -> Svc: Registrar(datos)
+        Svc -> MRepo: Crear(miembro)
+        MRepo -> DB: INSERT INTO Miembros
+        DB --> MRepo: Miembro { Id }
+        MRepo --> Svc: Miembro
+        Svc -> Svc: generarTokenPreliminar(miembro, RECLUTA, onboarding=false)
+        Svc --> Ctrl: { Miembro, tokenPreliminar }
+        Ctrl --> Action: 201 Created { id, token: tokenPreliminar }
+
+        note over Action, Ctrl
+          Paso 2: Crear clan usando token preliminar
+          (no está en cookie todavía — se pasa como Bearer)
+        end note
+
+        Action -> Ctrl: POST /api/incorporacion/clan\n{ nombre }\nAuthorization: Bearer tokenPreliminar
+        Ctrl -> Svc: CrearClan(nombre, liderClanId)
+        Svc -> CRepo: Crear(clan)
+        CRepo -> DB: INSERT INTO Clanes
+        DB --> CRepo: Clan { Id }
+        CRepo --> Svc: Clan
+        Svc -> MRepo: ActualizarClan(miembroId, clan.Id)
+        MRepo -> DB: UPDATE Miembros SET ClanId
+        Svc -> MRepo: ActualizarRol(miembroId, SILVERBACK)
+        MRepo -> DB: UPDATE Miembros SET Rol = 'SILVERBACK'
+        Svc -> MRepo: CompletarOnboarding(miembroId)
+        MRepo -> DB: UPDATE Miembros SET OnboardingCompletado = true
+        Svc -> Svc: generarToken(miembroId, SILVERBACK, clanId, onboarding=true)
+        Svc --> Ctrl: { Clan, tokenDefinitivo }
+        Ctrl --> Action: 201 Created { clanId, nombre, token: tokenDefinitivo }
+
+        note over Action
+          Paso 3: Establecer sesión y limpiar draft
+        end note
+
+        Action -> Action: setToken(tokenDefinitivo)\n→ cookie sb_token (HTTP-only)
+        Action -> Action: deleteCookie("sb_onboarding")
+        Action --> Page: redirect("/santuario")
+        Page --> Miembro: redirigirA(SantuarioPage)\n[como SILVERBACK, onboarding completo]
+    end
 end
 
 @enduml
@@ -251,7 +451,7 @@ box "Repositorios" #2E1C10
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
 Miembro -> Page: abrirSantuario()
@@ -303,7 +503,7 @@ box "Repositorios" #2E1C10
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
 Miembro -> Page: abrirForja()
@@ -349,7 +549,7 @@ box "Repositorios" #2E1C10
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
 Miembro -> Page: seleccionarDesafio(desafioId: string)
@@ -399,7 +599,7 @@ box "Repositorios" #2E1C10
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
 Miembro -> Page: abrirTacticas(clanId)
@@ -458,7 +658,7 @@ box "Repositorios" #2E1C10
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
 LiderClan -> Page: abrirGestionRoles(clanId)
@@ -513,7 +713,7 @@ box "Repositorios" #2E1C10
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
 LiderClan -> Page: presionarExpulsar(miembroId)
@@ -545,3 +745,84 @@ end
 
 @enduml
 ```
+
+---
+
+### CU-002-007 — Publicar Desafío en La Forja
+
+> **Agregado S3 (C-28).** Origen: `Modificacion-Carpeta.md`.
+
+```plantuml
+@startuml CU-002-007
+
+actor "Silverback" as Lider
+
+box "Presentación" #1C1C2E
+  participant "ForjaClient\n(ChallengeForgePage)" as Page
+end box
+
+box "Server Actions" #1C2E2E
+  participant "crearDesafio()\n[santuario.ts]" as Action
+end box
+
+box "API Controllers" #2E1C10
+  participant "SantuarioController" as Ctrl
+end box
+
+box "Servicios" #1C2E1C
+  participant "SantuarioService" as Svc
+end box
+
+box "Repositorios" #3E2E10
+  participant "MiembroRepository" as MRepo
+  participant "SantuarioRepository" as SRepo
+end box
+
+box "Base de Datos" #2E2E2E
+  database "SQL Server" as DB
+end box
+
+Lider -> Page: abrirPantalla(/santuario/forja)
+Page --> Lider: mostrarSeccion("Publicar nueva directiva")\n[solo si rol = SILVERBACK]
+
+Lider -> Page: expandirFormulario()
+Page --> Lider: mostrarCampos(descripcion, tier, recompensaXp, fechaExpiracion)
+Lider -> Page: completarCampos(datos)
+Lider -> Page: presionarPublicarDirectiva()
+
+Page -> Action: crearDesafio(formData)
+Action -> Action: validarCampos()\n[no vacíos · XP entre 1 y 10.000]
+
+alt campos vacíos o fuera de rango
+    Action --> Page: { error: "Completá todos los campos." }
+    Page --> Lider: mostrarError()
+else datos válidos
+    Action -> Ctrl: POST /api/santuario/{clanId}/desafios\n{ descripcion, tier, recompensaXp, fechaExpiracion }\nAuthorization: Bearer sb_token
+    Ctrl -> Svc: CrearDesafio(clanId, silverbackId, ...)
+    Svc -> MRepo: BuscarPorId(silverbackId)
+    MRepo -> DB: SELECT * FROM Miembros WHERE Id = silverbackId
+    DB --> MRepo: Miembro
+    MRepo --> Svc: Miembro
+
+    alt rol != SILVERBACK
+        Svc --> Ctrl: throw UnauthorizedAccessException
+        Ctrl --> Action: 403 Forbidden
+        Action --> Page: { error: "Error al publicar el desafío." }
+        Page --> Lider: mostrarError()
+    else rol = SILVERBACK
+        Svc -> SRepo: CrearDesafio(desafio [estado = ACTIVO])
+        SRepo -> DB: INSERT INTO DesafiosClan
+        DB --> SRepo: DesafioClan { Id }
+        SRepo --> Svc: DesafioClan
+        Svc --> Ctrl: DesafioClan
+        Ctrl --> Action: 201 Created
+        Action -> Action: revalidatePath("/santuario/forja")
+        Action --> Page: {}
+        Page --> Lider: refrescarListaDirectivas()\n[nuevo desafío visible para todo el clan]
+    end
+end
+
+@enduml
+```
+
+---

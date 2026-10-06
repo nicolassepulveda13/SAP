@@ -55,6 +55,7 @@ entity PARTICIPACION_GUERRA {
   * clan_id : UUID <<PK,FK>>
   --
   * puntaje_cer : DECIMAL DEFAULT 0
+  * posicion : INTEGER DEFAULT 0
 }
 
 ' ─── SANTUARIO ────────────────────────────────────────────

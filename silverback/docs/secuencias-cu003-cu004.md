@@ -1,7 +1,7 @@
 ﻿# 10.5.4 — Diagramas de Secuencia: CU-003 ARENA + CU-004 EVOLUCIÓN/BÓVEDA
 
 **Tipo:** Diagramas de secuencia de diseño (no de sistema)
-**Convención:** Page → Service → Repository → PostgreSQL (DB)
+**Convención:** Page → Service → Repository → SQL Server (DB)
 **Nota CER:** `puntajeCER = pesoKg × repeticiones × multiplicadorArquetipo`
 
 ---
@@ -12,6 +12,8 @@
 
 ### CU-003-001 — Consultar el Estado de la Guerra Global
 
+> **Modificado S6:** ciclo semanal real. La guerra de la semana se abre sola y la anterior se cierra al vencer (sin procesos programados). El rival es la pareja consecutiva del ranking (1º vs 2º, 3º vs 4º…).
+
 ```plantuml
 @startuml CU-003-001
 
@@ -21,35 +23,81 @@ box "Presentación" #1C1C2E
   participant "GuerraGlobalPage" as Page
 end box
 
-box "Servicios" #1C2E1C
-  participant "ArenaService" as Svc
+box "Server Actions" #1C2E2E
+  participant "getGuerra()\n[arena.ts]" as Action
 end box
 
-box "Repositorios" #2E1C10
+box "API Controllers" #2E1C10
+  participant "ArenaController" as Ctrl
+end box
+
+box "Servicios" #1C2E1C
+  participant "ArenaService" as Arena
+  participant "GuerraService" as Svc
+end box
+
+box "Repositorios" #3E2E10
+  participant "MiembroRepository" as MRepo
   participant "GuerraRepository" as Repo
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
 Miembro -> Page: accede a La Arena
-Page -> Svc: obtenerGuerraActiva(): Promise~GuerraGlobal | null~
-Svc -> Repo: findGuerraActiva(): Promise~GuerraGlobal | null~
-Repo -> DB: SELECT * FROM guerras WHERE estado = 'ACTIVA' LIMIT 1
-DB --> Repo: GuerraGlobal | null
-Repo --> Svc: GuerraGlobal | null
+Page -> Action: getGuerra()
+Action -> Ctrl: GET /api/arena/guerra\nAuthorization: Bearer sb_token
+Ctrl -> Arena: ObtenerClanId(miembroId)
+Arena -> MRepo: BuscarPorId(miembroId)
+MRepo -> DB: SELECT * FROM Miembros WHERE Id = miembroId
+DB --> MRepo: Miembro
+Arena --> Ctrl: clanId (desde la base, no del JWT)
 
-alt guerra activa encontrada
-    Svc -> Repo: findRankingClanes(guerraId, top: 10): Promise~Clan[]~
-    Repo -> DB: SELECT clanes ORDER BY puntaje_cer_semanal DESC LIMIT 10
-    DB --> Repo: Clan[]
-    Repo --> Svc: Clan[]
-    Svc --> Page: GuerraGlobal, ranking: Clan[], cuentaRegresiva: number
-    Page --> Miembro: muestra top 10 clanes + clan propio destacado + cuenta regresiva
-else sin guerra activa
-    Svc --> Page: null
-    Page --> Miembro: muestra "Próxima guerra en preparación"
+Ctrl -> Svc: ObtenerEstado(clanId)
+Svc -> Svc: AsegurarGuerraActiva()
+
+group Cierre de guerras vencidas
+    Svc -> Repo: ListarActivasVencidas(ahoraUtc)
+    Repo -> DB: SELECT * FROM GuerrasGlobales\nWHERE Estado = 'ACTIVA' AND FechaFin <= ahora
+    DB --> Repo: GuerraGlobal[]
+    loop por cada guerra vencida
+        Svc -> Repo: Finalizar(guerraId)
+        Repo -> DB: UPDATE ParticipacionesGuerra SET Posicion = 1..N\n(orden: CER desc, nombre de clan)
+        Repo -> DB: UPDATE GuerrasGlobales SET Estado = 'FINALIZADA'
+    end
+end
+
+Svc -> Svc: SemanaDe(ahora) → clave "2026-S41",\nfin = próximo lunes 00:00 (hora Argentina)
+Svc -> Repo: BuscarPorSemana(clave)
+Repo -> DB: SELECT * FROM GuerrasGlobales WHERE Semana = clave
+DB --> Repo: GuerraGlobal | null
+
+alt no existe la guerra de la semana
+    Svc -> Repo: Crear(GuerraGlobal { Semana, ACTIVA, FechaFin })
+    Repo -> DB: INSERT INTO GuerrasGlobales
+    alt otra request la creó en paralelo (índice único en Semana)
+        DB --> Repo: error de clave duplicada
+        Svc -> Repo: BuscarPorSemana(clave)
+    end
+end
+
+Svc -> Repo: Ranking(guerraId)
+Repo -> DB: SELECT p.ClanId, c.Nombre, p.CerAcumulado\nFROM ParticipacionesGuerra p JOIN Clanes c\nORDER BY CerAcumulado DESC, Nombre
+DB --> Repo: PosicionGuerra[]
+Svc -> Svc: nuestro = posición del clan\nrival = pareja (impar → +1, par → −1)\nprogreso = CER / CER del líder
+
+Svc --> Ctrl: EstadoGuerraDto { semana, diasRestantes, nuestro, rival, top 10 }
+Ctrl --> Action: 200 OK
+Action --> Page: GuerraDto
+
+alt el clan ya sumó CER esta semana
+    Page --> Miembro: NUESTRA MANADA vs CLAN RIVAL + barras + top 10 + cuenta regresiva
+else el clan todavía no participa
+    Page --> Miembro: "Registrá un entrenamiento para entrar a la guerra" (FA-1)
+end
+alt sin pareja (cantidad impar de clanes)
+    Page --> Miembro: tarjeta rival "SIN RIVAL ASIGNADO" (FA-1)
 end
 
 @enduml
@@ -59,61 +107,92 @@ end
 
 ### CU-003-002 — Registrar un Entrenamiento
 
+> **Modificado S6:** la entrada por voz muestra lo que entendió y pide confirmación antes de completar los campos. El CER se acredita a la guerra de la semana con un incremento atómico y se suma XP al miembro (1 XP cada 10 de CER).
+
 ```plantuml
 @startuml CU-003-002
 
 actor Miembro
 
 box "Presentación" #1C1C2E
-  participant "RegistrarEntrenamientoPage" as Page
+  participant "RegistrarClient" as Page
+end box
+
+box "Externo" #2E2E10
+  participant "Web Speech API\n(navegador)" as Voice
+end box
+
+box "Server Actions" #1C2E2E
+  participant "registrarEntrenamiento()\n[arena.ts]" as Action
+end box
+
+box "API Controllers" #2E1C10
+  participant "ArenaController" as Ctrl
 end box
 
 box "Servicios" #1C2E1C
   participant "ArenaService" as Svc
-  participant "CERService" as CER
+  participant "CerService" as CER
+  participant "GuerraService" as GSvc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #3E2E10
   participant "EntrenamientoRepository" as EntreRepo
-  participant "RachaRepository" as RachaRepo
+  participant "ClanRepository" as ClanRepo
+  participant "GuerraRepository" as GRepo
   participant "MiembroRepository" as MiembroRepo
-end box
-
-box "Externo" #2E2E10
-  participant "Web Speech API" as Voice
+  participant "RachaRepository" as RachaRepo
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
-Miembro -> Page: selecciona ejercicio, ingresa peso y reps
-
-opt entrada por voz
-    Miembro -> Page: activa micrófono
-    Page -> Voice: startRecognition(): Promise~string~
-    Voice --> Page: transcripción ("80 kilos 10 repeticiones")
-    Page --> Miembro: autocompleta campos peso y reps
+opt entrada por voz (navegador compatible)
+    Miembro -> Page: presiona "DICTAR"
+    Page -> Voice: start() [lang = es-AR]
+    Voice --> Page: transcripción ("sentadilla 80 kilos 10 repeticiones")
+    Page -> Page: interpretarDictado(texto)\n→ { ejercicio, peso, reps }
+    Page --> Miembro: muestra lo que entendió
+    alt confirma
+        Miembro -> Page: "USAR ESTOS DATOS"
+        Page --> Miembro: autocompleta ejercicio, peso y reps
+    else descarta
+        Miembro -> Page: "DESCARTAR"
+    end
 end
 
-Miembro -> Page: confirma "REGISTRAR ESFUERZO"
-Page -> Svc: registrarEntrenamiento(datos: Entrenamiento): Promise~ResultadoCER~
-Svc -> CER: calcular(pesoKg, reps, arquetipo: Arquetipo): ResultadoCER
-CER --> Svc: ResultadoCER
-Svc -> EntreRepo: crear(entrenamiento: Entrenamiento): Promise~Entrenamiento~
-EntreRepo -> DB: INSERT INTO entrenamientos (ejercicio, peso_kg, repeticiones, puntaje_cer, miembro_id)
-DB --> EntreRepo: Entrenamiento persistido
-EntreRepo --> Svc: Entrenamiento
-Svc -> RachaRepo: actualizar(miembroId, datos): Promise~Racha~
-RachaRepo -> DB: UPDATE rachas SET dias_consecutivos = dias_consecutivos + 1 WHERE miembro_id = miembroId
-DB --> RachaRepo: Racha actualizada
-RachaRepo --> Svc: Racha
-Svc -> MiembroRepo: actualizarXP(miembroId, xpGanado): Promise~Miembro~
-MiembroRepo -> DB: UPDATE miembros SET xp = xp + xpGanado WHERE id = miembroId
-DB --> MiembroRepo: Miembro actualizado
-MiembroRepo --> Svc: Miembro
-Svc --> Page: ResultadoCER
-Page --> Miembro: muestra puntaje CER + XP ganado + estado de racha
+Miembro -> Page: ajusta campos a mano (siempre disponibles)
+Miembro -> Page: presiona "REGISTRAR ESFUERZO"
+Page -> Action: registrarEntrenamiento(formData)
+Action -> Action: validar (ejercicio no vacío, peso > 0, reps ≥ 1)
+Action -> Ctrl: POST /api/arena/entrenar { ejercicio, pesoKg, repeticiones }
+Ctrl -> Svc: RegistrarEntrenamiento(miembroId, ...)
+Svc -> CER: Calcular(pesoKg, reps, arquetipo)
+CER --> Svc: ResultadoCER { puntaje, modificador }
+Svc -> EntreRepo: Crear(entrenamiento)
+EntreRepo -> DB: INSERT INTO Entrenamientos
+
+opt el miembro tiene clan
+    Svc -> GSvc: AsegurarGuerraActiva()
+    GSvc --> Svc: guerra de la semana
+    Svc -> ClanRepo: SumarCER(clanId, puntaje)
+    ClanRepo -> DB: UPDATE Clanes SET PuntosClan = PuntosClan + @cer
+    Svc -> GRepo: SumarCER(guerraId, clanId, puntaje)
+    GRepo -> DB: UPDATE ParticipacionesGuerra\nSET CerAcumulado = CerAcumulado + @cer
+    alt el clan todavía no participaba
+        GRepo -> DB: INSERT INTO ParticipacionesGuerra
+    end
+end
+
+Svc -> MiembroRepo: ActualizarXP(miembroId, floor(puntaje / 10))
+MiembroRepo -> DB: UPDATE Miembros SET Xp = Xp + @xp
+Svc -> RachaRepo: CrearOActualizar(miembroId, ...)
+RachaRepo -> DB: UPDATE Rachas SET DiasConsecutivos = ...
+Svc --> Ctrl: ResultadoCER { puntaje, modificador, xpGanado }
+Ctrl --> Action: 200 OK
+Action --> Page: resultado
+Page --> Miembro: puntaje CER + XP ganada
 
 @enduml
 ```
@@ -161,6 +240,8 @@ Page --> Miembro: muestra desglose: peso x reps x multiplicador = puntajeCER
 
 ### CU-003-004 — Consultar el Historial de Batallas
 
+> **Modificado S6:** la pantalla combina lo que piden el texto del CU (batallas con VICTORIA/DERROTA, tasa de victoria y racha) y la secuencia aprobada (entrenamientos con filtro). Una batalla es una semana de Guerra Global cerrada; el rival es la pareja del ranking final.
+
 ```plantuml
 @startuml CU-003-004
 
@@ -170,46 +251,57 @@ box "Presentación" #1C1C2E
   participant "HistorialBatallasPage" as Page
 end box
 
+box "Server Actions" #1C2E2E
+  participant "getBatallas() /\ngetHistorial()\n[arena.ts]" as Action
+end box
+
+box "API Controllers" #2E1C10
+  participant "ArenaController" as Ctrl
+end box
+
 box "Servicios" #1C2E1C
+  participant "GuerraService" as GSvc
   participant "ArenaService" as Svc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #3E2E10
+  participant "GuerraRepository" as GRepo
   participant "EntrenamientoRepository" as EntreRepo
-  participant "AdminHistorialRepository" as LogRepo
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
-Miembro -> Page: accede al Historial de Batallas
-Page -> Svc: obtenerHistorial(miembroId, filtros, pagina: 1): Promise~Entrenamiento[]~
-Svc -> EntreRepo: listar(miembroId, filtros, 1): Promise~Entrenamiento[]~
-EntreRepo -> DB: SELECT * FROM entrenamientos WHERE miembro_id = miembroId LIMIT 10 OFFSET 0
-DB --> EntreRepo: Entrenamiento[]
-EntreRepo --> Svc: Entrenamiento[]
-Svc -> LogRepo: registrar(evento: "acceso_historial"): Promise~void~
-LogRepo -> DB: INSERT INTO admin_historial (miembro_id, tipo, timestamp)
-DB --> LogRepo: OK
-LogRepo --> Svc: void
-
-alt hay entrenamientos registrados
-    Svc --> Page: Entrenamiento[] (paginado, 10 por página)
-    Page --> Miembro: lista con ejercicio, CER, fecha y duración
-
-    Miembro -> Page: aplicar filtro por fecha o ejercicio
-    Page -> Svc: obtenerHistorial(miembroId, filtrosActualizados, 1)
-    Svc -> EntreRepo: listar(miembroId, filtrosActualizados, 1)
-    EntreRepo -> DB: SELECT * FROM entrenamientos WHERE miembro_id = miembroId AND filtros LIMIT 10
-    DB --> EntreRepo: Entrenamiento[] filtrado
-    EntreRepo --> Svc: Entrenamiento[]
-    Svc --> Page: Entrenamiento[] filtrado
-    Page --> Miembro: lista actualizada con filtros aplicados
-else sin entrenamientos
-    Svc --> Page: []
-    Page --> Miembro: "Todavía no registraste ningún entrenamiento"
+Miembro -> Page: accede al Historial de Batallas [?ejercicio=filtro]
+par batallas del clan
+    Page -> Action: getBatallas()
+    Action -> Ctrl: GET /api/arena/batallas
+    Ctrl -> GSvc: ObtenerHistorialBatallas(clanId)
+    GSvc -> GSvc: AsegurarGuerraActiva()\n[cierra la semana anterior si venció]
+    GSvc -> GRepo: ListarFinalizadasDeClan(clanId)
+    GRepo -> DB: SELECT guerras FINALIZADAS con participación del clan\n+ participaciones + clanes
+    DB --> GRepo: GuerraGlobal[]
+    GSvc -> GSvc: por guerra: rival = pareja de la posición final\nVICTORIA si nuestra posición < la del rival\nsin pareja → SIN_RIVAL
+    GSvc -> GSvc: total, tasa de victoria, racha de victorias consecutivas
+    GSvc --> Ctrl: HistorialBatallasDto
+    Ctrl --> Action: 200 OK
+else sesiones del miembro
+    Page -> Action: getHistorial(1, ejercicio)
+    Action -> Ctrl: GET /api/arena/historial?pagina=1&ejercicio=...
+    Ctrl -> Svc: ObtenerHistorial(miembroId, 1, ejercicio)
+    Svc -> EntreRepo: Listar(miembroId, 1, 20, ejercicio)
+    EntreRepo -> DB: SELECT TOP 20 * FROM Entrenamientos\nWHERE MiembroId = @id AND Ejercicio LIKE %filtro%\nORDER BY FechaHora DESC
+    DB --> EntreRepo: Entrenamiento[]
+    Ctrl --> Action: 200 OK
 end
+
+alt el clan tiene guerras cerradas
+    Page --> Miembro: estadísticas + compromisos recientes (VICTORIA / DERROTA / SIN RIVAL)
+else sin guerras cerradas (FA-2)
+    Page --> Miembro: estadísticas en cero + mensaje de instrucción
+end
+Page --> Miembro: lista de sesiones (filtrada si corresponde)
 
 @enduml
 ```
@@ -241,7 +333,7 @@ box "Repositorios" #2E1C10
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
 Miembro -> Page: accede a Evolución
@@ -289,7 +381,7 @@ box "Repositorios" #2E1C10
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
 Miembro -> Page: selecciona nodo con EstadoNodo.DISPONIBLE
@@ -347,7 +439,7 @@ box "Repositorios" #2E1C10
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
 Miembro -> Page: accede a la Bóveda
@@ -409,7 +501,7 @@ box "Repositorios" #2E1C10
 end box
 
 box "Base de Datos" #2E2E2E
-  database "PostgreSQL" as DB
+  database "SQL Server" as DB
 end box
 
 Miembro -> Page: navega el Marketplace

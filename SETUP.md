@@ -83,20 +83,13 @@ npm run dev
 
 ---
 
-## 3. Seed de datos de prueba
+## 3. Datos de prueba
 
-El seed crea un usuario y un clan para empezar a probar.
+No hay script de seed: los datos se crean usando la app (API y DB migrada levantadas).
 
-```bash
-cd silverback
-
-# Correr seed (requiere que la API esté UP y la DB migrada)
-npm run db:seed
-```
-
-Credenciales del seed:
-- **Email:** `seed@silverback.com`
-- **Password:** `password123`
+1. Ir a `http://localhost:3000` → redirige a `/onboarding/biometrics`.
+2. Completar los 3 pasos y en el Radar de Manadas usar **"Fundar mi propio clan"** → el usuario queda como SILVERBACK.
+3. Para probar permisos (Tácticas, Roles, Forja), registrar un segundo usuario en otra ventana de incógnito y unirlo al clan creado → queda como RECLUTA.
 
 ---
 
@@ -108,7 +101,6 @@ Credenciales del seed:
 | Levantar frontend | `cd silverback && npm run dev` |
 | Migrar DB | `cd silverback-api && dotnet ef database update --project SilverbackApi.Data --startup-project SilverbackApi.Api` |
 | Nueva migración | `cd silverback-api && dotnet ef migrations add NombreMigracion --project SilverbackApi.Data --startup-project SilverbackApi.Api` |
-| Seed | `cd silverback && npm run db:seed` |
 
 ---
 

@@ -3,8 +3,8 @@
 **Proyecto:** SILVERBACK — Plataforma de Gamificación del Entrenamiento Físico  
 **Entrega base:** E1 — Especificación Técnica (aprobada)  
 **Universidad:** UAI — Seminario de Trabajo Final (SAP 2026)  
-**Versión:** 1.0  
-**Sprints cubiertos:** S2 (PKG_INCORPORACIÓN end-to-end) + S3 (PKG_SANTUARIO I — Panel del Clan y La Forja)
+**Versión:** 1.2  
+**Sprints cubiertos:** S2 (PKG_INCORPORACIÓN end-to-end) + S3 (PKG_SANTUARIO I — Panel del Clan y La Forja) + S4 (PKG_SANTUARIO II — Tácticas y Roles + Arena adelantada) + S5 (Registro por voz) + S6 (Guerra Global e Historial de Batallas)
 
 ---
 
@@ -27,6 +27,18 @@ Este documento registra todas las modificaciones realizadas a la carpeta técnic
 | S3 | Diagrama ER | Se agrega entidad `ACEPTACION_DESAFIO` con PK compuesta | Diagrama modificado |
 | S3 | `secuencias-cu001-cu002.md` | Agregar diagramas de secuencia de CU-001-000 y CU-001-005 | Secuencia nueva |
 | S3 | `secuencias-cu005.md` | Agregar diagrama de secuencia de CU-005-007 | Secuencia nueva |
+| S3 | PKG_SANTUARIO | CU-002-007 "Publicar Desafío en La Forja" agregado para cubrir la creación de desafíos | CU nuevo — C-28 |
+| S3 | `secuencias-cu001-cu002.md` | Agregar diagrama de secuencia de CU-002-007 | Secuencia nueva |
+| S4 | PKG_SANTUARIO | Modelo de roles definitivo: 4 roles (SILVERBACK/BETA/EXPLORADOR/RECLUTA); "Líder de Clan" del STFI = SILVERBACK | Decisión de diseño |
+| S4 | PKG_ARENA | Modificadores CER por arquetipo fijados: VOLUMEN 1.10 · DEFINIDO 1.05 · ATLÉTICO 1.00 | Decisión de diseño |
+| S5 | PKG_ARENA | Carga por voz (Web Speech API, es-AR) con confirmación previa; formulario manual siempre visible | Implementación de secuencia aprobada |
+| S5 | PKG_ARENA | XP por entrenamiento: 1 XP cada 10 de CER (la secuencia aprobada pedía `actualizarXP` sin fórmula) | Decisión de diseño |
+| S6 | PKG_ARENA | Ciclo de la Guerra Global: semanal (lunes 00:00 → lunes 00:00, hora Argentina), apertura y cierre automáticos | Decisión de diseño |
+| S6 | PKG_ARENA | Rival = pareja consecutiva del ranking (1º vs 2º, 3º vs 4º…); al cierre gana el mejor posicionado | Decisión de diseño |
+| S6 | Diagrama ER | `PARTICIPACION_GUERRA` agrega `posicion : INTEGER` (puesto final de la semana) | Diagrama modificado |
+| S6 | `secuencias-cu003-cu004.md` | CU-003-001, CU-003-002 y CU-003-004 reescritos según la implementación | Secuencia modificada |
+| S6 | Secuencias (todas) | `database "PostgreSQL"` → `database "SQL Server"` (el stack es SQL Server desde S1) | Corrección |
+| S6 | Secuencias | Se insertan en sus archivos las 4 secuencias nuevas (CU-001-000, CU-001-005, CU-002-007, CU-005-007) | Inserción pendiente resuelta |
 
 ---
 
@@ -153,6 +165,41 @@ Los textos completos de cada CU están en `casos-de-uso.md`. Lo que sigue es el 
 
 ---
 
+### C-28 — CU-002-007: Publicar Desafío en La Forja
+
+> *Insertar después de CU-002-006 en la sección CU-002 — SANTUARIO.*  
+> *Motivación: CU-002-002 y CU-002-003 asumían que los desafíos ya existían, pero ningún CU describía su creación. Se agrega para completar el ciclo de vida de La Forja.*
+
+**Descripción:** Este caso de uso describe el proceso mediante el cual el Líder de Clan (Silverback) publica una nueva directiva semanal en La Forja. Los desafíos publicados quedan disponibles para que todos los miembros del clan los acepten y completen durante el período indicado. Cada desafío tiene un tier de dificultad (BRONCE, PLATA u ORO), una descripción de objetivo, una recompensa en XP y una fecha de expiración.
+
+**Actores:** Líder de Clan (Silverback), Sistema SilverBack
+
+**Precondiciones:** El usuario autenticado posee el rol SILVERBACK dentro del clan y se encuentra en la pantalla de La Forja.
+
+**Escenario Principal de Éxito:**
+
+1. El Silverback accede a La Forja desde el Santuario (`/santuario/forja`).
+2. El sistema muestra, exclusivamente para el Silverback, la sección desplegable "Publicar nueva directiva" en la parte superior de la pantalla.
+3. El Silverback presiona la sección para expandir el formulario de creación.
+4. El sistema presenta cuatro campos: DESCRIPCIÓN, TIER, XP RECOMPENSA y EXPIRA (fecha).
+5. El Silverback ingresa la descripción del objetivo (máximo 200 caracteres).
+6. El Silverback selecciona el tier de dificultad: ORO (alta exigencia), PLATA (media) o BRONCE (introductorio).
+7. El Silverback define la recompensa en XP que recibirán los miembros al completar el desafío (entre 1 y 10.000 XP).
+8. El Silverback selecciona la fecha de expiración del desafío.
+9. El Silverback presiona "PUBLICAR DIRECTIVA".
+10. El sistema valida que todos los campos estén completos y dentro de los rangos permitidos.
+11. El sistema persiste el desafío en la base de datos con estado ACTIVO, vinculado al clan.
+12. El sistema refresca la lista de directivas semanales, mostrando el nuevo desafío disponible para todos los miembros.
+13. Los miembros del clan ya pueden ver y aceptar la nueva directiva.
+
+**Flujos Alternativos:**
+
+- **[FA-1]** Si algún campo está vacío o fuera de rango, el sistema muestra el error específico sin enviar la solicitud al backend.
+- **[FA-2]** Si un miembro sin rol SILVERBACK intenta publicar (por manipulación directa de la solicitud), el backend responde con 403 Forbidden y el sistema muestra un mensaje de error.
+- **[FA-3]** Si ocurre un error de red al publicar, el sistema muestra "Error al publicar el desafío." y mantiene el formulario abierto con los datos intactos.
+
+---
+
 ## 3. Diagramas modificados
 
 ### 3.1 Diagrama Entidad-Relación (`diagrama-er.md`)
@@ -176,6 +223,8 @@ entity ACEPTACION_DESAFIO {
 DESAFIO ||--o{ ACEPTACION_DESAFIO : "es aceptado en"
 MIEMBRO ||--o{ ACEPTACION_DESAFIO : "acepta"
 ```
+
+> **Nota S4:** `DESAFIO.tier` **se mantiene** como `ENUM(BRONCE,PLATA,ORO)`, tal como está aprobado en la carpeta. El código se realineó a ese dominio; no hay cambio de diagrama ni de datos.
 
 ---
 
@@ -202,9 +251,33 @@ PACT ..> PAPI : HTTP REST (Bearer JWT)
 
 ---
 
+### 3.3 Diagrama Entidad-Relación — `PARTICIPACION_GUERRA.posicion` (S6)
+
+**Cambio:** se agrega el atributo `posicion` para guardar el puesto final de cada clan cuando cierra la Guerra Global de la semana. Con él se arma el Historial de Batallas (CU-003-004) sin recalcular rankings viejos.
+
+```plantuml
+entity PARTICIPACION_GUERRA {
+  * guerra_id : UUID <<PK,FK>>
+  * clan_id : UUID <<PK,FK>>
+  --
+  * puntaje_cer : DECIMAL DEFAULT 0
+  * posicion : INTEGER DEFAULT 0
+}
+```
+
+Aplicado en `diagrama-er.md` y `er-arena-santuario.md`. En código la columna ya existía (`ParticipacionGuerra.Posicion`): no requiere migración.
+
+---
+
+### 3.4 Diagramas de secuencia — corrección de stack (S6)
+
+Todas las secuencias decían `database "PostgreSQL"`. Desde S1 el motor es **SQL Server** (decisión registrada en `PLAN_EJECUCION_TECNOLOGIA.md`). Se corrigió en `secuencias-cu001-cu002.md`, `secuencias-cu003-cu004.md` y `secuencias-cu005.md`, y en la cabecera de `diagrama-er.md` y `diagramas-uml.md`. `Entregas/diagramas-secuencia.md` **no se tocó**: es la copia de lo ya entregado.
+
+---
+
 ## 4. Diagramas de Secuencia — CUs nuevos
 
-> *Estos diagramas deben insertarse en los archivos de secuencias correspondientes: CU-001-000 y CU-001-005 en `secuencias-cu001-cu002.md`; CU-005-007 en `secuencias-cu005.md`.*  
+> *Estos diagramas deben insertarse en los archivos de secuencias correspondientes: CU-001-000, CU-001-005 y CU-002-007 en `secuencias-cu001-cu002.md`; CU-005-007 en `secuencias-cu005.md`.*  
 > *Convención: Page → ServerAction → API Controller → Service → Repository → SQL Server.*
 
 ---
@@ -526,6 +599,113 @@ end
 
 ---
 
+### Secuencia C-28 — CU-002-007: Publicar Desafío en La Forja
+
+```plantuml
+@startuml CU-002-007
+
+actor "Silverback" as Lider
+
+box "Presentación" #1C1C2E
+  participant "ForjaClient\n(ChallengeForgePage)" as Page
+end box
+
+box "Server Actions" #1C2E2E
+  participant "crearDesafio()\n[santuario.ts]" as Action
+end box
+
+box "API Controllers" #2E1C10
+  participant "SantuarioController" as Ctrl
+end box
+
+box "Servicios" #1C2E1C
+  participant "SantuarioService" as Svc
+end box
+
+box "Repositorios" #3E2E10
+  participant "MiembroRepository" as MRepo
+  participant "SantuarioRepository" as SRepo
+end box
+
+box "Base de Datos" #2E2E2E
+  database "SQL Server" as DB
+end box
+
+Lider -> Page: abrirPantalla(/santuario/forja)
+Page --> Lider: mostrarSeccion("Publicar nueva directiva")\n[solo si rol = SILVERBACK]
+
+Lider -> Page: expandirFormulario()
+Page --> Lider: mostrarCampos(descripcion, tier, recompensaXp, fechaExpiracion)
+Lider -> Page: completarCampos(datos)
+Lider -> Page: presionarPublicarDirectiva()
+
+Page -> Action: crearDesafio(formData)
+Action -> Action: validarCampos()\n[no vacíos · XP entre 1 y 10.000]
+
+alt campos vacíos o fuera de rango
+    Action --> Page: { error: "Completá todos los campos." }
+    Page --> Lider: mostrarError()
+else datos válidos
+    Action -> Ctrl: POST /api/santuario/{clanId}/desafios\n{ descripcion, tier, recompensaXp, fechaExpiracion }\nAuthorization: Bearer sb_token
+    Ctrl -> Svc: CrearDesafio(clanId, silverbackId, ...)
+    Svc -> MRepo: BuscarPorId(silverbackId)
+    MRepo -> DB: SELECT * FROM Miembros WHERE Id = silverbackId
+    DB --> MRepo: Miembro
+    MRepo --> Svc: Miembro
+
+    alt rol != SILVERBACK
+        Svc --> Ctrl: throw UnauthorizedAccessException
+        Ctrl --> Action: 403 Forbidden
+        Action --> Page: { error: "Error al publicar el desafío." }
+        Page --> Lider: mostrarError()
+    else rol = SILVERBACK
+        Svc -> SRepo: CrearDesafio(desafio [estado = ACTIVO])
+        SRepo -> DB: INSERT INTO DesafiosClan
+        DB --> SRepo: DesafioClan { Id }
+        SRepo --> Svc: DesafioClan
+        Svc --> Ctrl: DesafioClan
+        Ctrl --> Action: 201 Created
+        Action -> Action: revalidatePath("/santuario/forja")
+        Action --> Page: {}
+        Page --> Lider: refrescarListaDirectivas()\n[nuevo desafío visible para todo el clan]
+    end
+end
+
+@enduml
+```
+
+---
+
+## 4.5 Sprints S5–S6 — decisiones de diseño y diferencias con los CU aprobados
+
+> Regla: los textos de los CU aprobados en E1 **no se modifican**. Donde la implementación se aparta del texto, se deja constancia acá. Las secuencias de CU-003-001, CU-003-002 y CU-003-004 se reescribieron en `secuencias-cu003-cu004.md` (marcadas "Modificado S6").
+
+### Decisiones de diseño
+
+| Tema | Decisión | Motivo |
+|---|---|---|
+| Ciclo de la Guerra Global | Semanal: lunes 00:00 → lunes 00:00, hora Argentina (UTC−3). Clave de semana ISO (`2026-S41`). | El STFI no define duración (riesgo marcado en el plan S6). |
+| Apertura y cierre | Perezosos: al entrar a la Arena, al ver el Historial o al registrar un entrenamiento, se cierran las guerras vencidas y se abre la de la semana si no existe. Sin procesos programados. | Evita depender de un servicio en segundo plano en las máquinas de facultad (S9). |
+| Participación | Participa todo clan que sume al menos un entrenamiento en la semana. | Coincide con la secuencia aprobada (el CER se acumula por clan). |
+| Rival | Pareja consecutiva del ranking: 1º vs 2º, 3º vs 4º… Con cantidad impar, el último queda "SIN RIVAL ASIGNADO". | Concilia el texto del CU (1 vs 1 con rival) con la secuencia y el ER aprobados (ranking global, sin campo de rival). |
+| Resultado | Al cierre gana el mejor posicionado de cada pareja (desempate por nombre de clan). | — |
+| Barra de progreso | Porcentaje del CER del clan respecto del líder del ranking. | El "objetivo de puntaje" del CU no tiene valor definido. |
+| Suma de CER | Incremento atómico en SQL (`UPDATE … SET CerAcumulado = CerAcumulado + @cer`). | Mitigación del riesgo de condición de carrera del plan S6. |
+| XP | 1 XP cada 10 de CER, al registrar. | La secuencia aprobada pide `actualizarXP` sin fórmula. |
+| Voz | Web Speech API en `es-AR`. Lo dictado se muestra y se confirma antes de completar los campos; el formulario manual está siempre visible; sin soporte (Firefox) se avisa. | Riesgos del plan S5 (soporte desigual entre navegadores, precisión). |
+
+### Diferencias entre el texto de los CU aprobados y la implementación
+
+| CU | El texto aprobado dice | La implementación hace | Motivo |
+|---|---|---|---|
+| CU-003-001 | "Objetivo de puntaje total" | Progreso relativo al líder del ranking | El objetivo no tiene valor definido en ninguna fuente |
+| CU-003-002 | No menciona la voz | Voz como opción, según la secuencia aprobada (`opt entrada por voz`) | La secuencia es más completa que el texto |
+| CU-003-003 | "Silverback (1.15x)", peso en libras, CONFIRMAR registra | Modificadores VOLUMEN 1.10 / DEFINIDO 1.05 / ATLÉTICO 1.00, peso en kg, la calculadora es solo vista previa | Decisión S4 (Silverback es un rol, no un arquetipo); el sistema trabaja en kg |
+| CU-003-004 | Duración "mm:ss" e intensidad de cada enfrentamiento | No aplica: una batalla es una semana de guerra | Atributos sin sentido para un ciclo semanal |
+| CU-003-004 | "INFORME COMPLETO" exportable y filtros por resultado/fecha/rival | Filtro por ejercicio en las sesiones; informe exportable fuera de alcance | Se prioriza el núcleo del CU para la entrega |
+
+---
+
 ## 5. Mapa de inserción en la carpeta impresa/digital
 
 | Sección de la carpeta | Acción | Artefacto |
@@ -533,11 +713,17 @@ end
 | **10.5.3 Casos de Uso** | Insertar antes de CU-001-001 | C-25 — CU-001-000 |
 | **10.5.3 Casos de Uso** | Insertar después de CU-001-004 | C-27 — CU-001-005 |
 | **10.5.3 Casos de Uso** | Insertar al final de CU-005 | C-26 — CU-005-007 |
+| **10.5.3 Casos de Uso** | Insertar después de CU-002-006 | C-28 — CU-002-007 |
 | **10.5.4 Diagramas de Secuencia** | Insertar al inicio de la subsección CU-001 | Secuencia CU-001-000 |
 | **10.5.4 Diagramas de Secuencia** | Insertar al final de la subsección CU-001 | Secuencia CU-001-005 |
+| **10.5.4 Diagramas de Secuencia** | Insertar al final de la subsección CU-002 | Secuencia CU-002-007 |
 | **10.5.4 Diagramas de Secuencia** | Insertar al final de la subsección CU-005 | Secuencia CU-005-007 |
 | **10.5.5 Diagrama de Paquetes** | Agregar paquete PKG_ACTIONS en nodo Next.js | `diagrama-paquetes.md` actualizado |
 | **10.5.8 Diagrama ER** | Agregar entidad ACEPTACION_DESAFIO en Fila 4 | `diagrama-er.md` actualizado |
+| **10.5.8 Diagrama ER** | Agregar `posicion` a PARTICIPACION_GUERRA | `diagrama-er.md` + `er-arena-santuario.md` actualizados |
+| **10.5.4 Diagramas de Secuencia** | Reemplazar CU-003-001, CU-003-002 y CU-003-004 | `secuencias-cu003-cu004.md` (marcados "Modificado S6") |
+| **10.5.4 Diagramas de Secuencia** | Cambiar "PostgreSQL" por "SQL Server" en todos los diagramas | `secuencias-*.md` |
+| **10.5.3 Casos de Uso** | Agregar nota de diferencias en CU-003-001 a CU-003-004 | Sección 4.5 de este documento |
 
 ---
 
@@ -546,6 +732,8 @@ end
 | Versión | Fecha | Sprint | Descripción |
 |---------|-------|--------|-------------|
 | 1.0 | Sep 2026 | S3 | Creación inicial — cubre S2 y S3 completos |
+| 1.1 | 22/09/2026 | S4 | Se completa C-28 (ficha + secuencia + mapa de inserción). `DESAFIO.tier` se mantiene BRONCE/PLATA/ORO. Decisiones de diseño S4: modelo de 4 roles y modificadores CER. |
+| 1.2 | 05/10/2026 | S5–S6 | Decisiones de diseño de la Guerra Global, voz y XP. Diferencias CU-003-001 a 004 vs implementación. ER: `posicion` en PARTICIPACION_GUERRA. Secuencias CU-003 reescritas, PostgreSQL → SQL Server, y las 4 secuencias nuevas insertadas en sus archivos. |
 
 ---
 

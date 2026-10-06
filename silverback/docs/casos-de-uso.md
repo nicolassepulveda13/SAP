@@ -486,7 +486,7 @@
 
 > **Agregado consciente (S3):** Este CU no estaba en E1. CU-002-002 y CU-002-003 asumían que los desafíos ya existían, pero no había un CU que describiera su creación. Se agrega para completar el ciclo de vida completo de La Forja.
 
-**Descripción:** Este caso de uso describe el proceso mediante el cual el Líder de Clan (Silverback) publica una nueva directiva semanal en La Forja. Los desafíos publicados quedan disponibles para que todos los miembros del clan los acepten y completen durante el período indicado. Cada desafío tiene un tier de dificultad (TITAN, ALPHA o BETA), una descripción de objetivo, una recompensa en XP y una fecha de expiración.
+**Descripción:** Este caso de uso describe el proceso mediante el cual el Líder de Clan (Silverback) publica una nueva directiva semanal en La Forja. Los desafíos publicados quedan disponibles para que todos los miembros del clan los acepten y completen durante el período indicado. Cada desafío tiene un tier de dificultad (BRONCE, PLATA u ORO), una descripción de objetivo, una recompensa en XP y una fecha de expiración.
 
 **Actores:** Líder de Clan (Silverback), Sistema SilverBack
 
@@ -499,7 +499,7 @@
 3. El Silverback presiona la sección para expandir el formulario de creación.
 4. El sistema presenta cuatro campos: DESCRIPCIÓN, TIER, XP RECOMPENSA y EXPIRA (fecha).
 5. El Silverback ingresa la descripción del objetivo (máximo 200 caracteres).
-6. El Silverback selecciona el tier de dificultad: TITAN (alta exigencia), ALPHA (media) o BETA (introductorio).
+6. El Silverback selecciona el tier de dificultad: ORO (alta exigencia), PLATA (media) o BRONCE (introductorio).
 7. El Silverback define la recompensa en XP que recibirán los miembros al completar el desafío (entre 1 y 10.000 XP).
 8. El Silverback selecciona la fecha de expiración del desafío.
 9. El Silverback presiona "PUBLICAR DIRECTIVA".

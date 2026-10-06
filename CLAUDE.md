@@ -17,11 +17,14 @@ Eres un asistente especializado en el proyecto **SILVERBACK** de Nicolas Sepulve
 El `Context.md` fue diseñado originalmente para la carpeta de **Negocios**. Para la carpeta de **Tecnología** puede requerir adaptaciones. Siempre consultar al usuario si el contenido aplica a tecnología antes de usarlo directamente.
 
 ## Stack tecnológico (referencia rápida)
-- Frontend: React Native + Expo
-- Backend/BaaS: Supabase (PostgreSQL)
-- Voz: Speech-to-Text nativo
-- Wearables: Apple Health + Google Fit APIs
+- Frontend: Next.js 16 (App Router) + React 19 + TypeScript + Tailwind — web-first (`silverback/`)
+- Backend: ASP.NET Core 9 Web API, Clean Architecture en 4 proyectos (`silverback-api/`)
+- Base de datos: SQL Server + EF Core 9 — **nunca Supabase**
+- Auth: JWT emitido por la API, en cookie HTTP-only `sb_token`
+- Voz: Web Speech API del navegador (es-AR)
+- Wearables: fuera de alcance (10.4.3)
 
-## Estado actual (mayo 2026)
-- Canvas ✅ aprobado
-- E1 🔄 en construcción
+## Estado actual (octubre 2026)
+- Canvas ✅ aprobado · E1 Tecnología ✅ entregada
+- Desarrollo: S1–S4 ✅ · S5–S6 implementadas, pendientes de prueba — ver `PLAN_EJECUCION_TECNOLOGIA.md` y `SEMANA_4_RESUMEN.md`
+- 28 CU (24 de E1 + 4 agregados); cambios a la carpeta en `silverback/docs/Modificacion-Carpeta.md`

@@ -222,7 +222,7 @@ El paso 2 usa `fetch` directo (no `apiFetch`) porque el token preliminar no est�
   - `useActionState(crearDesafio, undefined)` → `[crearState, crearAction, crearPending]`
   - `useState(false)` → `mostrarCrear` — toggle para el formulario de crear desafío
 - **Formulario crear desafío**: visible solo si `esSilverback === true`
-  - Campos: `descripcion` (text, max 200), `tier` (select: TITAN/ALPHA/BETA), `recompensaXp` (number 1-10000), `fechaExpiracion` (date)
+  - Campos: `descripcion` (text, max 200), `tier` (select: BRONCE/PLATA/ORO), `recompensaXp` (number 1-10000), `fechaExpiracion` (date)
   - `<input type="hidden" name="clanId" value={clanId} />` — el Server Action lee esto del FormData
 - **Tarjetas de desafío**: si `d.aceptadoPorMi` muestra "PROTOCOLO ASEGURADO" (texto tachado) en vez del botón
 
@@ -283,10 +283,10 @@ El paso 2 usa `fetch` directo (no `apiFetch`) porque el token preliminar no est�
 
 ### Enums del dominio
 - `Arquetipo`: `VOLUMEN`, `DEFINIDO`, `ATLETICO`
-- `Rol`: `RECLUTA`, `ALPHA`, `SILVERBACK`
+- `Rol`: `SILVERBACK`, `BETA`, `EXPLORADOR`, `RECLUTA`
 - `Rango`: varía según XP
 - `NivelExperiencia`: `PRINCIPIANTE`, `INTERMEDIO`, `AVANZADO`, `ELITE`
-- `TierDesafio`: `TITAN`, `ALPHA`, `BETA`
+- `TierDesafio`: `BRONCE`, `PLATA`, `ORO`
 - `EstadoDesafio`: `ACTIVO`, `EXPIRADO`
 - `EstadoRacha`: `ACTIVA`, `ROTA`
 - `EstadoFatiga`: `OPTIMA`, `MODERADA`, `ALTA`, `CRITICA`
