@@ -73,6 +73,20 @@ dotnet clean
 
 Y después levantar de nuevo las dos terminales.
 
+### Tests E2E (Playwright)
+
+```powershell
+cd C:\Users\nico_\Documents\repos\SAP\silverback
+npm run test:e2e
+npx playwright show-report   # reporte HTML con capturas y trazas de los fallos
+```
+
+- Si la API y el front no están corriendo, **los levanta Playwright** y los baja al terminar. Si ya están arriba, los reutiliza.
+- Cada corrida crea sus propios usuarios y clanes (`e2e-…@silverback.local`, clanes `E2E Alfa/Beta …`), así que no depende de los datos que haya.
+- Son 11 tests: incorporación, pantallas ocultas, Tácticas, Forja (publicar y aceptar), permisos de Roles (403 y 400), registro manual y por voz (micrófono simulado), sin soporte de voz, Guerra Global con rival, cierre de semana con VICTORIA/DERROTA y expulsión.
+- ⚠️ El test de cierre de semana **modifica la guerra activa** en la base (la da por vencida). Antes hace un backup en `…\MSSQL\Backup\silverback_pre_e2e_<id>.bak`.
+- Si la base está en otra PC: `$env:E2E_SQL_SERVER = "OTRA-PC\SQLEXPRESS"; npm run test:e2e`.
+
 ### Si cambian las migraciones (después de un pull)
 
 ```powershell
@@ -90,7 +104,7 @@ Solo se ven las pantallas **integradas con la API**. Las maquetadas sin integrac
 |---|---|---|
 | Incorporación | Login · Biometría · Arquetipo · Radar de Manadas (unirse / fundar) | ✅ Integrado |
 | Santuario | Panel del Clan · La Forja · Sala de Tácticas · Roles | ✅ Integrado |
-| Arena | Guerra Global · Registrar (manual + voz) · Calculadora CER · Historial de Batallas | 🧪 Implementado en S5–S6 (05/10), falta probar en ejecución |
+| Arena | Guerra Global · Registrar (manual + voz) · Calculadora CER · Historial de Batallas | ✅ Integrado en S5–S6 (05/10), verificado con E2E |
 | Evolución / Bóveda | Evolución · Habilidades · Botín · Tienda | 🙈 Oculto (S7) |
 | Perfil | Dashboard · Racha · Fatiga · Trofeos · Beneficios | 🙈 Oculto (S8) |
 

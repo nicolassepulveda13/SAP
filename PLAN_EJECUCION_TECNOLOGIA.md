@@ -34,7 +34,13 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 
 ## Resumen ejecutivo
 
-> **Estado real al 22/09/2026:** el CU total es **28** (24 aprobados en E1 + CU-001-000, CU-001-005, CU-002-007, CU-005-007). En S4 se adelantó el núcleo de Arena (planificado para S5/S6) en paralelo con Santuario II.
+> **Estado real al 05/10/2026:** el CU total es **28** (24 aprobados en E1 + CU-001-000, CU-001-005, CU-002-007, CU-005-007). S1–S6 completas. Los paquetes Incorporación, Santuario y Arena están cubiertos por la suite E2E `silverback/e2e/` (11 tests, Playwright).
+>
+> **Bugs encontrados por la E2E (05/10) y corregidos:**
+> - `POST /api/santuario/{clanId}/desafios` devolvía la entidad de EF: ciclo de serialización (500) y fuga del `PasswordHash` del líder. Ahora devuelve un DTO (igual `GET /api/santuario/{clanId}`).
+> - Aceptar un desafío (CU-002-003) **nunca funcionó desde la web**: el endpoint responde 204 y `apiFetch` intentaba parsear JSON vacío. Corregido en `lib/api-client.ts`.
+>
+> **Pendiente para S7/S8:** `EvolucionController` y `PerfilController` (módulos ocultos) también devuelven entidades sin DTO; revisar al implementarlos.
 
 | # | Semana | Entregable | CU / Alcance |
 |---|---|---|---|
@@ -42,8 +48,8 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 | 2 | S2 ✅ | PKG_INCORPORACIÓN — Onboarding Conectado End-to-End | CU-001-000 · CU-001-001 · CU-001-002 · CU-001-003 · CU-001-004 |
 | 3 | S3 ✅ | PKG_SANTUARIO I — Panel del Clan y La Forja | CU-002-001 · CU-002-002 · CU-002-003 · CU-002-007 · CU-001-005 |
 | 4 | S4 ✅ | PKG_SANTUARIO II — Sala de Tácticas y Gestión de Roles **+ Arena adelantada** | CU-002-004 · CU-002-005 · CU-002-006 · (CU-003-002 · CU-003-003 adelantados) |
-| 5 | S5 🧪 | Motor CER y Registro de Entrenamiento por Voz | CU-003-002 · CU-003-003 — voz + XP implementados (05/10); **falta prueba en ejecución** |
-| 6 | S6 🧪 | PKG_ARENA — Guerra Global e Historial de Batallas | CU-003-001 · CU-003-004 — ciclo semanal + historial de batallas implementados (05/10); **falta prueba en ejecución** |
+| 5 | S5 ✅ | Motor CER y Registro de Entrenamiento por Voz | CU-003-002 · CU-003-003 — voz + XP, verificado con E2E (05/10) |
+| 6 | S6 ✅ | PKG_ARENA — Guerra Global e Historial de Batallas | CU-003-001 · CU-003-004 — ciclo semanal + historial de batallas, verificado con E2E (05/10) |
 | 7 | S7 | PKG_EVOLUCIÓN / BÓVEDA — Progresión, Árbol de Habilidades y Marketplace | CU-004-001 · CU-004-002 · CU-004-003 · CU-004-004 |
 | 8 | S8 | PKG_PERFIL — Dashboard, Racha, Fatiga, Trofeos y Beneficios | CU-005-001 · CU-005-002 · CU-005-003 · CU-005-004 · CU-005-005 · CU-005-006 |
 | 9 | S9 | Análisis de Entorno de Despliegue en Máquinas de Facultad | No aplica a un CU — es una tarea de infraestructura y viabilidad de despliegue. |
@@ -235,7 +241,7 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 - [x] Implementar fallback de carga manual siempre visible, no oculto, para navegadores sin soporte de Web Speech API. Sin soporte se muestra un aviso y el botón no aparece.
 - [x] Acumular el CER calculado al marcador de clan correspondiente. *(hecho en S4)*
 - [x] Sumar XP al miembro (lo pide la secuencia aprobada): 1 XP cada 10 de CER. La pantalla de éxito muestra "+N XP".
-- [ ] **Probar en ejecución:** dictado en Chrome con micrófono real; aviso en Firefox.
+- [x] Probado con E2E (Playwright, micrófono simulado): el dictado se confirma y completa los campos; sin soporte se avisa. Queda pendiente probar con un micrófono real en Chrome.
 
 **Integraciones:** Web Speech API (nativa del navegador) · SQL Server.
 
@@ -267,7 +273,7 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 - [x] `GuerraGlobalPage`: NUESTRA MANADA vs CLAN RIVAL, barras relativas al líder, cuenta regresiva, top 10. `GET /api/arena/guerra` (el `clanId` sale de la base).
 - [x] `HistorialBatallasPage`: estadísticas (total, tasa de victoria, racha) + batallas cerradas (`GET /api/arena/batallas`) + sesiones con filtro por ejercicio (`GET /api/arena/historial?ejercicio=`).
 - [x] Guerra Global vuelve a ser visible (se sacó de `PANTALLAS_OCULTAS` en `lib/features.ts`).
-- [ ] **Probar en ejecución:** apertura automática, ranking con 2+ clanes, cierre de una semana vencida y resultado en el historial de ambos clanes.
+- [x] Probado con E2E: apertura automática, ranking con 2 clanes, cierre de una semana vencida (simulada en la base) y VICTORIA / DERROTA en el historial de ambos clanes.
 
 **Integraciones:** SQL Server · Motor CER (Semana 5) como dependencia directa.
 
