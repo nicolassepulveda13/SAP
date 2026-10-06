@@ -2,6 +2,8 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Scalar.AspNetCore;
 using SilverbackApi.Data;
 using SilverbackApi.Data.Repositories;
 using SilverbackApi.Services;
@@ -63,7 +65,23 @@ builder.Services.AddControllers()
         opt.JsonSerializerOptions.DefaultIgnoreCondition =
             System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
-builder.Services.AddOpenApi();
+// OpenAPI + esquema Bearer para poder pegar el JWT en Scalar (/scalar/v1)
+builder.Services.AddOpenApi(opt => opt.AddDocumentTransformer((doc, _, _) =>
+{
+    doc.Components ??= new OpenApiComponents();
+    doc.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "JWT devuelto por /api/auth/login",
+    };
+    doc.SecurityRequirements.Add(new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" } }] = []
+    });
+    return Task.CompletedTask;
+}));
 
 builder.Services.AddCors(opt =>
     opt.AddDefaultPolicy(p => p
@@ -75,7 +93,12 @@ builder.Services.AddCors(opt =>
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
+{
     app.MapOpenApi();
+    app.MapScalarApiReference(opt => opt
+        .WithTitle("SilverBack API")
+        .AddPreferredSecuritySchemes("Bearer"));
+}
 
 app.UseCors();
 app.UseAuthentication();
