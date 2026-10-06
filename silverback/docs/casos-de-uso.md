@@ -22,19 +22,19 @@
 
 | Componente | Código | Nombre | Estado |
 |-----------|--------|--------|--------|
-| **CU-001 — INCORPORACIÓN** | CU-001-000 | Crear Cuenta / Iniciar Sesión | ✏️ Modificado S2 |
+| **CU-001 — INCORPORACIÓN** | CU-001-000 | Crear Cuenta / Iniciar Sesión | ➕ Agregado S2 (C-25) |
 | | CU-001-001 | Registrar Datos Biométricos Iniciales | ✅ Aprobado E1 |
 | | CU-001-002 | Seleccionar Arquetipo de Entrenamiento | ✅ Aprobado E1 |
 | | CU-001-003 | Buscar Manadas Disponibles | ✅ Aprobado E1 |
 | | CU-001-004 | Unirse a una Manada | ✅ Aprobado E1 |
-| | CU-001-005 | Fundar una Manada | ✅ Implementado S3 |
+| | CU-001-005 | Fundar una Manada | ➕ Agregado S3 (C-27) |
 | **CU-002 — SANTUARIO** | CU-002-001 | Visualizar el Panel del Santuario | ✅ Aprobado E1 |
 | | CU-002-002 | Consultar Desafíos en La Forja | ✅ Aprobado E1 |
 | | CU-002-003 | Aceptar un Desafío Semanal | ✅ Aprobado E1 |
 | | CU-002-004 | Comunicarse en la Sala de Tácticas | ✅ Aprobado E1 |
 | | CU-002-005 | Asignar Rol a un Miembro del Clan | ✅ Aprobado E1 |
 | | CU-002-006 | Expulsar a un Miembro del Clan | ✅ Aprobado E1 |
-| | CU-002-007 | Publicar Desafío en La Forja | ✅ Implementado S3 |
+| | CU-002-007 | Publicar Desafío en La Forja | ➕ Agregado S3 (C-28) |
 | **CU-003 — ARENA** | CU-003-001 | Consultar el Estado de la Guerra Global | ✅ Aprobado E1 |
 | | CU-003-002 | Registrar un Entrenamiento | ✅ Aprobado E1 |
 | | CU-003-003 | Calcular el Puntaje CER | ✅ Aprobado E1 |
@@ -49,7 +49,7 @@
 | | CU-005-004 | Monitorear Estado de Fatiga Biométrica | ✅ Aprobado E1 |
 | | CU-005-005 | Consultar Vitrina de Trofeos | ✅ Aprobado E1 |
 | | CU-005-006 | Reclamar Beneficio de un Aliado Comercial | ✅ Aprobado E1 |
-| | CU-005-007 | Gestionar Datos de Cuenta | ✏️ Agregado S2 |
+| | CU-005-007 | Gestionar Datos de Cuenta | ➕ Agregado S2 (C-26) — pantalla pendiente (S8) |
 
 ---
 
@@ -65,7 +65,9 @@
 
 ## CU-001-000: Crear Cuenta / Iniciar Sesión
 
-**Descripción:** Este caso de uso describe el proceso mediante el cual el usuario nuevo crea una cuenta en la plataforma SilverBack ingresando sus datos de acceso, o bien el usuario existente inicia sesión con sus credenciales. Es el punto de entrada absoluto del sistema. Para usuarios nuevos, la creación de cuenta emite un JWT provisional (`onboardingCompletado = false`) y redirige al flujo de incorporación (CU-001-001). Para usuarios existentes con onboarding completo, el login emite un JWT definitivo y redirige al Santuario.
+> **Corregido 06/10:** el texto anterior describía una pantalla de login con pestañas "CREAR CUENTA" / "INICIAR SESIÓN" que crea la cuenta al instante. La implementación usa un formulario unificado en Calibración Biométrica y crea la cuenta al elegir clan.
+
+**Descripción:** Este caso de uso describe el proceso mediante el cual el usuario nuevo crea una cuenta en la plataforma SilverBack ingresando sus datos de acceso, o bien el usuario existente inicia sesión con sus credenciales. Es el punto de entrada absoluto del sistema. Para usuarios nuevos, los datos de credenciales (nombre, email, contraseña) se capturan en la pantalla de Calibración Biométrica como parte de un formulario unificado y se almacenan temporalmente hasta que el usuario completa el onboarding. Para usuarios existentes con onboarding completo, el login emite un JWT definitivo y redirige al Santuario.
 
 **Actores:** Miembro (nuevo o existente), Sistema SilverBack
 
@@ -73,29 +75,30 @@
 
 **Escenario Principal de Éxito — Usuario nuevo:**
 
-1. El sistema presenta la pantalla de acceso con dos secciones: "INICIAR SESIÓN" y "CREAR CUENTA".
-2. El usuario selecciona la sección "CREAR CUENTA".
-3. El usuario completa los campos: NOMBRE (nombre de clan), EMAIL y CONTRASEÑA.
+1. El sistema redirige al usuario a la pantalla de Calibración Biométrica (`/onboarding/biometrics`) al detectar ausencia de sesión.
+2. El sistema presenta el formulario unificado con los campos: NOMBRE, EMAIL, CONTRASEÑA, EDAD, PESO (KG), ALTURA (CM) y NIVEL DE EXPERIENCIA.
+3. El usuario completa todos los campos del formulario.
 4. El usuario presiona "CONTINUAR →".
-5. El sistema valida que el email no esté registrado y que la contraseña cumpla el formato mínimo.
-6. El sistema crea el perfil del miembro con `onboardingCompletado = false` y emite un JWT provisional.
-7. El sistema almacena el JWT en una cookie HTTP-only `sb_token`.
-8. El sistema redirige al usuario a la pantalla de Calibración Biométrica (CU-001-001, paso 1 de 3).
+5. El sistema valida los campos de credenciales (email con formato válido, contraseña no vacía) y los datos biométricos (rangos: edad 14-99, peso 30-300 kg, altura 100-250 cm).
+6. El sistema almacena temporalmente todos los datos en una cookie HTTP-only `sb_onboarding` con TTL de 30 minutos.
+7. El sistema redirige al usuario a la pantalla de selección de arquetipo (CU-001-002, paso 2 de 3).
+8. La cuenta en base de datos se crea en el paso CU-001-004 (Unirse a una Manada) o CU-001-005 (Fundar una Manada), no en este paso.
 
 **Escenario Principal de Éxito — Usuario existente:**
 
-1. El usuario completa los campos EMAIL y CONTRASEÑA en la sección "INICIAR SESIÓN".
-2. El usuario presiona "INICIAR SESIÓN".
-3. El sistema valida las credenciales contra la base de datos.
-4. El sistema emite un JWT con `onboardingCompletado = true` (usuario ya completó el flujo).
-5. El sistema almacena el JWT en una cookie HTTP-only `sb_token`.
-6. El sistema redirige al usuario al Santuario (`/santuario`).
+1. El usuario navega a `/login` desde el enlace "¿Ya tenés cuenta? Iniciá sesión" en la pantalla de Calibración Biométrica.
+2. El usuario completa los campos EMAIL y CONTRASEÑA.
+3. El usuario presiona "INICIAR SESIÓN".
+4. El sistema valida las credenciales contra la base de datos.
+5. El sistema emite un JWT con `onboarding_completado = true` y los claims del clan y rol del miembro.
+6. El sistema almacena el JWT en una cookie HTTP-only `sb_token`.
+7. El sistema redirige al usuario al Santuario (`/santuario`).
 
 **Flujos Alternativos:**
 
-- **[FA-1]** Si el email ya está registrado al crear cuenta, el sistema muestra "Este email ya tiene una cuenta. ¿Querés iniciar sesión?"
+- **[FA-1]** Si algún campo biométrico está fuera del rango permitido, el sistema muestra el mensaje de error específico ("La edad debe estar entre 14 y 99 años.") y no avanza.
 - **[FA-2]** Si las credenciales de login son incorrectas, el sistema muestra "Email o contraseña incorrectos." sin indicar cuál falló.
-- **[FA-3]** Si el usuario existente tiene `onboardingCompletado = false` (creó cuenta pero no terminó el onboarding), el sistema lo redirige a la última pantalla de incorporación pendiente.
+- **[FA-3]** Si el usuario ya tiene cuenta pero no tiene clan (no terminó el onboarding o fue expulsado), el sistema lo lleva al Radar de Manadas (CU-001-003) en lugar de volver a pedirle los datos de registro.
 
 ---
 
@@ -1055,6 +1058,22 @@
 
 ---
 
+## CU-001-000 — Crear Cuenta / Iniciar Sesión
+
+> **Agregado:** CU nuevo posterior a E1 (ver `Modificacion-Carpeta.md`).
+
+**Actores Primarios:** Miembro (nuevo o existente)
+
+**Actores Secundarios:** Sistema SilverBack
+
+**Evento Disparador:** El usuario abre la aplicación sin una sesión activa (el sistema lo lleva a Calibración Biométrica) o presiona "¿Ya tenés cuenta? Iniciá sesión".
+
+**Post Condición:** Usuario nuevo: sus credenciales y datos biométricos quedan guardados temporalmente (cookie `sb_onboarding`, 30 minutos) y avanza al paso de arquetipo; la cuenta se crea al unirse o fundar un clan. Usuario existente: queda autenticado con un JWT en la cookie HTTP-only `sb_token` y accede al Santuario.
+
+**Extensiones:** La contraseña se almacena con hash BCrypt. El email es único en el sistema.
+
+---
+
 ## CU-001-001 — Registrar Datos Biométricos Iniciales
 
 **Actores Primarios:** Miembro
@@ -1098,6 +1117,22 @@
 **Evento Disparador:** El usuario identificó el clan de destino en el Radar de Manadas (CU-001-003) y presiona el botón "UNIRSE" en la tarjeta del clan seleccionado.
 
 **Post Condición:** El usuario queda registrado como miembro del clan con rol RECLUTA, el onboarding queda marcado como completado y el contador de miembros del clan se incrementa en una unidad.
+
+---
+
+## CU-001-005 — Fundar una Manada
+
+> **Agregado:** CU nuevo posterior a E1 (ver `Modificacion-Carpeta.md`).
+
+**Actores Primarios:** Miembro
+
+**Actores Secundarios:** Sistema SilverBack
+
+**Evento Disparador:** En el Radar de Manadas, el usuario despliega "Fundar mi propio clan", ingresa un nombre y presiona "FUNDAR CLAN".
+
+**Post Condición:** El clan queda creado con el usuario como único miembro y líder; el usuario queda con rol SILVERBACK, onboarding completado y una sesión con el clan asignado.
+
+**Extensiones:** El nombre del clan es único. Si el usuario ya pertenece a un clan, la operación se rechaza ("Ya pertenecés a un clan.").
 
 ---
 
@@ -1170,6 +1205,22 @@
 **Post Condición:** El miembro queda eliminado del clan, su acceso a todas las funcionalidades colectivas es revocado y el contador de capacidad del clan se decrementa en una unidad.
 
 **Extensiones:** La expulsión es irreversible; el sistema no ofrece mecanismo de reintegración desde esta pantalla. Cada expulsión queda registrada en el historial de administración del clan con marca de tiempo y el nombre del Líder responsable.
+
+---
+
+## CU-002-007 — Publicar Desafío en La Forja
+
+> **Agregado:** CU nuevo posterior a E1 (ver `Modificacion-Carpeta.md`).
+
+**Actores Primarios:** Líder de Clan (Silverback)
+
+**Actores Secundarios:** Sistema SilverBack, Miembros del clan
+
+**Evento Disparador:** El Silverback despliega "Publicar nueva directiva" en La Forja, completa el formulario y presiona "PUBLICAR DIRECTIVA".
+
+**Post Condición:** El desafío queda registrado con estado ACTIVO, vinculado al clan, y visible para todos los miembros para que lo acepten (CU-002-003).
+
+**Extensiones:** Solo el rol SILVERBACK ve el formulario; un pedido de otro rol se rechaza con 403. Tier: BRONCE, PLATA u ORO. Recompensa entre 1 y 10.000 XP.
 
 ---
 
@@ -1332,6 +1383,22 @@
 **Post Condición:** El beneficio queda activado o el código de descuento queda generado y disponible para su uso en la tienda del aliado.
 
 **Extensiones:** Los beneficios con estado "BLOQUEADO" no ejecutan ninguna acción al presionar su botón; el sistema informa el nivel mínimo requerido. Los beneficios con estado "EXPIRADO" tampoco ejecutan acciones.
+
+---
+
+## CU-005-007 — Gestionar Datos de Cuenta
+
+> **Agregado:** CU nuevo posterior a E1 (ver `Modificacion-Carpeta.md`).
+
+**Actores Primarios:** Miembro
+
+**Actores Secundarios:** Sistema SilverBack
+
+**Evento Disparador:** El usuario accede a "Cuenta" desde el menú de perfil (`/perfil/cuenta`).
+
+**Post Condición:** Los datos modificados (nombre, email o contraseña) quedan actualizados; si cambió la contraseña, se almacena el nuevo hash.
+
+**Extensiones:** Pantalla pendiente de implementación (PKG_PERFIL, S8).
 
 ---
 

@@ -4,7 +4,7 @@
 **Actualizado:** 06/10/2026
 **Estado:** S1 ✅ · S2 ✅ · S3 ✅ · S4 ✅ · S5 ✅ · S6 ✅ — verificado con 13 tests E2E · todo commiteado y subido a `origin/main`
 
-> Este documento es el punto de entrada. El detalle de cada sprint está en `PLAN_EJECUCION_TECNOLOGIA.md`. Los cambios para la carpeta del TP están en `silverback/docs/Modificacion-Carpeta.md` (v1.3).
+> Este documento es el punto de entrada. El detalle de cada sprint está en `PLAN_EJECUCION_TECNOLOGIA.md`. Los cambios para la carpeta del TP están en `silverback/docs/Modificacion-Carpeta.md` → **sección 0, checklist de balanceo** (v1.4).
 
 ---
 
@@ -15,7 +15,7 @@
 - **Oculto hasta implementarse:** Evolución/Bóveda (S7) y Perfil (S8). Las pantallas están, pero no se muestran.
 - **28 casos de uso:** 24 aprobados en E1 + 4 agregados (C-25 a C-28).
 - **Calidad:** suite E2E de 13 tests con Playwright. Encontró 7 bugs reales (incluida una fuga de contraseñas) y quedaron todos corregidos.
-- **Carpeta del TP:** `Modificacion-Carpeta.md` v1.3 tiene todo lo que hay que insertar o anotar, más la lista de brechas que faltan implementar.
+- **Carpeta del TP:** todo lo que hay que balancear está en **una sola checklist**: `silverback/docs/Modificacion-Carpeta.md` → **sección 0** (v1.4, 33 ítems ordenados por sección de la guía SAP, más los pendientes).
 
 ---
 
@@ -237,7 +237,7 @@ Todas están registradas para el profe en `Modificacion-Carpeta.md` (secciones 1
 
 | Documento | Para qué | Estado |
 |---|---|---|
-| `silverback/docs/Modificacion-Carpeta.md` | **Lo que hay que cambiar en la carpeta** para el profe: CU nuevos, diagramas, decisiones, diferencias, mapa de inserción y brechas | ✅ v1.3 (06/10) |
+| `silverback/docs/Modificacion-Carpeta.md` | **Lo que hay que cambiar en la carpeta**: la sección 0 es la checklist única (qué, dónde y de dónde copiar); el resto es el contenido a copiar | ✅ v1.4 (06/10) |
 | `silverback/docs/casos-de-uso.md` | Los 28 CU | ✅ |
 | `silverback/docs/secuencias-*.md` | Diagramas de secuencia (CU-003 reescritos en S6, 4 nuevos insertados, SQL Server) | ✅ |
 | `silverback/docs/diagrama-er.md` · `er-*.md` | ER (`ACEPTACION_DESAFIO`, `posicion` en `PARTICIPACION_GUERRA`) | ✅ |

@@ -48,17 +48,20 @@ flowchart TB
             P18["**P18** · Monitor de Fatiga\n/perfil/fatiga"]
             P19["**P19** · Vitrina de Trofeos\n/perfil/trofeos"]
             P20["**P20** · Beneficios Aliados\n/perfil/beneficios"]
+            P21["**P21** · Datos de Cuenta\n/perfil/cuenta"]
         end
     end
 
-    %% Flujo de incorporación (lineal)
-    ROOT -->|sin sesión| P0
+    %% Flujo de incorporación (lineal) — actualizado 06/10 (CU-001-000)
+    ROOT -->|sin sesión| P1
     ROOT -->|sesión activa| P4
-    P0 -->|CREAR CUENTA| P1
+    P1 -.->|¿Ya tenés cuenta? Iniciá sesión| P0
+    P0 -.->|¿No tenés cuenta?| P1
     P0 -->|INICIAR SESIÓN| P4
     P1 -->|CONTINUAR| P2
     P2 -->|CONFIRMAR ARQUETIPO| P3
-    P3 -->|UNIRSE / INICIAR VIAJE| P4
+    P3 -->|UNIRSE / FUNDAR CLAN| P4
+    P7 -.->|miembro expulsado| P3
 
     %% Santuario → sub-páginas
     P4 -->|RANGO DE 7 DÍAS| P17
@@ -84,6 +87,7 @@ flowchart TB
     P16 --- P18
     P16 --- P19
     P16 --- P20
+    P16 --- P21
 
     %% Estilos
     style ROOT fill:#F97316,color:#fff,stroke:#EA6800
@@ -115,6 +119,7 @@ flowchart TB
     style P18 fill:#2e2e2e,stroke:#555,color:#fff
     style P19 fill:#2e2e2e,stroke:#555,color:#fff
     style P20 fill:#2e2e2e,stroke:#555,color:#fff
+    style P21 fill:#2e2e2e,stroke:#555,color:#fff
 ```
 
 ---
@@ -125,11 +130,13 @@ flowchart TB
 
 Flujo **lineal de 3 pasos** sin barra de navegación. El usuario no puede saltar pasos ni acceder a la aplicación principal hasta completarlo.
 
+> **Actualizado 06/10:** el punto de entrada sin sesión es **P1** (formulario unificado con nombre, email y contraseña — CU-001-000); **P0 Login** se alcanza desde el enlace "¿Ya tenés cuenta? Iniciá sesión". La cuenta se crea en P3 al unirse o fundar un clan (CU-001-004 / CU-001-005). Una cuenta existente sin clan (por ejemplo, un miembro expulsado desde P7) vuelve directamente a **P3**.
+
 | Paso | Pantalla | Ruta | Acción de avance |
 |------|----------|------|-----------------|
 | 1/3 | Calibración Biométrica | `/onboarding/biometrics` | Botón **CONTINUAR →** |
 | 2/3 | Selector de Arquetipo | `/onboarding/archetype` | Botón **CONFIRMAR ARQUETIPO →** |
-| 3/3 | Radar de Manadas | `/onboarding/matchmaking` | Botón **UNIRSE** + **INICIAR VIAJE →** |
+| 3/3 | Radar de Manadas | `/onboarding/matchmaking` | Botón **UNIRSE** o **FUNDAR CLAN** |
 
 ### Zona 2 — Aplicación Principal
 
@@ -147,15 +154,24 @@ Layout persistente con **Topbar** (navegación entre secciones) y **Sidebar** (a
 
 #### Acceso vía Sidebar
 
-| Ítem del Sidebar | Pantalla destino |
-|----------------|----------------|
-| Sala de Tácticas | P6 · `/santuario/tacticas` |
-| Árbol de Habilidades | P13 · `/evolucion/habilidades` |
-| Historial | P11 · `/arena/historial` |
-| Mercado | P15 · `/evolucion/tienda` |
-| Radar | P3 · `/onboarding/matchmaking` |
-| Beneficios | P20 · `/perfil/beneficios` |
-| Trofeos | P19 · `/perfil/trofeos` |
+Agrupado por sección (actualizado 06/10). Muestra además el nombre, rol y clan del usuario.
+
+| Grupo | Ítem del Sidebar | Pantalla destino |
+|-------|----------------|----------------|
+| Santuario | Panel del Clan | P4 · `/santuario` |
+| Santuario | La Forja | P5 · `/santuario/forja` |
+| Santuario | Sala de Tácticas | P6 · `/santuario/tacticas` |
+| Santuario | Roles | P7 · `/santuario/roles` |
+| Arena | Guerra Global | P8 · `/arena` |
+| Arena | Registrar | P9 · `/arena/registrar` |
+| Arena | Calculadora CER | P10 · `/arena/calculadora` |
+| Arena | Historial | P11 · `/arena/historial` |
+| Evolución | Árbol de Habilidades | P13 · `/evolucion/habilidades` |
+| Evolución | Mercado | P15 · `/evolucion/tienda` |
+| Perfil | Beneficios | P20 · `/perfil/beneficios` |
+| Perfil | Trofeos | P19 · `/perfil/trofeos` |
+
+El ítem "Radar" se quitó: el Radar de Manadas es parte de la incorporación y no se usa con clan asignado.
 
 ---
 
@@ -188,4 +204,4 @@ Layout persistente con **Topbar** (navegación entre secciones) y **Sidebar** (a
 
 ---
 
-*Generado a partir del código fuente en `silverback/src/app/` — versión 1.0, mayo 2026.*
+*Generado a partir del código fuente en `silverback/src/app/` — versión 1.1, 06/10/2026 (entrada por P1, P21 en el diagrama, Sidebar agrupado, expulsado → P3).*

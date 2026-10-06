@@ -1,5 +1,7 @@
 # 10.5.7d — Diagrama de Clases: Capa de Servicios
 
+> **Actualizado 06/10:** se agregan las clases y métodos implementados después de E1 (login, fundar manada, publicar desafío, voz, Guerra Global, gestión de cuenta, `AceptacionDesafio`, `posicion`). Detalle en `Modificacion-Carpeta.md`.
+
 **Capa:** Servicios — proyecto `SilverbackApi.Services` (ASP.NET Core 9)  
 **Descripción:** Lógica de negocio. Cada servicio coordina repositorios para ejecutar un caso de uso. Los métodos públicos (+) son llamados por los Controllers del proyecto Api vía inyección de dependencias (DI); los privados (-) son internos del servicio.
 
@@ -43,6 +45,8 @@ package "Servicios" #EBFBF0 {
     +asignarArquetipo(miembroId: UUID, arquetipo: Arquetipo): Miembro
     +buscarManadas(filtros: Object): Clan[]
     +unirseAManada(miembroId: UUID, clanId: UUID): Clan
+    +fundarManada(miembroId: UUID, nombre: String): Clan
+    -validarSinClan(miembroId: UUID): void
     -construirLineaBase(datos: DatosBiometricos): DatosBiometricos
     -calcularMultiplicadorCER(arquetipo: Arquetipo): Float
   }
@@ -57,12 +61,24 @@ package "Servicios" #EBFBF0 {
     +actualizarRol(miembroId: UUID, nuevoRol: Rol, liderClanId: UUID): Miembro
     +obtenerMiembro(miembroId: UUID): Miembro
     +expulsarMiembro(miembroId: UUID, clanId: UUID, liderClanId: UUID): void
+    +crearDesafio(clanId: UUID, silverbackId: UUID, descripcion: String, tier: TierDesafio, recompensaXp: Int, fechaExpiracion: Date): DesafioClan
   }
 
   class ArenaService <<service>> {
     +obtenerGuerraActiva(): GuerraGlobal
     +registrarEntrenamiento(datos: Entrenamiento): ResultadoCER
     +obtenerHistorial(miembroId: UUID, filtros: Object, pagina: Int): Entrenamiento[]
+  }
+  class GuerraService <<service>> {
+    +asegurarGuerraActiva(): GuerraGlobal
+    +obtenerEstado(clanId: UUID): EstadoGuerra
+    +obtenerHistorialBatallas(clanId: UUID): HistorialBatallas
+    -semanaDe(fecha: Date): String
+    -posicionRival(posicion: Int): Int
+  }
+  class AuthService <<service>> {
+    +login(email: String, password: String): String
+    +generarToken(miembroId: UUID, rol: Rol, clanId: UUID, onboardingCompletado: Boolean): String
   }
 
   class CERService <<service>> {
@@ -90,6 +106,8 @@ package "Servicios" #EBFBF0 {
     +cargarTrofeos(miembroId: UUID): Trofeo[]
     +cargarBeneficios(miembroId: UUID): BeneficioAliado[]
     +reclamarBeneficio(beneficioId: UUID, miembroId: UUID): Object
+    +actualizarCuenta(miembroId: UUID, nombre: String, email: String): Miembro
+    +cambiarPassword(miembroId: UUID, actual: String, nueva: String): void
     -construirDashboard(miembro: Miembro, entrenamientos: Entrenamiento[], racha: Racha): Object
     -evaluarFatiga(datos: DatosFatiga, cargaSemanal: Float): EstadoFatiga
     -calcularProgresoHaciaProximo(miembroId: UUID, proximo: Trofeo): Float
@@ -174,6 +192,10 @@ ArenaService ..> RachaRepository : usa
 ArenaService ..> MiembroRepository : usa
 ArenaService ..> AdminHistorialRepository : usa
 ArenaService ..> CERService : compone
+ArenaService ..> GuerraService : usa
+GuerraService ..> GuerraRepository : usa
+AuthService ..> MiembroRepository : usa
+IncorporacionService ..> AuthService : usa
 
 EvolucionService ..> SkillTreeRepository : usa
 EvolucionService ..> CofreRepository : usa

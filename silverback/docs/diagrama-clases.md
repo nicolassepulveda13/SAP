@@ -1,5 +1,7 @@
 # 10.5.7 — Diagrama de Clases
 
+> **Actualizado 06/10:** se agregan las clases y métodos implementados después de E1 (login, fundar manada, publicar desafío, voz, Guerra Global, gestión de cuenta, `AceptacionDesafio`, `posicion`). Detalle en `Modificacion-Carpeta.md`.
+
 **Proyecto:** SILVERBACK  
 **Tipo:** Diagrama de clases UML — Arquitectura en 4 capas  
 **Descripción:** Métodos 100% derivados de los diagramas de secuencia.  
@@ -52,6 +54,11 @@ package "Presentación — Next.js" #F5F0FF {
     +onAsignarArquetipo(arquetipo: Arquetipo): void
     +onBuscarManadas(filtros: Object): void
     +onUnirseAManada(clanId: UUID): void
+    +onFundarManada(nombre: String): void
+  }
+  class AuthPage <<page>> {
+    +onIniciarSesion(email: String, password: String): void
+    +onCerrarSesion(): void
   }
   class SantuarioPage <<page>> {
     +onCargarDashboard(): void
@@ -62,12 +69,15 @@ package "Presentación — Next.js" #F5F0FF {
     +onListarMiembrosClan(): void
     +onActualizarRol(miembroId: UUID, nuevoRol: Rol): void
     +onExpulsarMiembro(miembroId: UUID): void
+    +onPublicarDesafio(descripcion: String, tier: TierDesafio, recompensaXp: Int, fechaExpiracion: Date): void
   }
   class ArenaPage <<page>> {
     +onObtenerGuerraActiva(): void
     +onRegistrarEntrenamiento(datos: Entrenamiento): void
     +onObtenerHistorial(filtros: Object, pagina: Int): void
     +onCalcularCER(pesoKg: Float, reps: Int, arquetipo: Arquetipo): void
+    +onDictarEntrenamiento(): void
+    +onObtenerBatallas(): void
   }
   class EvolucionPage <<page>> {
     +onCargarProgreso(): void
@@ -85,6 +95,8 @@ package "Presentación — Next.js" #F5F0FF {
     +onCargarTrofeos(): void
     +onCargarBeneficios(): void
     +onReclamarBeneficio(beneficioId: UUID): void
+    +onActualizarCuenta(nombre: String, email: String): void
+    +onCambiarPassword(actual: String, nueva: String): void
   }
 
   IncorporacionPage -[hidden]r- SantuarioPage
@@ -104,6 +116,8 @@ package "Servicios — ASP.NET Core" #EBFBF0 {
     +asignarArquetipo(miembroId: UUID, arquetipo: Arquetipo): Miembro
     +buscarManadas(filtros: Object): Clan[]
     +unirseAManada(miembroId: UUID, clanId: UUID): Clan
+    +fundarManada(miembroId: UUID, nombre: String): Clan
+    -validarSinClan(miembroId: UUID): void
     -construirLineaBase(datos: DatosBiometricos): DatosBiometricos
     -calcularMultiplicadorCER(arquetipo: Arquetipo): Float
   }
@@ -117,11 +131,23 @@ package "Servicios — ASP.NET Core" #EBFBF0 {
     +actualizarRol(miembroId: UUID, nuevoRol: Rol, liderClanId: UUID): Miembro
     +obtenerMiembro(miembroId: UUID): Miembro
     +expulsarMiembro(miembroId: UUID, clanId: UUID, liderClanId: UUID): void
+    +crearDesafio(clanId: UUID, silverbackId: UUID, descripcion: String, tier: TierDesafio, recompensaXp: Int, fechaExpiracion: Date): DesafioClan
   }
   class ArenaService <<service>> {
     +obtenerGuerraActiva(): GuerraGlobal
     +registrarEntrenamiento(datos: Entrenamiento): ResultadoCER
     +obtenerHistorial(miembroId: UUID, filtros: Object, pagina: Int): Entrenamiento[]
+  }
+  class GuerraService <<service>> {
+    +asegurarGuerraActiva(): GuerraGlobal
+    +obtenerEstado(clanId: UUID): EstadoGuerra
+    +obtenerHistorialBatallas(clanId: UUID): HistorialBatallas
+    -semanaDe(fecha: Date): String
+    -posicionRival(posicion: Int): Int
+  }
+  class AuthService <<service>> {
+    +login(email: String, password: String): String
+    +generarToken(miembroId: UUID, rol: Rol, clanId: UUID, onboardingCompletado: Boolean): String
   }
   class CERService <<service>> {
     +calcular(pesoKg: Float, reps: Int, arquetipo: Arquetipo): ResultadoCER
@@ -146,6 +172,8 @@ package "Servicios — ASP.NET Core" #EBFBF0 {
     +cargarTrofeos(miembroId: UUID): Trofeo[]
     +cargarBeneficios(miembroId: UUID): BeneficioAliado[]
     +reclamarBeneficio(beneficioId: UUID, miembroId: UUID): Object
+    +actualizarCuenta(miembroId: UUID, nombre: String, email: String): Miembro
+    +cambiarPassword(miembroId: UUID, actual: String, nueva: String): void
     -construirDashboard(miembro: Miembro, entrenamientos: Entrenamiento[], racha: Racha): Object
     -evaluarFatiga(datos: DatosFatiga, cargaSemanal: Float): EstadoFatiga
     -calcularProgresoHaciaProximo(miembroId: UUID, proximo: Trofeo): Float
@@ -310,6 +338,7 @@ package "Dominio — ASP.NET Core" #EBF4FF {
     +Float puntaje
     +Float modificador
     +String descripcion
+    +Int xpGanado
   }
   class GuerraGlobal {
     +UUID id
@@ -321,6 +350,12 @@ package "Dominio — ASP.NET Core" #EBF4FF {
     +UUID guerraId
     +UUID clanId
     +Float cerAcumulado
+    +Int posicion
+  }
+  class AceptacionDesafio {
+    +UUID desafioId
+    +UUID miembroId
+    +Date aceptadoEn
   }
   class DesafioClan {
     +UUID id
@@ -420,6 +455,8 @@ ArenaPage ..> ArenaService : HTTP REST — Bearer JWT
 ArenaPage ..> CERService : HTTP REST — Bearer JWT
 EvolucionPage ..> EvolucionService : HTTP REST — Bearer JWT
 PerfilPage ..> PerfilService : HTTP REST — Bearer JWT
+AuthPage ..> AuthService : HTTP REST
+ArenaPage ..> GuerraService : HTTP REST — Bearer JWT
 
 ' ═══════════════════════════════════════════════════════════
 ' DEPENDENCIAS: SERVICIOS → REPOSITORIOS (in-process)
@@ -439,6 +476,10 @@ ArenaService ..> RachaRepository : usa
 ArenaService ..> MiembroRepository : usa
 ArenaService ..> AdminHistorialRepository : usa
 ArenaService ..> CERService : compone
+ArenaService ..> GuerraService : usa
+GuerraService ..> GuerraRepository : usa
+AuthService ..> MiembroRepository : usa
+IncorporacionService ..> AuthService : usa
 
 EvolucionService ..> SkillTreeRepository : usa
 EvolucionService ..> CofreRepository : usa
@@ -466,6 +507,8 @@ Miembro "1" o-- "*" Entrenamiento : registra
 Clan "1" o-- "*" DesafioClan : publica
 Clan "1" o-- "*" ParticipacionGuerra : acumula
 GuerraGlobal "1" o-- "*" ParticipacionGuerra : registra
+DesafioClan "1" o-- "*" AceptacionDesafio : es aceptado en
+Miembro "1" o-- "*" AceptacionDesafio : acepta
 MensajeClan "N" --> "1" Clan : enviado en
 MensajeClan "N" --> "1" Miembro : enviado por
 InversionNodo "N" --> "1" Miembro : realizada por

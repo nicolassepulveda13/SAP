@@ -27,4 +27,4 @@ El `Context.md` fue diseñado originalmente para la carpeta de **Negocios**. Par
 ## Estado actual (octubre 2026)
 - Canvas ✅ aprobado · E1 Tecnología ✅ entregada
 - Desarrollo: S1–S6 ✅ (verificado con E2E: `cd silverback && npm run test:e2e`) — ver `RESUMEN_GENERAL.md` y `PLAN_EJECUCION_TECNOLOGIA.md`
-- 28 CU (24 de E1 + 4 agregados); cambios a la carpeta en `silverback/docs/Modificacion-Carpeta.md`
+- 28 CU (24 de E1 + 4 agregados); cambios a la carpeta: checklist única en `silverback/docs/Modificacion-Carpeta.md` (sección 0)

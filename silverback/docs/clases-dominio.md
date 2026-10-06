@@ -1,5 +1,7 @@
 # 10.5.7b — Diagrama de Clases: Capa de Dominio
 
+> **Actualizado 06/10:** se agregan las clases y métodos implementados después de E1 (`posicion` en ParticipacionGuerra, `xpGanado` en ResultadoCER). Detalle en `Modificacion-Carpeta.md`.
+
 **Capa:** Dominio — proyecto `SilverbackApi.Domain`  
 **Descripción:** Entidades del negocio. Solo atributos y relaciones. Son el modelo persistido en SQL Server vía EF Core 9. Los enums se almacenan como strings (`HasConversion<string>()`).
 
@@ -88,6 +90,7 @@ package "Dominio" #EBF4FF {
     +Float puntaje
     +Float multiplicador
     +Arquetipo arquetipo
+    +Int xpGanado
   }
   class GuerraGlobal {
     +UUID id
@@ -99,6 +102,7 @@ package "Dominio" #EBF4FF {
     +UUID guerraId
     +UUID clanId
     +Float puntajeCER
+    +Int posicion
   }
 
   ' ── Fila 4: Santuario

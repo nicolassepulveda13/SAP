@@ -3,7 +3,8 @@
 **Proyecto:** SILVERBACK — Plataforma de Gamificación del Entrenamiento Físico  
 **Entrega base:** E1 — Especificación Técnica (aprobada)  
 **Universidad:** UAI — Seminario de Trabajo Final (SAP 2026)  
-**Versión:** 1.3  
+**Versión:** 1.4  
+**Punto de partida:** la [sección 0 — Checklist de balanceo](#0--checklist-de-balanceo--punto-único-de-referencia) lista todo lo que hay que pasar a la carpeta.  
 **Sprints cubiertos:** S2 (PKG_INCORPORACIÓN end-to-end) + S3 (PKG_SANTUARIO I — Panel del Clan y La Forja) + S4 (PKG_SANTUARIO II — Tácticas y Roles + Arena adelantada) + S5 (Registro por voz) + S6 (Guerra Global e Historial de Batallas) + correcciones del 06/10 (expulsión, cambio de clan, Tácticas)
 
 ---
@@ -13,6 +14,115 @@
 Este documento registra todas las modificaciones realizadas a la carpeta técnica de SILVERBACK **posteriores a la aprobación de E1**. Incluye: casos de uso nuevos (con su numeración secuencial continuada), diagramas modificados y los nuevos diagramas de secuencia requeridos por los CUs agregados.
 
 > **Regla aplicada:** No se renumera ni modifica ningún CU aprobado en E1. Los CUs nuevos continúan la secuencia a partir del último aprobado (C-24 = CU-005-006).
+
+---
+
+## 0. ✅ CHECKLIST DE BALANCEO — punto único de referencia
+
+> **Cómo usarla:** recorré la tabla en orden, que sigue la numeración de la guía SAP. Cada fila dice **en qué sección de la carpeta**, **dónde exactamente**, **qué hacer** y **de dónde copiar el contenido**. Marcá la casilla cuando lo pases a la carpeta (Word).
+> Todos los archivos están en `silverback/docs/` salvo que se indique otra ruta.
+
+### 10.3 — Historial de revisión
+
+| ✓ | # | Dónde | Qué hacer | Contenido |
+|---|---|---|---|---|
+| [ ] | 1 | Tabla de historial de revisión | Agregar una fila por cada versión de este documento (1.0 a 1.4) con fecha y resumen | §6 de este documento |
+
+### 10.4 — Documento Visión
+
+| ✓ | # | Dónde | Qué hacer | Contenido |
+|---|---|---|---|---|
+| [ ] | 2 | 10.4.5 Descripción del entorno | Reemplazar la arquitectura: Next.js 16 como frontend + **API ASP.NET Core 9** (Clean Architecture) + **SQL Server**, autenticación **JWT en cookie HTTP-only**. Quitar menciones a Next.js full-stack, PostgreSQL o Supabase si las hay | `diagrama-componentes.md` (descripción y justificación) y `diagrama-paquetes.md` (cambio arquitectónico S1) |
+
+### 10.5.1.1 — Mapa de Navegación
+
+| ✓ | # | Dónde | Qué hacer | Contenido |
+|---|---|---|---|---|
+| [ ] | 3 | Diagrama del mapa | **Reemplazar** por la versión 1.1: entrada sin sesión por P1, P0 Login desde el enlace "¿Ya tenés cuenta?", P3 con UNIRSE / FUNDAR CLAN, expulsado (P7) → P3, P21 Datos de Cuenta | `mapa-de-navegacion.md` (diagrama) |
+| [ ] | 4 | Tablas del mapa (pasos de incorporación, Sidebar) | Reemplazar por las tablas actualizadas y agregar la nota "Actualizado 06/10" | `mapa-de-navegacion.md` (Zona 1 y Sidebar) |
+
+### 10.5.2 — Índice de Casos de Uso
+
+| ✓ | # | Dónde | Qué hacer | Contenido |
+|---|---|---|---|---|
+| [ ] | 5 | Tabla índice | Agregar los 4 CU nuevos con su numeración: C-25 CU-001-000, C-26 CU-005-007, C-27 CU-001-005, C-28 CU-002-007. Total: **28 CU** | §2 de este documento (tabla) o índice de `casos-de-uso.md` |
+
+### 10.5.3 — Casos de Uso
+
+**CU nuevos (insertar completos):**
+
+| ✓ | # | Dónde | Qué hacer | Contenido |
+|---|---|---|---|---|
+| [ ] | 6 | **Antes** de CU-001-001 | Insertar C-25 — CU-001-000 Crear Cuenta / Iniciar Sesión, con su ficha (actores, evento disparador, postcondición) | §2 C-25 + ficha en el ANEXO de `casos-de-uso.md` |
+| [ ] | 7 | **Después** de CU-001-004 | Insertar C-27 — CU-001-005 Fundar una Manada, con su ficha | §2 C-27 + ficha en el ANEXO |
+| [ ] | 8 | **Después** de CU-002-006 | Insertar C-28 — CU-002-007 Publicar Desafío en La Forja, con su ficha | §2 C-28 + ficha en el ANEXO |
+| [ ] | 9 | **Al final** de CU-005 (después de CU-005-006) | Insertar C-26 — CU-005-007 Gestionar Datos de Cuenta, con su ficha | §2 C-26 + ficha en el ANEXO |
+
+**Campos UAI faltantes en todos los CU:**
+
+| ✓ | # | Dónde | Qué hacer | Contenido |
+|---|---|---|---|---|
+| [ ] | 10 | Cada uno de los 28 CU | Agregar **Actores Primarios**, **Actores Secundarios**, **Evento Disparador** y **Post Condición** (y **Extensiones** donde aplique), formato 10.5.3 | ANEXO "Campos pendientes por CU" al final de `casos-de-uso.md` (un bloque por CU) |
+
+**Notas en CU aprobados (no se reescribe el texto aprobado: se agrega una nota al pie del CU):**
+
+| ✓ | # | CU | Nota a agregar | Contenido |
+|---|---|---|---|---|
+| [ ] | 11 | CU-001-003 Buscar Manadas | La precondición se amplía a "cuenta sin clan" (también lo usa un miembro expulsado) | §4.6 (cambios) |
+| [ ] | 12 | CU-001-004 Unirse | Precondición ampliada; FA-1 de cupo implementado (20 miembros); **FA nuevo** "Ya pertenecés a un clan" | §4.6 (cambios) |
+| [ ] | 13 | CU-002-004 Sala de Tácticas | El "tiempo real" es un refresco automático cada 5 s; sin indicador LIVE | §4.6 (cambios) |
+| [ ] | 14 | CU-002-005 Asignar Rol | El Líder no puede cambiar su propio rol (FA-2), también validado en el servidor | §4.6 (cambios) |
+| [ ] | 15 | CU-002-006 Expulsar | El expulsado queda sin clan, como RECLUTA, y vuelve al Radar de Manadas | §4.6 (cambios) |
+| [ ] | 16 | CU-003-001 Guerra Global | Ciclo semanal, rival = pareja del ranking, progreso relativo al líder | §4.5 (decisiones y diferencias) |
+| [ ] | 17 | CU-003-002 Registrar | Carga por voz con confirmación; XP = 1 cada 10 de CER | §4.5 |
+| [ ] | 18 | CU-003-003 Calcular CER | Modificadores 1.10 / 1.05 / 1.00, peso en kg, la calculadora es solo vista previa | §4.5 |
+| [ ] | 19 | CU-003-004 Historial | Una batalla = una semana de guerra; sin duración ni intensidad; informe exportable fuera de alcance | §4.5 |
+
+### 10.5.4 — Diagramas de Secuencia
+
+| ✓ | # | Dónde | Qué hacer | Contenido |
+|---|---|---|---|---|
+| [ ] | 20 | Inicio de la subsección CU-001 | Insertar secuencia CU-001-000 | `secuencias-cu001-cu002.md` (también §4 de este documento) |
+| [ ] | 21 | Final de la subsección CU-001 | Insertar secuencia CU-001-005 | `secuencias-cu001-cu002.md` |
+| [ ] | 22 | Final de la subsección CU-002 | Insertar secuencia CU-002-007 | `secuencias-cu001-cu002.md` |
+| [ ] | 23 | Final de la subsección CU-005 | Insertar secuencia CU-005-007 | `secuencias-cu005.md` |
+| [ ] | 24 | Subsección CU-003 | **Reemplazar** las secuencias CU-003-001, CU-003-002 y CU-003-004 (marcadas "Modificado S6") | `secuencias-cu003-cu004.md` |
+| [ ] | 25 | Todos los diagramas | Cambiar el participante `database "PostgreSQL"` por `database "SQL Server"` | `secuencias-*.md` (ya corregidos) |
+
+### 10.5.5 / 10.5.6 — Paquetes y Componentes
+
+| ✓ | # | Dónde | Qué hacer | Contenido |
+|---|---|---|---|---|
+| [ ] | 26 | 10.5.5 Diagrama de Paquetes | **Reemplazar**: dos nodos (Next.js y ASP.NET Core) + paquete `PKG_ACTIONS` (Server Actions) | `diagrama-paquetes.md` |
+| [ ] | 27 | 10.5.6 Diagrama de Componentes | **Reemplazar** con la separación frontend / API y su justificación | `diagrama-componentes.md` |
+
+### 10.5.7 — Diagrama de Clases
+
+| ✓ | # | Dónde | Qué hacer | Contenido |
+|---|---|---|---|---|
+| [ ] | 28 | Diagrama general | **Reemplazar** por la versión 06/10: `AuthPage` + `AuthService` (login), `GuerraService` (S6), métodos de fundar manada, publicar desafío, voz, batallas y gestión de cuenta, entidad `AceptacionDesafio`, `ParticipacionGuerra.posicion`, `ResultadoCER.xpGanado` | `diagrama-clases.md` |
+| [ ] | 29 | Diagramas por capa (10.5.7a–d) | Reemplazar presentación, servicios y dominio | `clases-presentacion.md`, `clases-servicios.md`, `clases-dominio.md` |
+| [ ] | 30 | Notas de arquitectura | Corregir modificadores CER (1.10 / 1.05 / 1.00), autenticación por JWT y capas con la API .NET | `diagramas-uml.md` (Notas de arquitectura) |
+
+### 10.5.8 — Diagrama Entidad-Relación (E3)
+
+| ✓ | # | Dónde | Qué hacer | Contenido |
+|---|---|---|---|---|
+| [ ] | 31 | Fila 4 — Santuario | Agregar la entidad `ACEPTACION_DESAFIO` (PK compuesta `desafio_id` + `miembro_id`, `aceptado_en`) | §3.1 de este documento / `diagrama-er.md` |
+| [ ] | 32 | Entidad `PARTICIPACION_GUERRA` | Agregar el atributo `posicion : INTEGER` | §3.3 / `diagrama-er.md` + `er-arena-santuario.md` |
+| [ ] | 33 | Entidad `DESAFIO` | **Verificar** que `tier` siga como `ENUM(BRONCE,PLATA,ORO)` (no cambia) | `diagrama-er.md` |
+
+### ⏳ Pendiente de implementar (no se pasa a la carpeta todavía)
+
+Brechas entre CU aprobados y la app, planificadas para S10. Cuando se implementen, la nota del CU correspondiente se actualiza. Detalle en §4.6.
+
+| # | CU | Qué falta |
+|---|---|---|
+| P1 | CU-001-003 | Buscador de clanes por nombre y "INICIAR VIAJE" con asignación automática |
+| P2 | CU-002-005 | Un solo SILVERBACK por clan |
+| P3 | CU-002-006 | Confirmación antes de expulsar, registro en el historial de administración, no expulsar a un SILVERBACK |
+| P4 | CU-005-007 | Pantalla `/perfil/cuenta` (PKG_PERFIL, S8) |
+| P5 | 10.5.3 (todos) | Prototipo de interfaz por CU (ver `Anexo Imágenes de pantalas SilverBack.docx`) |
 
 ---
 
@@ -99,7 +209,7 @@ Los textos completos de cada CU están en `casos-de-uso.md`. Lo que sigue es el 
 
 - **[FA-1]** Si algún campo biométrico está fuera del rango permitido, el sistema muestra el mensaje de error específico ("La edad debe estar entre 14 y 99 años.") y no avanza.
 - **[FA-2]** Si las credenciales de login son incorrectas, el sistema muestra "Email o contraseña incorrectos." sin indicar cuál falló.
-- **[FA-3]** Si el usuario existente tiene `onboarding_completado = false`, el middleware lo redirige a `/onboarding/biometrics`.
+- **[FA-3]** Si el usuario ya tiene cuenta pero no tiene clan (no terminó el onboarding o fue expulsado), el sistema lo lleva al Radar de Manadas (CU-001-003) en lugar de volver a pedirle los datos de registro.
 
 ---
 
@@ -743,25 +853,7 @@ Funcionalidad que el CU aprobado describe y la aplicación **todavía no tiene**
 
 ## 5. Mapa de inserción en la carpeta impresa/digital
 
-| Sección de la carpeta | Acción | Artefacto |
-|-----------------------|--------|-----------|
-| **10.5.3 Casos de Uso** | Insertar antes de CU-001-001 | C-25 — CU-001-000 |
-| **10.5.3 Casos de Uso** | Insertar después de CU-001-004 | C-27 — CU-001-005 |
-| **10.5.3 Casos de Uso** | Insertar al final de CU-005 | C-26 — CU-005-007 |
-| **10.5.3 Casos de Uso** | Insertar después de CU-002-006 | C-28 — CU-002-007 |
-| **10.5.4 Diagramas de Secuencia** | Insertar al inicio de la subsección CU-001 | Secuencia CU-001-000 |
-| **10.5.4 Diagramas de Secuencia** | Insertar al final de la subsección CU-001 | Secuencia CU-001-005 |
-| **10.5.4 Diagramas de Secuencia** | Insertar al final de la subsección CU-002 | Secuencia CU-002-007 |
-| **10.5.4 Diagramas de Secuencia** | Insertar al final de la subsección CU-005 | Secuencia CU-005-007 |
-| **10.5.5 Diagrama de Paquetes** | Agregar paquete PKG_ACTIONS en nodo Next.js | `diagrama-paquetes.md` actualizado |
-| **10.5.8 Diagrama ER** | Agregar entidad ACEPTACION_DESAFIO en Fila 4 | `diagrama-er.md` actualizado |
-| **10.5.8 Diagrama ER** | Agregar `posicion` a PARTICIPACION_GUERRA | `diagrama-er.md` + `er-arena-santuario.md` actualizados |
-| **10.5.4 Diagramas de Secuencia** | Reemplazar CU-003-001, CU-003-002 y CU-003-004 | `secuencias-cu003-cu004.md` (marcados "Modificado S6") |
-| **10.5.4 Diagramas de Secuencia** | Cambiar "PostgreSQL" por "SQL Server" en todos los diagramas | `secuencias-*.md` |
-| **10.5.3 Casos de Uso** | Agregar nota de diferencias en CU-003-001 a CU-003-004 | Sección 4.5 de este documento |
-| **10.5.3 Casos de Uso** | En CU-002-006, agregar nota: el expulsado vuelve al Radar de Manadas | Sección 4.6 de este documento |
-| **10.5.3 Casos de Uso** | En CU-001-003, 004 y 005, ampliar la precondición a "cuenta sin clan" y agregar el FA "Ya pertenecés a un clan" | Sección 4.6 de este documento |
-| **10.5.3 Casos de Uso** | En CU-002-004, aclarar que el "tiempo real" es un refresco cada 5 s | Sección 4.6 de este documento |
+> **Reemplazado por la [sección 0 — Checklist de balanceo](#0--checklist-de-balanceo--punto-único-de-referencia)**, que tiene todo lo que hay que cambiar en la carpeta, ordenado por sección de la guía SAP. Esta sección se mantiene solo para no romper referencias.
 
 ---
 
@@ -773,6 +865,7 @@ Funcionalidad que el CU aprobado describe y la aplicación **todavía no tiene**
 | 1.1 | 22/09/2026 | S4 | Se completa C-28 (ficha + secuencia + mapa de inserción). `DESAFIO.tier` se mantiene BRONCE/PLATA/ORO. Decisiones de diseño S4: modelo de 4 roles y modificadores CER. |
 | 1.2 | 05/10/2026 | S5–S6 | Decisiones de diseño de la Guerra Global, voz y XP. Diferencias CU-003-001 a 004 vs implementación. ER: `posicion` en PARTICIPACION_GUERRA. Secuencias CU-003 reescritas, PostgreSQL → SQL Server, y las 4 secuencias nuevas insertadas en sus archivos. |
 | 1.3 | 06/10/2026 | Correcciones | Sección 4.6: flujo del expulsado hacia el Radar, FA "Ya pertenecés a un clan", cupo de 20, el Líder no cambia su propio rol, Tácticas con refresco cada 5 s. Lista de brechas pendientes entre CU aprobados e implementación (buscador del Radar, un solo SILVERBACK, confirmación e historial al expulsar). |
+| 1.4 | 06/10/2026 | Balanceo | **Sección 0: checklist única de balanceo** (33 ítems por sección de la carpeta + pendientes). CU-001-000 corregido en `casos-de-uso.md` (flujo real: formulario unificado y cuenta creada al elegir clan; FA-3 al Radar). Fichas UAI de los 4 CU nuevos en el ANEXO. Mapa de navegación v1.1. Diagrama de clases con login, Guerra, fundar, publicar, voz, cuenta, `AceptacionDesafio` y `posicion`. Se registra el cambio de arquitectura de S1 (10.4.5, 10.5.5, 10.5.6). |
 
 ---
 

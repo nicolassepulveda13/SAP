@@ -1,5 +1,7 @@
 # 10.5.7a — Diagrama de Clases: Capa de Presentación
 
+> **Actualizado 06/10:** se agregan las clases y métodos implementados después de E1 (login, fundar manada, publicar desafío, voz, Guerra Global, gestión de cuenta, `AceptacionDesafio`, `posicion`). Detalle en `Modificacion-Carpeta.md`.
+
 **Capa:** Presentación (Pages) — proyecto `silverback/` (Next.js 16)  
 **Descripción:** Pages de Next.js App Router. Cada clase agrupa los handlers de una sección funcional. Se comunican con la capa de Servicios vía HTTP REST al .NET API (`apiFetch<T>()` desde Server Components, Server Actions para mutaciones). No acceden directamente a servicios ni repositorios.
 
@@ -43,6 +45,11 @@ package "Presentación" #F5F0FF {
     +onAsignarArquetipo(arquetipo: Arquetipo): void
     +onBuscarManadas(filtros: Object): void
     +onUnirseAManada(clanId: UUID): void
+    +onFundarManada(nombre: String): void
+  }
+  class AuthPage <<page>> {
+    +onIniciarSesion(email: String, password: String): void
+    +onCerrarSesion(): void
   }
 
   class SantuarioPage <<page>> {
@@ -54,6 +61,7 @@ package "Presentación" #F5F0FF {
     +onListarMiembrosClan(): void
     +onActualizarRol(miembroId: UUID, nuevoRol: Rol): void
     +onExpulsarMiembro(miembroId: UUID): void
+    +onPublicarDesafio(descripcion: String, tier: TierDesafio, recompensaXp: Int, fechaExpiracion: Date): void
   }
 
   class ArenaPage <<page>> {
@@ -61,6 +69,8 @@ package "Presentación" #F5F0FF {
     +onRegistrarEntrenamiento(datos: Entrenamiento): void
     +onObtenerHistorial(filtros: Object, pagina: Int): void
     +onCalcularCER(pesoKg: Float, reps: Int, arquetipo: Arquetipo): void
+    +onDictarEntrenamiento(): void
+    +onObtenerBatallas(): void
   }
 
   class EvolucionPage <<page>> {
@@ -80,6 +90,8 @@ package "Presentación" #F5F0FF {
     +onCargarTrofeos(): void
     +onCargarBeneficios(): void
     +onReclamarBeneficio(beneficioId: UUID): void
+    +onActualizarCuenta(nombre: String, email: String): void
+    +onCambiarPassword(actual: String, nueva: String): void
   }
 
   ' Forzar layout 3 columnas fila 1 + 2 columnas fila 2
