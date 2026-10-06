@@ -71,4 +71,48 @@ public class SantuarioService(
             MiembroId = miembroId,
             Contenido = contenido,
         });
+
+    // S4-Roles: AsignarRol() — solo el SILVERBACK del mismo clan puede cambiar el rol de otro miembro (CU-002-006)
+    public async Task<Miembro> AsignarRol(Guid clanId, Guid liderId, Guid miembroId, string rol)
+    {
+        // Sin este control el SILVERBACK podía bajarse el rol y dejar el clan sin líder
+        if (liderId == miembroId)
+            throw new InvalidOperationException("No podés cambiar tu propio rol.");
+
+        var lider = await miembroRepo.BuscarPorId(liderId)
+            ?? throw new InvalidOperationException("Miembro no encontrado.");
+        if (lider.Rol != Rol.SILVERBACK || lider.ClanId != clanId)
+            throw new UnauthorizedAccessException("Solo el SILVERBACK del clan puede asignar roles.");
+
+        var miembro = await miembroRepo.BuscarPorId(miembroId)
+            ?? throw new InvalidOperationException("Miembro no encontrado.");
+        if (miembro.ClanId != clanId)
+            throw new InvalidOperationException("El miembro no pertenece a este clan.");
+
+        var nuevoRol = Enum.Parse<Rol>(rol);
+        await miembroRepo.ActualizarRol(miembroId, nuevoRol);
+        miembro.Rol = nuevoRol;
+        return miembro;
+    }
+
+    // S4-Roles: ExpulsarMiembro() — desvincula al miembro del clan, lo baja a RECLUTA y decrementa el contador
+    public async Task ExpulsarMiembro(Guid clanId, Guid liderId, Guid miembroId)
+    {
+        if (liderId == miembroId)
+            throw new InvalidOperationException("No podés expulsarte a vos mismo.");
+
+        var lider = await miembroRepo.BuscarPorId(liderId)
+            ?? throw new InvalidOperationException("Miembro no encontrado.");
+        if (lider.Rol != Rol.SILVERBACK || lider.ClanId != clanId)
+            throw new UnauthorizedAccessException("Solo el SILVERBACK del clan puede expulsar miembros.");
+
+        var miembro = await miembroRepo.BuscarPorId(miembroId)
+            ?? throw new InvalidOperationException("Miembro no encontrado.");
+        if (miembro.ClanId != clanId)
+            throw new InvalidOperationException("El miembro no pertenece a este clan.");
+
+        await miembroRepo.ActualizarClan(miembroId, null);
+        await miembroRepo.ActualizarRol(miembroId, Rol.RECLUTA);
+        await clanRepo.ActualizarCantidadMiembros(clanId, -1);
+    }
 }

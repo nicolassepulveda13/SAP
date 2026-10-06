@@ -1,23 +1,17 @@
-"use client";
-
-import { useState } from "react";
-import { Users, UserMinus, Clock } from "lucide-react";
+import { Users, UserMinus } from "lucide-react";
 import { PageLabel } from "@/components/ui/PageLabel";
+import { requireClan } from "@/lib/clan-context";
+import { apiFetch } from "@/lib/api-client";
+import { asignarRol, expulsarMiembro } from "@/app/actions/santuario";
 
-const roles = ["SILVERBACK (LÍDER)", "BETA (OFICIAL)", "EXPLORADOR (MIEMBRO)", "RECLUTA"];
+type MiembroClan = { id: string; nombre: string; rol: string; rango: string; xp: number };
 
-const initialMembers = [
-  { id: 1, name: 'JAXSON "IRON" V.', level: 38, days: 120, role: "SILVERBACK (LÍDER)", avatar: null },
-  { id: 2, name: 'ELENA "FORGE" M.', level: 35, days: 85, role: "BETA (OFICIAL)", avatar: null },
-  { id: 3, name: "MARCUS K.", level: 12, days: 14, role: "EXPLORADOR (MIEMBRO)", initials: "MK" },
-];
+const ROLES = ["SILVERBACK", "BETA", "EXPLORADOR", "RECLUTA"] as const;
 
-export default function RolesPage() {
-  const [members, setMembers] = useState(initialMembers);
-
-  function updateRole(id: number, role: string) {
-    setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, role } : m)));
-  }
+export default async function RolesPage() {
+  const { data, clanId } = await requireClan();
+  const miembros = await apiFetch<MiembroClan[]>(`/api/santuario/${clanId}/miembros`);
+  const esLider = data.miembro.rol === "SILVERBACK";
 
   return (
     <div>
@@ -28,53 +22,65 @@ export default function RolesPage() {
             PANEL DE GESTIÓN TÁCTICA
           </h1>
           <p className="text-sm text-[#9CA3AF] max-w-lg">
-            Gestiona la jerarquía y el personal del clan. Los niveles de autoridad dictan el acceso a la arena.
+            {esLider
+              ? "Gestioná la jerarquía y el personal del clan. Los niveles de autoridad dictan el acceso a la arena."
+              : "Solo el líder del clan (SILVERBACK) puede modificar roles o expulsar miembros."}
           </p>
         </div>
         <div className="bg-[#242424] border border-[#333] rounded-xl px-6 py-4 flex items-center gap-3 shrink-0">
           <Users size={20} className="text-[#F97316]" />
           <div>
-            <span className="font-heading font-bold text-2xl text-white">24 / 50</span>
+            <span className="font-heading font-bold text-2xl text-white">{miembros.length}</span>
             <p className="text-xs text-[#9CA3AF] uppercase tracking-wider">MIEMBROS ACTIVOS</p>
           </div>
         </div>
       </div>
 
-      <div className="border-t border-[#333] mb-6" />
-
       <div className="space-y-3">
-        {members.map((member) => (
-          <div key={member.id} className="bg-[#242424] border border-[#333] rounded-xl p-5 flex items-center gap-4">
-            <div className="w-14 h-14 rounded-lg bg-[#2e2e2e] flex items-center justify-center shrink-0 overflow-hidden">
-              {member.initials ? (
-                <span className="font-heading font-bold text-lg text-[#9CA3AF]">{member.initials}</span>
-              ) : (
-                <span className="text-2xl">🦍</span>
-              )}
+        {miembros.map((m) => (
+          <div
+            key={m.id}
+            className="bg-[#242424] border border-[#333] rounded-xl p-4 flex items-center justify-between gap-4"
+          >
+            <div>
+              <p className="font-heading font-bold text-white uppercase">
+                {m.nombre}
+                {m.id === data.miembro.id && <span className="text-[#F97316] text-xs ml-2">(VOS)</span>}
+              </p>
+              <p className="text-xs text-[#9CA3AF]">Rango {m.rango} · {m.xp} XP</p>
             </div>
-            <div className="flex-1">
-              <p className="font-heading font-bold text-white uppercase mb-1">{member.name}</p>
-              <div className="flex items-center gap-3">
-                <span className="text-xs bg-[#2e2e2e] text-[#9CA3AF] px-2 py-0.5 rounded font-heading uppercase">
-                  NIVEL {member.level}
-                </span>
-                <span className="text-xs text-[#9CA3AF] flex items-center gap-1">
-                  <Clock size={10} /> {member.days} Días
-                </span>
+            {esLider && m.id !== data.miembro.id ? (
+              <div className="flex items-center gap-2 shrink-0">
+                <form action={asignarRol.bind(null, clanId, m.id)} className="flex items-center gap-2">
+                  <select
+                    name="rol"
+                    defaultValue={m.rol}
+                    className="bg-white text-[#333] text-xs rounded px-2 py-1.5 outline-none"
+                  >
+                    {ROLES.map((r) => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="submit"
+                    className="text-xs border border-[#555] hover:border-white text-white px-2 py-1.5 rounded uppercase font-heading font-bold tracking-wider transition-colors"
+                  >
+                    GUARDAR
+                  </button>
+                </form>
+                <form action={expulsarMiembro.bind(null, clanId, m.id)}>
+                  <button
+                    type="submit"
+                    title="Expulsar del clan"
+                    className="border border-red-500/50 text-red-400 hover:bg-red-500/10 p-2 rounded transition-colors"
+                  >
+                    <UserMinus size={14} />
+                  </button>
+                </form>
               </div>
-            </div>
-            <select
-              value={member.role}
-              onChange={(e) => updateRole(member.id, e.target.value)}
-              className="bg-[#1a1a1a] border border-[#444] text-white text-xs font-heading font-bold uppercase px-3 py-2 rounded outline-none focus:border-[#F97316] cursor-pointer"
-            >
-              {roles.map((r) => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
-            <button className="border border-[#F97316]/60 text-[#F97316] hover:bg-[#F97316]/10 font-heading font-bold uppercase text-xs px-4 py-2 rounded tracking-wider transition-colors flex items-center gap-2">
-              <UserMinus size={14} /> EXPULSAR
-            </button>
+            ) : (
+              <span className="text-xs text-[#9CA3AF] uppercase font-heading font-bold">{m.rol}</span>
+            )}
           </div>
         ))}
       </div>

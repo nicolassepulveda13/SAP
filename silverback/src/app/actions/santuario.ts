@@ -77,3 +77,34 @@ export async function aceptarDesafio(
     return { error: e instanceof Error ? e.message : "Error al aceptar el desafío." };
   }
 }
+
+// S4-Tacticas: enviarMensaje — llamado desde el form de TacticasPage (CU-002-004/005)
+export async function enviarMensaje(clanId: string, formData: FormData): Promise<void> {
+  const contenido = (formData.get("contenido") as string)?.trim();
+  if (!contenido) return;
+  await apiFetch(`/api/santuario/${clanId}/mensajes`, {
+    method: "POST",
+    body: JSON.stringify({ contenido }),
+  });
+  revalidatePath("/santuario/tacticas");
+}
+
+// S4-Roles: asignarRol / expulsarMiembro — solo SILVERBACK; la API responde 403 si no (CU-002-006)
+export async function asignarRol(
+  clanId: string,
+  miembroId: string,
+  formData: FormData
+): Promise<void> {
+  const rol = formData.get("rol") as string;
+  if (!rol) return;
+  await apiFetch(`/api/santuario/${clanId}/miembros/${miembroId}/rol`, {
+    method: "PUT",
+    body: JSON.stringify({ rol }),
+  });
+  revalidatePath("/santuario/roles");
+}
+
+export async function expulsarMiembro(clanId: string, miembroId: string): Promise<void> {
+  await apiFetch(`/api/santuario/${clanId}/miembros/${miembroId}`, { method: "DELETE" });
+  revalidatePath("/santuario/roles");
+}

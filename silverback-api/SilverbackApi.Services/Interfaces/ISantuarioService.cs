@@ -15,4 +15,6 @@ public interface ISantuarioService
     Task<PanelClan> ObtenerPanelClan(Guid clanId);
     Task<List<MensajeClan>> ListarMensajes(Guid clanId);
     Task<MensajeClan> EnviarMensaje(Guid clanId, Guid miembroId, string contenido);
+    Task<Miembro> AsignarRol(Guid clanId, Guid liderId, Guid miembroId, string rol);
+    Task ExpulsarMiembro(Guid clanId, Guid liderId, Guid miembroId);
 }
