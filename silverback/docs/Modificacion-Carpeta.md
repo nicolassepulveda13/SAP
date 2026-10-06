@@ -3,8 +3,8 @@
 **Proyecto:** SILVERBACK — Plataforma de Gamificación del Entrenamiento Físico  
 **Entrega base:** E1 — Especificación Técnica (aprobada)  
 **Universidad:** UAI — Seminario de Trabajo Final (SAP 2026)  
-**Versión:** 1.2  
-**Sprints cubiertos:** S2 (PKG_INCORPORACIÓN end-to-end) + S3 (PKG_SANTUARIO I — Panel del Clan y La Forja) + S4 (PKG_SANTUARIO II — Tácticas y Roles + Arena adelantada) + S5 (Registro por voz) + S6 (Guerra Global e Historial de Batallas)
+**Versión:** 1.3  
+**Sprints cubiertos:** S2 (PKG_INCORPORACIÓN end-to-end) + S3 (PKG_SANTUARIO I — Panel del Clan y La Forja) + S4 (PKG_SANTUARIO II — Tácticas y Roles + Arena adelantada) + S5 (Registro por voz) + S6 (Guerra Global e Historial de Batallas) + correcciones del 06/10 (expulsión, cambio de clan, Tácticas)
 
 ---
 
@@ -39,6 +39,11 @@ Este documento registra todas las modificaciones realizadas a la carpeta técnic
 | S6 | `secuencias-cu003-cu004.md` | CU-003-001, CU-003-002 y CU-003-004 reescritos según la implementación | Secuencia modificada |
 | S6 | Secuencias (todas) | `database "PostgreSQL"` → `database "SQL Server"` (el stack es SQL Server desde S1) | Corrección |
 | S6 | Secuencias | Se insertan en sus archivos las 4 secuencias nuevas (CU-001-000, CU-001-005, CU-002-007, CU-005-007) | Inserción pendiente resuelta |
+| 06/10 | PKG_SANTUARIO / PKG_INCORPORACIÓN | El miembro expulsado vuelve al Radar de Manadas y puede unirse o fundar con su misma cuenta (CU-002-006 → CU-001-003/004/005) | Flujo modificado |
+| 06/10 | PKG_INCORPORACIÓN | Unirse o fundar rechaza a quien ya tiene clan; unirse valida el cupo (20) | Flujo alternativo nuevo |
+| 06/10 | PKG_SANTUARIO | Sala de Tácticas con refresco automático cada 5 s (el CU pide "tiempo real") | Diferencia documentada |
+| 06/10 | PKG_SANTUARIO | El SILVERBACK no puede cambiar su propio rol (implementa el FA-2 de CU-002-005) | Implementación de CU aprobado |
+| 06/10 | — | Brechas detectadas entre CU aprobados e implementación (sección 4.6) | Pendiente de implementar |
 
 ---
 
@@ -706,6 +711,35 @@ end
 
 ---
 
+## 4.6 Correcciones del 06/10 — Incorporación y Santuario
+
+> Surgieron al probar la aplicación de punta a punta (suite E2E). Los textos de los CU aprobados **no se modifican**: se agregan notas y flujos alternativos acá.
+
+### Cambios que impactan en CU aprobados
+
+| CU | El texto aprobado dice | La implementación hace | Motivo |
+|---|---|---|---|
+| CU-002-006 Expulsar | "Revoca su acceso a las funcionalidades colectivas" (no dice qué pasa después con el expulsado) | El expulsado queda sin clan y con rol RECLUTA. Al entrar a cualquier pantalla del clan va al **Radar de Manadas**, desde donde puede unirse a otro clan o fundar uno con **su misma cuenta**. | Sin esto quedaba trabado: no podía entrar al clan ni elegir otro, porque el Radar solo existía dentro del alta de una cuenta nueva |
+| CU-001-003 / CU-001-004 / CU-001-005 | Precondición: "el usuario completó la selección de arquetipo (CU-001-002)" — es decir, solo usuarios nuevos | También los usan **cuentas existentes sin clan** (expulsadas). En ese caso se omiten biometría y arquetipo, y unirse o fundar usa la sesión actual | Consecuencia del cambio anterior |
+| CU-001-004 Unirse | FA-1: si el clan se llenó, mensaje de error | Implementado: el servidor valida el cupo (20 miembros) y responde "El clan está lleno." | — |
+| CU-001-004 / CU-001-005 | — | **FA nuevo:** si el miembro ya pertenece a un clan, el sistema rechaza la operación con "Ya pertenecés a un clan." Si entra al Radar teniendo clan, se lo redirige al Santuario | Antes un miembro podía pasarse de clan llamando directo a la API y los contadores quedaban mal |
+| CU-002-005 Asignar rol | FA-2: el Líder no puede cambiar su propio rol | Implementado en la pantalla (no muestra su selector) **y** en el servidor (responde 400 "No podés cambiar tu propio rol.") | Por la API podía bajarse el rol y dejar el clan sin líder |
+| CU-002-004 Tácticas | "Chat en tiempo real", "actualiza automáticamente el historial sin recargar", indicador LIVE | Refresco automático cada 5 segundos (se pausa con la pestaña oculta). No hay indicador LIVE ni cola de mensajes (FA-2) | Decisión del plan S4: polling como versión mínima viable; websockets fuera de alcance |
+
+### Brechas pendientes de implementar
+
+Funcionalidad que el CU aprobado describe y la aplicación **todavía no tiene**. Se planifican para S10 (Integración final y hardening).
+
+| CU | El CU aprobado pide | Estado actual |
+|---|---|---|
+| CU-001-003 Buscar | Buscador de clanes por nombre (pasos 6–11) y FA-2 "INICIAR VIAJE" con asignación automática por afinidad de arquetipo | Solo se muestra la lista de clanes con cupo, sin buscador ni asignación automática |
+| CU-002-005 Asignar rol | Paso 16: "solo puede haber un SILVERBACK activo por clan" | El selector permite asignar SILVERBACK a otro miembro: el clan quedaría con dos líderes |
+| CU-002-006 Expulsar | Modal de confirmación antes de expulsar (pasos 7–11, FA-1 "CANCELAR") | La expulsión se ejecuta al presionar el botón, sin confirmación |
+| CU-002-006 Expulsar | Paso 15: registrar el evento en el historial de administración del clan | No se registra |
+| CU-002-006 Expulsar | FA-2: no se puede expulsar a un miembro con rol SILVERBACK | Solo se impide que el Líder se expulse a sí mismo |
+
+---
+
 ## 5. Mapa de inserción en la carpeta impresa/digital
 
 | Sección de la carpeta | Acción | Artefacto |
@@ -724,6 +758,9 @@ end
 | **10.5.4 Diagramas de Secuencia** | Reemplazar CU-003-001, CU-003-002 y CU-003-004 | `secuencias-cu003-cu004.md` (marcados "Modificado S6") |
 | **10.5.4 Diagramas de Secuencia** | Cambiar "PostgreSQL" por "SQL Server" en todos los diagramas | `secuencias-*.md` |
 | **10.5.3 Casos de Uso** | Agregar nota de diferencias en CU-003-001 a CU-003-004 | Sección 4.5 de este documento |
+| **10.5.3 Casos de Uso** | En CU-002-006, agregar nota: el expulsado vuelve al Radar de Manadas | Sección 4.6 de este documento |
+| **10.5.3 Casos de Uso** | En CU-001-003, 004 y 005, ampliar la precondición a "cuenta sin clan" y agregar el FA "Ya pertenecés a un clan" | Sección 4.6 de este documento |
+| **10.5.3 Casos de Uso** | En CU-002-004, aclarar que el "tiempo real" es un refresco cada 5 s | Sección 4.6 de este documento |
 
 ---
 
@@ -734,6 +771,7 @@ end
 | 1.0 | Sep 2026 | S3 | Creación inicial — cubre S2 y S3 completos |
 | 1.1 | 22/09/2026 | S4 | Se completa C-28 (ficha + secuencia + mapa de inserción). `DESAFIO.tier` se mantiene BRONCE/PLATA/ORO. Decisiones de diseño S4: modelo de 4 roles y modificadores CER. |
 | 1.2 | 05/10/2026 | S5–S6 | Decisiones de diseño de la Guerra Global, voz y XP. Diferencias CU-003-001 a 004 vs implementación. ER: `posicion` en PARTICIPACION_GUERRA. Secuencias CU-003 reescritas, PostgreSQL → SQL Server, y las 4 secuencias nuevas insertadas en sus archivos. |
+| 1.3 | 06/10/2026 | Correcciones | Sección 4.6: flujo del expulsado hacia el Radar, FA "Ya pertenecés a un clan", cupo de 20, el Líder no cambia su propio rol, Tácticas con refresco cada 5 s. Lista de brechas pendientes entre CU aprobados e implementación (buscador del Radar, un solo SILVERBACK, confirmación e historial al expulsar). |
 
 ---
 

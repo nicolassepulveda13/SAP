@@ -43,6 +43,8 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 > - **Cambio de clan sin control:** `/api/incorporacion/unirse` y `/clan` permitían a un miembro con clan pasarse a otro (contadores incorrectos). Ahora responden 400 "Ya pertenecés a un clan". `/unirse` además valida el cupo (20).
 > - **`null` que llega como `undefined`:** la API serializa con `WhenWritingNull` y omite los campos nulos. El Radar creía que un miembro sin clan tenía clan, y el Historial **rompía** en una batalla "SIN RIVAL" (`rivalCer` ausente). Corregido con `!= null` y tipos opcionales.
 > - **Chat sin refresco:** Tácticas se actualiza sola cada 5 s (`components/ui/AutoRefresh.tsx`), y se pausa con la pestaña oculta.
+>
+> **Brechas con CU aprobados → S10** (detalle en `Modificacion-Carpeta.md` §4.6): un solo SILVERBACK por clan (CU-002-005); confirmación, registro en historial y protección del SILVERBACK al expulsar (CU-002-006); buscador y "INICIAR VIAJE" en el Radar (CU-001-003).
 
 | # | Semana | Entregable | CU / Alcance |
 |---|---|---|---|
