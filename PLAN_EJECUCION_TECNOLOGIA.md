@@ -36,11 +36,13 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 
 > **Estado real al 05/10/2026:** el CU total es **28** (24 aprobados en E1 + CU-001-000, CU-001-005, CU-002-007, CU-005-007). S1–S6 completas. Los paquetes Incorporación, Santuario y Arena están cubiertos por la suite E2E `silverback/e2e/` (11 tests, Playwright).
 >
-> **Bugs encontrados por la E2E (05/10) y corregidos:**
-> - `POST /api/santuario/{clanId}/desafios` devolvía la entidad de EF: ciclo de serialización (500) y fuga del `PasswordHash` del líder. Ahora devuelve un DTO (igual `GET /api/santuario/{clanId}`).
-> - Aceptar un desafío (CU-002-003) **nunca funcionó desde la web**: el endpoint responde 204 y `apiFetch` intentaba parsear JSON vacío. Corregido en `lib/api-client.ts`.
->
-> **Pendiente para S7/S8:** `EvolucionController` y `PerfilController` (módulos ocultos) también devuelven entidades sin DTO; revisar al implementarlos.
+> **Bugs encontrados por la E2E (05/10) y corregidos** — la suite tiene 13 tests y cubre cada uno:
+> - **Fuga de `PasswordHash`:** varios endpoints devolvían entidades de EF. `POST /api/santuario/{clanId}/desafios` y `GET /api/evolucion/progreso` además rompían con 500 por ciclos de serialización. Ahora **todos los controllers** devuelven DTOs (Santuario, Arena, Evolución, Perfil), incluidos los de módulos ocultos, porque la API igual responde. Hay un test de regresión que recorre los endpoints.
+> - **Aceptar un desafío (CU-002-003) nunca funcionó desde la web:** el endpoint responde 204 y `apiFetch` intentaba parsear JSON vacío. Corregido en `lib/api-client.ts`.
+> - **Un miembro expulsado quedaba trabado:** no podía entrar al clan ni unirse a otro (el Radar solo existía para cuentas nuevas). Ahora el Radar sirve para cuentas existentes sin clan y se une o funda con la sesión actual. Mismo arreglo para cuentas creadas por API sin clan.
+> - **Cambio de clan sin control:** `/api/incorporacion/unirse` y `/clan` permitían a un miembro con clan pasarse a otro (contadores incorrectos). Ahora responden 400 "Ya pertenecés a un clan". `/unirse` además valida el cupo (20).
+> - **`null` que llega como `undefined`:** la API serializa con `WhenWritingNull` y omite los campos nulos. El Radar creía que un miembro sin clan tenía clan, y el Historial **rompía** en una batalla "SIN RIVAL" (`rivalCer` ausente). Corregido con `!= null` y tipos opcionales.
+> - **Chat sin refresco:** Tácticas se actualiza sola cada 5 s (`components/ui/AutoRefresh.tsx`), y se pausa con la pestaña oculta.
 
 | # | Semana | Entregable | CU / Alcance |
 |---|---|---|---|
@@ -206,8 +208,8 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 
 ### Pendiente arrastrado
 
-- [ ] Chat: refresco automático (polling 3–5 s). Hoy se actualiza al enviar o recargar.
-- [ ] Rol cambiado/expulsión no invalida el JWT del afectado: la UI usa el rol de la base, pero el claim `clanId` del token del expulsado sigue hasta re-login.
+- [x] Chat: refresco automático cada 5 s (`AutoRefresh`, se pausa con la pestaña oculta). *(05/10)*
+- [x] Rol cambiado / expulsión con JWT viejo: todas las pantallas y endpoints del clan leen rol y `clanId` **desde la base** (`requireClan()`, `ObtenerClanId`), no del token. El expulsado va al Radar de Manadas y puede unirse a otro clan; al hacerlo recibe un token nuevo. *(05/10)*
 - [ ] Probar end-to-end con 2 usuarios (Silverback + Recluta) el criterio de aceptación de 403.
 
 **Integraciones:** SQL Server · Validación de permisos jerárquicos.

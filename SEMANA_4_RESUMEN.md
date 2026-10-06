@@ -83,7 +83,7 @@ npx playwright show-report   # reporte HTML con capturas y trazas de los fallos
 
 - Si la API y el front no están corriendo, **los levanta Playwright** y los baja al terminar. Si ya están arriba, los reutiliza.
 - Cada corrida crea sus propios usuarios y clanes (`e2e-…@silverback.local`, clanes `E2E Alfa/Beta …`), así que no depende de los datos que haya.
-- Son 11 tests: incorporación, pantallas ocultas, Tácticas, Forja (publicar y aceptar), permisos de Roles (403 y 400), registro manual y por voz (micrófono simulado), sin soporte de voz, Guerra Global con rival, cierre de semana con VICTORIA/DERROTA y expulsión.
+- Son 13 tests: incorporación (3 clanes), pantallas ocultas, Tácticas con refresco automático, Forja (publicar y aceptar), permisos de Roles (403 y 400), registro manual y por voz (micrófono simulado), sin soporte de voz, Guerra Global con rival y SIN RIVAL, cierre de semana con VICTORIA/DERROTA, expulsión y vuelta a otro clan, bloqueo de cambio de clan, y un test de seguridad que verifica que ningún endpoint exponga `passwordHash`.
 - ⚠️ El test de cierre de semana **modifica la guerra activa** en la base (la da por vencida). Antes hace un backup en `…\MSSQL\Backup\silverback_pre_e2e_<id>.bak`.
 - Si la base está en otra PC: `$env:E2E_SQL_SERVER = "OTRA-PC\SQLEXPRESS"; npm run test:e2e`.
 
