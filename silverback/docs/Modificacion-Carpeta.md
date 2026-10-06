@@ -44,6 +44,7 @@ Este documento registra todas las modificaciones realizadas a la carpeta técnic
 | 06/10 | PKG_SANTUARIO | Sala de Tácticas con refresco automático cada 5 s (el CU pide "tiempo real") | Diferencia documentada |
 | 06/10 | PKG_SANTUARIO | El SILVERBACK no puede cambiar su propio rol (implementa el FA-2 de CU-002-005) | Implementación de CU aprobado |
 | 06/10 | — | Brechas detectadas entre CU aprobados e implementación (sección 4.6) | Pendiente de implementar |
+| 06/10 | `diagramas-uml.md` | Notas de arquitectura corregidas: modificadores CER (decían 1.15 / 1.10 / 1.20), autenticación por JWT (decía sesiones en base) y capas con la API .NET | Corrección |
 
 ---
 

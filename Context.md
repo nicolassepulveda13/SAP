@@ -151,7 +151,7 @@ Estrategia **"Try & Buy"**: 15 días de prueba gratuita total antes de requerir 
 | **Big Data / Analytics** | Recolección, anonimización y procesamiento de datos de comportamiento |
 | **IA / Recomendación** | Algoritmos de plan dinámico para tier Pro |
 
-> ⚠️ **REGLA CRÍTICA:** El backend usa **PostgreSQL o SQL Server**. **Nunca Supabase**. La fuente de verdad del desarrollo es `SPEC_silverback.md` — 20 páginas web + 20 CUs + estructura App Router.
+> ⚠️ **REGLA CRÍTICA:** El backend usa **SQL Server** (API ASP.NET Core 9). **Nunca Supabase**. La fuente de verdad del desarrollo es `RESUMEN_GENERAL.md` + `PLAN_EJECUCION_TECNOLOGIA.md`; los casos de uso vigentes (28) están en `silverback/docs/casos-de-uso.md`.
 
 ---
 

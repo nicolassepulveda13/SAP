@@ -24,7 +24,25 @@
 > Requisitos: SQL Server Express corriendo (servicio `SQL Server (SQLEXPRESS)`), .NET 9 SDK, Node 20+.
 > Connection string actual: `DESKTOP-JQBGOKE\SQLEXPRESS` (en `silverback-api/SilverbackApi.Api/appsettings.json`). En la otra PC hay que cambiarlo, o usar `localhost\SQLEXPRESS`, que funciona en las dos.
 
-Se necesitan **dos terminales** (PowerShell).
+### Primera vez en una PC nueva
+
+1. **Connection string:** en `silverback-api/SilverbackApi.Api/appsettings.json` poné el nombre de la máquina (`Server=NOMBRE-PC\\SQLEXPRESS;…`) o `localhost\\SQLEXPRESS`. Con usuario y contraseña de SQL, el formato es `Server=localhost;Database=silverback;User Id=sa;Password=…;TrustServerCertificate=True`.
+2. **JWT secret:** reemplazá `Jwt:Secret` en el mismo archivo por una cadena aleatoria de 32 caracteres o más.
+3. **Herramienta de migraciones** (una sola vez): `dotnet tool install --global dotnet-ef`.
+4. **Base de datos:**
+   ```powershell
+   cd silverback-api
+   dotnet restore
+   dotnet ef database update --project SilverbackApi.Data --startup-project SilverbackApi.Api
+   ```
+5. **Front:**
+   ```powershell
+   cd silverback
+   npm install
+   "API_URL=http://localhost:5057" | Out-File -Encoding utf8 .env.local
+   ```
+
+Después, para el día a día, se necesitan **dos terminales** (PowerShell).
 
 ### Terminal 1 — API (.NET) → http://localhost:5057
 
@@ -79,12 +97,35 @@ cd C:\Users\nico_\Documents\repos\SAP\silverback-api
 dotnet clean                                                                     # build de la API
 ```
 
-### Si cambian las migraciones (después de un pull)
+### Migraciones
 
 ```powershell
 cd C:\Users\nico_\Documents\repos\SAP\silverback-api
+
+# Aplicar las pendientes (después de un pull)
 dotnet ef database update --project SilverbackApi.Data --startup-project SilverbackApi.Api
+
+# Crear una nueva (después de cambiar el modelo)
+dotnet ef migrations add NombreMigracion --project SilverbackApi.Data --startup-project SilverbackApi.Api
 ```
+
+### Puertos
+
+| Servicio | Puerto |
+|---|---|
+| Front (Next.js) | 3000 |
+| API (.NET) | 5057 |
+| SQL Server | 1433 (default) |
+
+### Troubleshooting
+
+| Síntoma | Qué revisar |
+|---|---|
+| La API no conecta a SQL Server | Que el servicio `SQL Server (SQLEXPRESS)` esté corriendo, y que el connection string tenga el nombre de **esta** PC |
+| `401 Unauthorized` | El token venció o es inválido: cerrá sesión y volvé a entrar. En Scalar, pegá solo el token, sin "Bearer" |
+| El front no llega a la API | Que `API_URL` en `silverback/.env.local` apunte a `http://localhost:5057` y que la API esté corriendo |
+| `dotnet ef` no se encuentra | `dotnet tool install --global dotnet-ef` |
+| El build falla con "archivo en uso" | La API sigue corriendo y bloquea las DLLs: bajala antes de compilar |
 
 ### Datos de prueba
 
@@ -201,8 +242,7 @@ Todas están registradas para el profe en `Modificacion-Carpeta.md` (secciones 1
 | `silverback/docs/secuencias-*.md` | Diagramas de secuencia (CU-003 reescritos en S6, 4 nuevos insertados, SQL Server) | ✅ |
 | `silverback/docs/diagrama-er.md` · `er-*.md` | ER (`ACEPTACION_DESAFIO`, `posicion` en `PARTICIPACION_GUERRA`) | ✅ |
 | `PLAN_EJECUCION_TECNOLOGIA.md` | Plan de 11 semanas con el estado real de cada tarea | ✅ |
-| `silverback/docs/Guia-Tecnica.md` | Guía interna del código | ⚠️ Llega hasta S3 |
-| `SPEC_silverback.md` | SPEC inicial de las maquetas | 🗄️ Histórico (marcado como desactualizado) |
+| `silverback/docs/Guia-Tecnica.md` | Guía interna del código, archivo por archivo, con debugging | ✅ S1–S6 (06/10) |
 | `Context.md` | Contexto de Negocios | ⚠️ Dice Next.js 14 y 20 CU (no se tocó: es de Negocios) |
 
 ---
@@ -226,5 +266,4 @@ Todas están registradas para el profe en `Modificacion-Carpeta.md` (secciones 1
 
 - [ ] Probar la voz con un micrófono real en Chrome (en los tests es simulado).
 - [ ] Datos de la base: "Lider Gorila" es fundador de la Manada de Prueba pero tiene rol BETA (el código ya no deja que vuelva a pasar).
-- [ ] `Guia-Tecnica.md`: sumar S4 a S6.
 - [ ] Prisma (`silverback/prisma/`) queda como referencia histórica (`DEPRECADO.md`), excluido de `tsconfig`.

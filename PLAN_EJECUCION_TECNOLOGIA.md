@@ -73,7 +73,7 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 ### Tareas completadas
 
 - [x] Schema SQL Server migrado vía EF Core 9 migrations: 22 entidades con enums como strings (`HasConversion<string>()`), precisiones decimales explícitas, PKs compuestas, índices únicos y restricciones de cascada.
-- [x] SQL Server nativo (NICO-DESKTOP\SQLEXPRESS, Windows Auth) — sin Docker; ver `SETUP.md` para instrucciones de arranque.
+- [x] SQL Server nativo (NICO-DESKTOP\SQLEXPRESS, Windows Auth) — sin Docker; ver `RESUMEN_GENERAL.md` (§2) para instrucciones de arranque.
 - [x] ASP.NET Core 9 Web API en Clean Architecture: 4 proyectos (`Domain`, `Data`, `Services`, `Api`) con dependencias compilador-enforced vía project references.
 - [x] EF Core 9 con SQL Server como ORM.
 - [x] Auth JWT Bearer: token emitido por .NET API (HS256, 7 días), almacenado por Next.js en cookie HTTP-only `sb_token`.
@@ -92,7 +92,7 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 
 | Riesgo original | Resolución |
 |---|---|
-| SQL Server no disponible. | Resuelto: se usa instalación nativa NICO-DESKTOP\SQLEXPRESS con Windows Auth, documentado en SETUP.md. |
+| SQL Server no disponible. | Resuelto: se usa instalación nativa NICO-DESKTOP\SQLEXPRESS con Windows Auth, documentado en `RESUMEN_GENERAL.md` (§2). |
 | ENUMs sin soporte nativo en SQL Server. | Resuelto: `HasConversion<string>()` en EF Core, serialización como strings vía `JsonStringEnumConverter`. |
 | Gaps entre ER y pantallas. | Mitigado: schema construido desde el Diagrama de Clases del repo, no desde el STFI directamente. |
 

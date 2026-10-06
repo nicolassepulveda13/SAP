@@ -23,9 +23,9 @@
 
 ## Notas de arquitectura
 
-- **Patrón de capas:** Pages (Next.js App Router) → Services (lógica de negocio) → Repositories (acceso a base de datos)
+- **Patrón de capas:** Pages (Next.js App Router) → Server Actions → API Controllers (.NET) → Services (lógica de negocio) → Repositories → SQL Server
 - **Base de datos:** SQL Server — base de datos relacional. Los repositorios ejecutan SQL via ORM o driver nativo.
-- **Autenticación:** sesiones almacenadas en base de datos, validadas por HTTP (cookie de sesión).
+- **Autenticación:** JWT firmado por la API (.NET), guardado en la cookie HTTP-only `sb_token` y enviado como `Authorization: Bearer`.
 - **Actores:** Miembro (usuario estándar), LiderClan (rol SILVERBACK), Sistema SilverBack, Aliado Comercial (externo)
 - **Coherencia:** Todos los diagramas usan la misma nomenclatura canónica (PascalCase clases, camelCase métodos)
-- **CER:** `puntajeCER = pesoKg × repeticiones × multiplicadorArquetipo` (VOLUMEN 1.15x, DEFINIDO 1.10x, ATLETICO 1.20x)
+- **CER:** `puntajeCER = pesoKg × repeticiones × multiplicadorArquetipo` (VOLUMEN 1.10x, DEFINIDO 1.05x, ATLETICO 1.00x — decisión S4, ver `Modificacion-Carpeta.md`)
