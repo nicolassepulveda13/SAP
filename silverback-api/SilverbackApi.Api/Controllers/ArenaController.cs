@@ -57,7 +57,7 @@ public class ArenaController(IArenaService svc, IGuerraService guerraSvc) : Silv
         var miembroId = ObtenerMiembroId();
         if (miembroId is null) return Unauthorized();
         var historial = await svc.ObtenerHistorial(miembroId.Value, pagina, ejercicio);
-        return Ok(historial);
+        return Ok(historial.Select(e => new { e.Id, e.Ejercicio, e.PesoKg, e.Repeticiones, e.PuntajeCer, e.FechaHora }));
     }
 
 }

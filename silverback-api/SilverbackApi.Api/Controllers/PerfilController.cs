@@ -52,7 +52,11 @@ public class PerfilController(IPerfilService svc) : SilverbackControllerBase
         var miembroId = ObtenerMiembroId();
         if (miembroId is null) return Unauthorized();
         var racha = await svc.ConsultarRacha(miembroId.Value);
-        return racha is null ? NotFound() : Ok(racha);
+        // DTOs en todo el controller: las entidades tienen navegación a Miembro (PasswordHash)
+        return racha is null ? NotFound() : Ok(new
+        {
+            racha.DiasConsecutivos, Estado = racha.Estado.ToString(), racha.UltimoEntrenamiento,
+        });
     }
 
     [HttpPost("racha/salvar")]
@@ -69,7 +73,8 @@ public class PerfilController(IPerfilService svc) : SilverbackControllerBase
     {
         var miembroId = ObtenerMiembroId();
         if (miembroId is null) return Unauthorized();
-        return Ok(await svc.CargarFatiga(miembroId.Value));
+        var f = await svc.CargarFatiga(miembroId.Value);
+        return Ok(new { f.CargaSemanal, NivelFatiga = f.NivelFatiga.ToString(), f.ActualizadoEn });
     }
 
     [HttpGet("trofeos")]
@@ -77,7 +82,8 @@ public class PerfilController(IPerfilService svc) : SilverbackControllerBase
     {
         var miembroId = ObtenerMiembroId();
         if (miembroId is null) return Unauthorized();
-        return Ok(await svc.CargarTrofeos(miembroId.Value));
+        var trofeos = await svc.CargarTrofeos(miembroId.Value);
+        return Ok(trofeos.Select(t => new { t.Id, t.Nombre, t.Descripcion, Tipo = t.Tipo.ToString(), t.ObtendioEn }));
     }
 
     [HttpGet("beneficios")]
@@ -85,7 +91,12 @@ public class PerfilController(IPerfilService svc) : SilverbackControllerBase
     {
         var miembroId = ObtenerMiembroId();
         if (miembroId is null) return Unauthorized();
-        return Ok(await svc.CargarBeneficios(miembroId.Value));
+        var beneficios = await svc.CargarBeneficios(miembroId.Value);
+        return Ok(beneficios.Select(b => new
+        {
+            b.Id, b.AliadoId, b.Titulo, b.Descripcion, Tipo = b.Tipo.ToString(),
+            RangoMinimo = b.RangoMinimo.ToString(), Estado = b.Estado.ToString(),
+        }));
     }
 
     [HttpPost("beneficios/reclamar")]
