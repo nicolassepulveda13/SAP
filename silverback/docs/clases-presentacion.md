@@ -1,9 +1,11 @@
 # 10.5.7a — Diagrama de Clases: Capa de Presentación
 
-> **Actualizado 06/10:** se agregan las clases y métodos implementados después de E1 (login, fundar manada, publicar desafío, voz, Guerra Global, gestión de cuenta, `AceptacionDesafio`, `posicion`). Detalle en `Modificacion-Carpeta.md`.
+> **Actualizado 06/10:** arquitectura documentada en **5 capas** (se incorpora Controladores — `SilverbackApi.Api`). Las clases y atributos se alinean con el código: `DesafioClan` y `MensajeClan` (antes `Desafio`/`Mensaje`), `AuthService` y `GuerraService`. Detalle en `Modificacion-Carpeta.md`.
 
-**Capa:** Presentación (Pages) — proyecto `silverback/` (Next.js 16)  
-**Descripción:** Pages de Next.js App Router. Cada clase agrupa los handlers de una sección funcional. Se comunican con la capa de Servicios vía HTTP REST al .NET API (`apiFetch<T>()` desde Server Components, Server Actions para mutaciones). No acceden directamente a servicios ni repositorios.
+**Capa:** Presentación — Next.js (silverback/)  
+**Descripción:** Pages de Next.js App Router. Cada clase agrupa los handlers de una sección funcional. Se comunican con la capa de Controladores vía HTTP REST (`apiFetch<T>()` desde Server Components, Server Actions para mutaciones), enviando el JWT de la cookie `sb_token` como Bearer. No acceden directamente a servicios ni repositorios. Los controladores se muestran como referencia (detalle en 10.5.7b).
+
+> **Render:** exportar en **SVG** (vectorial, sin límite de tamaño). En PNG, PlantUML recorta a 4096 px (`PLANTUML_LIMIT_SIZE`).
 
 ---
 
@@ -13,20 +15,22 @@ skinparam classAttributeIconSize 0
 skinparam packageStyle rectangle
 skinparam defaultFontName Arial
 skinparam defaultFontSize 11
+skinparam nodesep 30
+skinparam ranksep 70
+hide empty members
 
 skinparam class {
   BackgroundColor #FFFFFF
-  BorderColor #7C3AED
-  HeaderBackgroundColor #DDD6FE
   FontColor #111111
-
-  BackgroundColor<<service>> #FFFFFF
-  BorderColor<<service>> #2E8B57
-  HeaderBackgroundColor<<service>> #C3EDCF
-  FontColor<<service>> #111111
+  BorderColor<<page>> #7C3AED
+  HeaderBackgroundColor<<page>> #DDD6FE
+  BorderColor<<controller>> #0E7490
+  HeaderBackgroundColor<<controller>> #CFFAFE
+  BorderColor #3B82F6
+  HeaderBackgroundColor #DBEAFE
 }
 skinparam arrow {
-  Color #444444
+  Color #555555
   FontColor #333333
   FontSize 10
 }
@@ -35,11 +39,11 @@ skinparam package {
   FontStyle bold
   FontSize 12
 }
-
-' ─── PRESENTACIÓN ─────────────────────────────────────────
-
-package "Presentación" #F5F0FF {
-
+package "Presentación — Next.js (silverback/)" #F5F0FF {
+  class AuthPage <<page>> {
+    +onIniciarSesion(email: String, password: String): void
+    +onCerrarSesion(): void
+  }
   class IncorporacionPage <<page>> {
     +onRegistrarBiometricos(datos: DatosBiometricos): void
     +onAsignarArquetipo(arquetipo: Arquetipo): void
@@ -47,11 +51,6 @@ package "Presentación" #F5F0FF {
     +onUnirseAManada(clanId: UUID): void
     +onFundarManada(nombre: String): void
   }
-  class AuthPage <<page>> {
-    +onIniciarSesion(email: String, password: String): void
-    +onCerrarSesion(): void
-  }
-
   class SantuarioPage <<page>> {
     +onCargarDashboard(): void
     +onListarDesafiosPorTier(tier: TierDesafio): void
@@ -63,7 +62,6 @@ package "Presentación" #F5F0FF {
     +onExpulsarMiembro(miembroId: UUID): void
     +onPublicarDesafio(descripcion: String, tier: TierDesafio, recompensaXp: Int, fechaExpiracion: Date): void
   }
-
   class ArenaPage <<page>> {
     +onObtenerGuerraActiva(): void
     +onRegistrarEntrenamiento(datos: Entrenamiento): void
@@ -72,7 +70,6 @@ package "Presentación" #F5F0FF {
     +onDictarEntrenamiento(): void
     +onObtenerBatallas(): void
   }
-
   class EvolucionPage <<page>> {
     +onCargarProgreso(): void
     +onObtenerCofresDisponibles(): void
@@ -81,7 +78,6 @@ package "Presentación" #F5F0FF {
     +onObtenerItems(categoria: CategoriaItem): void
     +onComprarItem(itemId: UUID): void
   }
-
   class PerfilPage <<page>> {
     +onCargarDashboard(): void
     +onConsultarRacha(): void
@@ -93,51 +89,29 @@ package "Presentación" #F5F0FF {
     +onActualizarCuenta(nombre: String, email: String): void
     +onCambiarPassword(actual: String, nueva: String): void
   }
-
-  ' Forzar layout 3 columnas fila 1 + 2 columnas fila 2
-  IncorporacionPage -[hidden]r- SantuarioPage
-  SantuarioPage -[hidden]r- ArenaPage
-  IncorporacionPage -[hidden]d- EvolucionPage
-  EvolucionPage -[hidden]r- PerfilPage
 }
 
-' ─── SERVICIOS (referencia) ───────────────────────────────
+package "Controladores — SilverbackApi.Api" #ECFEFF {
+  abstract class SilverbackControllerBase <<controller>>
+  class AuthController <<controller>>
+  class IncorporacionController <<controller>>
+  class SantuarioController <<controller>>
+  class ArenaController <<controller>>
+  class EvolucionController <<controller>>
+  class PerfilController <<controller>>
 
-package "Servicios" #EBFBF0 {
-
-  class IncorporacionService <<service>> {
-  }
-  class SantuarioService <<service>> {
-  }
-  class ArenaService <<service>> {
-  }
-  class CERService <<service>> {
-  }
-  class EvolucionService <<service>> {
-  }
-  class PerfilService <<service>> {
-  }
-
-  IncorporacionService -[hidden]r- SantuarioService
-  SantuarioService -[hidden]r- ArenaService
-  CERService -[hidden]r- EvolucionService
-  EvolucionService -[hidden]r- PerfilService
-  IncorporacionService -[hidden]d- CERService
+  SilverbackControllerBase <|-- IncorporacionController
+  SilverbackControllerBase <|-- SantuarioController
+  SilverbackControllerBase <|-- ArenaController
+  SilverbackControllerBase <|-- EvolucionController
+  SilverbackControllerBase <|-- PerfilController
 }
 
-' ─── Forzar Pages ARRIBA, Servicios ABAJO ─────────────────
-
-IncorporacionPage -[hidden]d- IncorporacionService
-ArenaPage -[hidden]d- CERService
-
-' ─── Dependencias ─────────────────────────────────────────
-
-IncorporacionPage ..> IncorporacionService : usa
-SantuarioPage ..> SantuarioService : usa
-ArenaPage ..> ArenaService : usa
-ArenaPage ..> CERService : usa
-EvolucionPage ..> EvolucionService : usa
-PerfilPage ..> PerfilService : usa
-
+AuthPage ..> AuthController : HTTP REST
+IncorporacionPage ..> IncorporacionController : HTTP REST
+SantuarioPage ..> SantuarioController : HTTP REST
+ArenaPage ..> ArenaController : HTTP REST
+EvolucionPage ..> EvolucionController : HTTP REST
+PerfilPage ..> PerfilController : HTTP REST
 @enduml
 ```

@@ -1,7 +1,11 @@
 # 10.5.7c — Diagrama de Clases: Capa de Repositorios
 
-**Capa:** Repositorios — proyecto `SilverbackApi.Data` (ASP.NET Core 9)  
-**Descripción:** Acceso a datos vía EF Core 9. Cada repositorio encapsula las queries sobre una entidad del dominio usando `AppDbContext`. Agrupados por área funcional.
+> **Actualizado 06/10:** arquitectura documentada en **5 capas** (se incorpora Controladores — `SilverbackApi.Api`). Las clases y atributos se alinean con el código: `DesafioClan` y `MensajeClan` (antes `Desafio`/`Mensaje`), `AuthService` y `GuerraService`. Detalle en `Modificacion-Carpeta.md`.
+
+**Capa:** Repositorios — SilverbackApi.Data  
+**Descripción:** Acceso a datos vía EF Core 9 sobre SQL Server. Cada repositorio encapsula las queries sobre una o más entidades del dominio usando `AppDbContext`. Las entidades se muestran como referencia (detalle en 10.5.7b).
+
+> **Render:** exportar en **SVG** (vectorial, sin límite de tamaño). En PNG, PlantUML recorta a 4096 px (`PLANTUML_LIMIT_SIZE`).
 
 ---
 
@@ -11,20 +15,20 @@ skinparam classAttributeIconSize 0
 skinparam packageStyle rectangle
 skinparam defaultFontName Arial
 skinparam defaultFontSize 11
+skinparam nodesep 30
+skinparam ranksep 70
+hide empty members
 
 skinparam class {
   BackgroundColor #FFFFFF
-  BorderColor #D4620A
-  HeaderBackgroundColor #FDDCB5
   FontColor #111111
-
-  BackgroundColor<<domain>> #FFFFFF
-  BorderColor<<domain>> #3B82F6
-  HeaderBackgroundColor<<domain>> #DBEAFE
-  FontColor<<domain>> #111111
+  BorderColor<<repository>> #D4620A
+  HeaderBackgroundColor<<repository>> #FDDCB5
+  BorderColor #3B82F6
+  HeaderBackgroundColor #DBEAFE
 }
 skinparam arrow {
-  Color #444444
+  Color #555555
   FontColor #333333
   FontSize 10
 }
@@ -33,12 +37,7 @@ skinparam package {
   FontStyle bold
   FontSize 12
 }
-
-' ─── REPOSITORIOS ─────────────────────────────────────────
-
-package "Repositorios" #FFF3EB {
-
-  ' ── Fila 1: Núcleo
+package "Repositorios — SilverbackApi.Data" #FFF3EB {
   class MiembroRepository <<repository>> {
     +crear(datos: DatosBiometricos): Miembro
     +buscarPorId(id: UUID): Miembro
@@ -55,17 +54,20 @@ package "Repositorios" #FFF3EB {
     +listarDisponibles(filtros: Object, pagina: Int, limite: Int): Clan[]
     +buscarPorId(id: UUID): Clan
     +obtenerConMiembros(id: UUID): Clan
-    +verificarDisponibilidad(id: UUID): boolean
+    +verificarDisponibilidad(id: UUID): Boolean
     +actualizarContadorMiembros(id: UUID, delta: Int): Clan
     +descontarPuntos(id: UUID, puntos: Int): void
   }
-  class RachaRepository <<repository>> {
-    +obtenerPorMiembro(miembroId: UUID): Racha
-    +actualizar(miembroId: UUID, datos: Object): Racha
-    +restaurar(miembroId: UUID): Racha
+  class DesafioRepository <<repository>> {
+    +listarActivos(clanId: UUID): DesafioClan[]
+    +listarPorTier(clanId: UUID, tier: TierDesafio): DesafioClan[]
+    +buscarAceptacion(desafioId: UUID, miembroId: UUID): AceptacionDesafio
+    +crearAceptacion(miembroId: UUID, desafioId: UUID, estado: EstadoDesafio): AceptacionDesafio
   }
-
-  ' ── Fila 2: Arena + Santuario
+  class MensajeRepository <<repository>> {
+    +crear(mensaje: MensajeClan): MensajeClan
+    +listarPorClan(clanId: UUID, desde: Date): MensajeClan[]
+  }
   class EntrenamientoRepository <<repository>> {
     +crear(entrenamiento: Entrenamiento): Entrenamiento
     +listar(miembroId: UUID, filtros: Object, pagina: Int): Entrenamiento[]
@@ -76,18 +78,14 @@ package "Repositorios" #FFF3EB {
     +findRankingClanes(guerraId: UUID, top: Int): Clan[]
     +obtenerPuntajeActual(clanId: UUID): GuerraGlobal
   }
-  class DesafioRepository <<repository>> {
-    +listarActivos(clanId: UUID): Desafio[]
-    +listarPorTier(clanId: UUID, tier: TierDesafio): Desafio[]
-    +buscarAceptacion(desafioId: UUID, miembroId: UUID): AceptacionDesafio
-    +crearAceptacion(miembroId: UUID, desafioId: UUID, estado: EstadoDesafio): AceptacionDesafio
+  class RachaRepository <<repository>> {
+    +obtenerPorMiembro(miembroId: UUID): Racha
+    +actualizar(miembroId: UUID, datos: Object): Racha
+    +restaurar(miembroId: UUID): Racha
   }
-  class MensajeRepository <<repository>> {
-    +crear(mensaje: Mensaje): Mensaje
-    +listarPorClan(clanId: UUID, desde: Date): Mensaje[]
+  class AdminHistorialRepository <<repository>> {
+    +registrar(evento: String): void
   }
-
-  ' ── Fila 3: Evolución
   class SkillTreeRepository <<repository>> {
     +obtenerArbol(miembroId: UUID): Nodo[]
     +crearInversion(inversion: InversionNodo): InversionNodo
@@ -101,8 +99,9 @@ package "Repositorios" #FFF3EB {
     +buscarItem(itemId: UUID): Item
     +registrarCompra(miembroId: UUID, itemId: UUID): void
   }
-
-  ' ── Fila 4: Perfil
+  class FatigaRepository <<repository>> {
+    +obtenerPorMiembro(miembroId: UUID): DatosFatiga
+  }
   class TrofeoRepository <<repository>> {
     +listarPorMiembro(miembroId: UUID): Trofeo[]
     +obtenerProgreso(miembroId: UUID): Object
@@ -112,84 +111,53 @@ package "Repositorios" #FFF3EB {
     +registrarReclamo(beneficioId: UUID, miembroId: UUID): void
     +actualizarEstado(beneficioId: UUID, datos: Object): void
   }
-  class FatigaRepository <<repository>> {
-    +obtenerPorMiembro(miembroId: UUID): DatosFatiga
-  }
-  class AdminHistorialRepository <<repository>> {
-    +registrar(evento: String): void
-  }
 
-  ' ── Hidden links para grilla vertical ──────────────────
-  MiembroRepository -[hidden]r- ClanRepository
-  ClanRepository -[hidden]r- RachaRepository
-  MiembroRepository -[hidden]d- EntrenamientoRepository
-  EntrenamientoRepository -[hidden]r- GuerraRepository
-  GuerraRepository -[hidden]r- DesafioRepository
-  DesafioRepository -[hidden]r- MensajeRepository
-  EntrenamientoRepository -[hidden]d- SkillTreeRepository
-  SkillTreeRepository -[hidden]r- CofreRepository
-  CofreRepository -[hidden]r- MarketplaceRepository
-  SkillTreeRepository -[hidden]d- TrofeoRepository
-  TrofeoRepository -[hidden]r- BeneficioRepository
-  BeneficioRepository -[hidden]r- FatigaRepository
-  FatigaRepository -[hidden]r- AdminHistorialRepository
+  ' Dos filas para que la capa no quede demasiado ancha
+  MiembroRepository -[hidden]d- AdminHistorialRepository
+  ClanRepository -[hidden]d- SkillTreeRepository
+  DesafioRepository -[hidden]d- CofreRepository
+  MensajeRepository -[hidden]d- MarketplaceRepository
+  EntrenamientoRepository -[hidden]d- FatigaRepository
+  GuerraRepository -[hidden]d- TrofeoRepository
+  RachaRepository -[hidden]d- BeneficioRepository
 }
 
-' ─── DOMINIO (referencia) ─────────────────────────────────
-
-package "Dominio" #EBF4FF {
-
-  class Miembro <<domain>> {
-  }
-  class Clan <<domain>> {
-  }
-  class Entrenamiento <<domain>> {
-  }
-  class GuerraGlobal <<domain>> {
-  }
-  class Desafio <<domain>> {
-  }
-  class AceptacionDesafio <<domain>> {
-  }
-  class Mensaje <<domain>> {
-  }
-  class Racha <<domain>> {
-  }
-  class Nodo <<domain>> {
-  }
-  class InversionNodo <<domain>> {
-  }
-  class Cofre <<domain>> {
-  }
-  class Item <<domain>> {
-  }
-  class Trofeo <<domain>> {
-  }
-  class BeneficioAliado <<domain>> {
-  }
-  class DatosFatiga <<domain>> {
-  }
-
-  Miembro -[hidden]r- Clan
-  Clan -[hidden]r- Entrenamiento
-  Entrenamiento -[hidden]r- GuerraGlobal
-  Desafio -[hidden]r- AceptacionDesafio
-  AceptacionDesafio -[hidden]r- Mensaje
-  Mensaje -[hidden]r- Racha
-  Nodo -[hidden]r- InversionNodo
-  InversionNodo -[hidden]r- Cofre
-  Cofre -[hidden]r- Item
-  Trofeo -[hidden]r- BeneficioAliado
-  BeneficioAliado -[hidden]r- DatosFatiga
-  Miembro -[hidden]d- Desafio
-  Desafio -[hidden]d- Nodo
-  Nodo -[hidden]d- Trofeo
+package "Dominio — SilverbackApi.Domain" #EBF4FF {
+  class Miembro
+  class Clan
+  class DatosBiometricos
+  class Racha
+  class DatosFatiga
+  class Entrenamiento
+  class ResultadoCER
+  class GuerraGlobal
+  class ParticipacionGuerra
+  class DesafioClan
+  class AceptacionDesafio
+  class MensajeClan
+  class Nodo
+  class InversionNodo
+  class Cofre
+  class Item
+  class Trofeo
+  class BeneficioAliado
+  class AliadoComercial
 }
 
-' ─── Forzar Repositorios ARRIBA, Dominio ABAJO ────────────
-
-MiembroRepository -[hidden]d- Miembro
-EntrenamientoRepository -[hidden]d- Entrenamiento
-
+MiembroRepository ..> Miembro : gestiona
+ClanRepository ..> Clan : gestiona
+DesafioRepository ..> DesafioClan : gestiona
+DesafioRepository ..> AceptacionDesafio : gestiona
+MensajeRepository ..> MensajeClan : gestiona
+EntrenamientoRepository ..> Entrenamiento : gestiona
+GuerraRepository ..> GuerraGlobal : gestiona
+RachaRepository ..> Racha : gestiona
+SkillTreeRepository ..> Nodo : gestiona
+SkillTreeRepository ..> InversionNodo : gestiona
+CofreRepository ..> Cofre : gestiona
+MarketplaceRepository ..> Item : gestiona
+FatigaRepository ..> DatosFatiga : gestiona
+TrofeoRepository ..> Trofeo : gestiona
+BeneficioRepository ..> BeneficioAliado : gestiona
 @enduml
 ```

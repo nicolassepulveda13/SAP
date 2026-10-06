@@ -21,15 +21,15 @@
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "CalibracionBiometricaPage" as Page
 end box
 
-box "Server Actions" #1C2E2E
+box "Server Actions" #FAF5FF
   participant "saveStep1()\n[onboarding.ts]" as Action
 end box
 
-box "Infraestructura" #2E2E2E
+box "Infraestructura" #F3F4F6
   participant "Cookie sb_onboarding\n(HTTP-only, 30 min)" as Cookie
 end box
 
@@ -69,15 +69,15 @@ actor Miembro2 as "Miembro (login)"
 Miembro2 -> LoginPage: ingresarCredenciales(email, password)
 LoginPage -> AuthAction: login(formData)
 
-box "API Controller" #2E1C10
+box "API Controller" #ECFEFF
   participant "AuthController" as AuthCtrl
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "AuthService" as AuthSvc
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -112,19 +112,19 @@ end
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "CalibracionBiometricaPage" as Page
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "IncorporacionService" as Svc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #FFF3EB
   participant "MiembroRepository" as Repo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -165,19 +165,19 @@ end
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "ArquetipoPage" as Page
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "IncorporacionService" as Svc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #FFF3EB
   participant "MiembroRepository" as Repo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -217,19 +217,19 @@ Page --> Miembro: redirigirA(RadarManadasPage)
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "RadarManadasPage" as Page
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "IncorporacionService" as Svc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #FFF3EB
   participant "ClanRepository" as Repo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -269,20 +269,20 @@ end
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "RadarManadasPage" as Page
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "IncorporacionService" as Svc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #FFF3EB
   participant "ClanRepository" as ClanRepo
   participant "MiembroRepository" as MiembroRepo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -325,28 +325,28 @@ end
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "MatchmakingClient\n(RadarManadasPage)" as Page
 end box
 
-box "Server Actions" #1C2E2E
+box "Server Actions" #FAF5FF
   participant "crearClan()\n[onboarding.ts]" as Action
 end box
 
-box "API Controllers" #2E1C10
+box "API Controllers" #ECFEFF
   participant "IncorporacionController" as Ctrl
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "IncorporacionService" as Svc
 end box
 
-box "Repositorios" #3E2E10
+box "Repositorios" #FFF3EB
   participant "MiembroRepository" as MRepo
   participant "ClanRepository" as CRepo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -436,21 +436,21 @@ end
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "SantuarioPage" as Page
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "SantuarioService" as Svc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #FFF3EB
   participant "ClanRepository" as ClanRepo
   participant "DesafioRepository" as DesafioRepo
   participant "GuerraRepository" as GuerraRepo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -490,19 +490,19 @@ Page --> Miembro: mostrarDashboard(DashboardSantuario)
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "ForjaPage" as Page
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "SantuarioService" as Svc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #FFF3EB
   participant "DesafioRepository" as Repo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -536,19 +536,19 @@ Page --> Miembro: renderizarListadoFiltrado(desafios)
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "ForjaPage" as Page
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "SantuarioService" as Svc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #FFF3EB
   participant "DesafioRepository" as Repo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -586,19 +586,19 @@ end
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "TacticasPage" as Page
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "SantuarioService" as Svc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #FFF3EB
   participant "MensajeRepository" as Repo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -645,19 +645,19 @@ Page --> Miembro: agrega el mensaje enviado al chat
 
 actor LiderClan
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "RolesPage" as Page
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "SantuarioService" as Svc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #FFF3EB
   participant "MiembroRepository" as Repo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -699,20 +699,20 @@ end
 
 actor LiderClan
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "RolesPage" as Page
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "SantuarioService" as Svc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #FFF3EB
   participant "MiembroRepository" as MiembroRepo
   participant "ClanRepository" as ClanRepo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -757,28 +757,28 @@ end
 
 actor "Silverback" as Lider
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "ForjaClient\n(ChallengeForgePage)" as Page
 end box
 
-box "Server Actions" #1C2E2E
+box "Server Actions" #FAF5FF
   participant "crearDesafio()\n[santuario.ts]" as Action
 end box
 
-box "API Controllers" #2E1C10
+box "API Controllers" #ECFEFF
   participant "SantuarioController" as Ctrl
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "SantuarioService" as Svc
 end box
 
-box "Repositorios" #3E2E10
+box "Repositorios" #FFF3EB
   participant "MiembroRepository" as MRepo
   participant "SantuarioRepository" as SRepo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 

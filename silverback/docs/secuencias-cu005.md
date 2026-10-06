@@ -17,21 +17,21 @@
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "PerfilPage" as Page
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "PerfilService" as Svc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #FFF3EB
   participant "MiembroRepository" as MiembroRepo
   participant "EntrenamientoRepository" as EntreRepo
   participant "RachaRepository" as RachaRepo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -73,19 +73,19 @@ https://www.sportograf.com/img/thumbnail/25111/search/SGF6272d9e5
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "RachaPage" as Page
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "PerfilService" as Svc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #FFF3EB
   participant "RachaRepository" as Repo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -117,21 +117,21 @@ end
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "RachaPage" as Page
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "PerfilService" as Svc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #FFF3EB
   participant "ClanRepository" as ClanRepo
   participant "RachaRepository" as RachaRepo
   participant "MiembroRepository" as MiembroRepo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -180,20 +180,20 @@ end
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "FatigaPage" as Page
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "PerfilService" as Svc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #FFF3EB
   participant "FatigaRepository" as FatigaRepo
   participant "EntrenamientoRepository" as EntreRepo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -240,19 +240,19 @@ end
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "TrofeosPage" as Page
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "PerfilService" as Svc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #FFF3EB
   participant "TrofeoRepository" as Repo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -289,24 +289,24 @@ end
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "BeneficiosPage" as Page
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "PerfilService" as Svc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #FFF3EB
   participant "BeneficioRepository" as BeneficioRepo
   participant "MiembroRepository" as MiembroRepo
 end box
 
-box "Externo" #2E2E10
+box "Externo" #FEFCE8
   participant "AliadoComercial (externo)" as Aliado
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -375,27 +375,27 @@ end
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "CuentaPage\n(/perfil/cuenta)" as Page
 end box
 
-box "Server Actions" #1C2E2E
+box "Server Actions" #FAF5FF
   participant "actualizarCuenta()\n[perfil.ts]" as Action
 end box
 
-box "API Controller" #2E1C10
+box "API Controller" #ECFEFF
   participant "PerfilController" as Ctrl
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "PerfilService" as Svc
 end box
 
-box "Repositorios" #3E2E10
+box "Repositorios" #FFF3EB
   participant "MiembroRepository" as Repo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 

@@ -19,29 +19,29 @@
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "GuerraGlobalPage" as Page
 end box
 
-box "Server Actions" #1C2E2E
+box "Server Actions" #FAF5FF
   participant "getGuerra()\n[arena.ts]" as Action
 end box
 
-box "API Controllers" #2E1C10
+box "API Controllers" #ECFEFF
   participant "ArenaController" as Ctrl
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "ArenaService" as Arena
   participant "GuerraService" as Svc
 end box
 
-box "Repositorios" #3E2E10
+box "Repositorios" #FFF3EB
   participant "MiembroRepository" as MRepo
   participant "GuerraRepository" as Repo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -114,29 +114,29 @@ end
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "RegistrarClient" as Page
 end box
 
-box "Externo" #2E2E10
+box "Externo" #FEFCE8
   participant "Web Speech API\n(navegador)" as Voice
 end box
 
-box "Server Actions" #1C2E2E
+box "Server Actions" #FAF5FF
   participant "registrarEntrenamiento()\n[arena.ts]" as Action
 end box
 
-box "API Controllers" #2E1C10
+box "API Controllers" #ECFEFF
   participant "ArenaController" as Ctrl
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "ArenaService" as Svc
   participant "CerService" as CER
   participant "GuerraService" as GSvc
 end box
 
-box "Repositorios" #3E2E10
+box "Repositorios" #FFF3EB
   participant "EntrenamientoRepository" as EntreRepo
   participant "ClanRepository" as ClanRepo
   participant "GuerraRepository" as GRepo
@@ -144,7 +144,7 @@ box "Repositorios" #3E2E10
   participant "RachaRepository" as RachaRepo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -206,11 +206,11 @@ Page --> Miembro: puntaje CER + XP ganada
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "CalculadoraCERPage" as Page
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "CERService" as Svc
 end box
 
@@ -247,29 +247,29 @@ Page --> Miembro: muestra desglose: peso x reps x multiplicador = puntajeCER
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "HistorialBatallasPage" as Page
 end box
 
-box "Server Actions" #1C2E2E
+box "Server Actions" #FAF5FF
   participant "getBatallas() /\ngetHistorial()\n[arena.ts]" as Action
 end box
 
-box "API Controllers" #2E1C10
+box "API Controllers" #ECFEFF
   participant "ArenaController" as Ctrl
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "GuerraService" as GSvc
   participant "ArenaService" as Svc
 end box
 
-box "Repositorios" #3E2E10
+box "Repositorios" #FFF3EB
   participant "GuerraRepository" as GRepo
   participant "EntrenamientoRepository" as EntreRepo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -319,20 +319,20 @@ Page --> Miembro: lista de sesiones (filtrada si corresponde)
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "EvolucionPage" as Page
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "EvolucionService" as Svc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #FFF3EB
   participant "MiembroRepository" as MiembroRepo
   participant "SkillTreeRepository" as STRepo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -367,20 +367,20 @@ Page --> Miembro: avatar evolutivo según Rango (BRONCE/PLATA/ORO/RANGO_S) + ár
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "SkillTreePage" as Page
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "EvolucionService" as Svc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #FFF3EB
   participant "SkillTreeRepository" as STRepo
   participant "MiembroRepository" as MiembroRepo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -425,20 +425,20 @@ end
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "BovedaPage" as Page
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "EvolucionService" as Svc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #FFF3EB
   participant "CofreRepository" as CofreRepo
   participant "MiembroRepository" as MiembroRepo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -487,20 +487,20 @@ end
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "MarketplacePage" as Page
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "EvolucionService" as Svc
 end box
 
-box "Repositorios" #2E1C10
+box "Repositorios" #FFF3EB
   participant "MarketplaceRepository" as MktRepo
   participant "MiembroRepository" as MiembroRepo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 

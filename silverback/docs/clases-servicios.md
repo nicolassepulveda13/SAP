@@ -1,9 +1,11 @@
 # 10.5.7d — Diagrama de Clases: Capa de Servicios
 
-> **Actualizado 06/10:** se agregan las clases y métodos implementados después de E1 (login, fundar manada, publicar desafío, voz, Guerra Global, gestión de cuenta, `AceptacionDesafio`, `posicion`). Detalle en `Modificacion-Carpeta.md`.
+> **Actualizado 06/10:** arquitectura documentada en **5 capas** (se incorpora Controladores — `SilverbackApi.Api`). Las clases y atributos se alinean con el código: `DesafioClan` y `MensajeClan` (antes `Desafio`/`Mensaje`), `AuthService` y `GuerraService`. Detalle en `Modificacion-Carpeta.md`.
 
-**Capa:** Servicios — proyecto `SilverbackApi.Services` (ASP.NET Core 9)  
-**Descripción:** Lógica de negocio. Cada servicio coordina repositorios para ejecutar un caso de uso. Los métodos públicos (+) son llamados por los Controllers del proyecto Api vía inyección de dependencias (DI); los privados (-) son internos del servicio.
+**Capa:** Servicios — SilverbackApi.Services  
+**Descripción:** Lógica de negocio. Cada servicio coordina repositorios para ejecutar un caso de uso. Los métodos públicos (+) son llamados por los Controllers vía inyección de dependencias; los privados (-) son internos del servicio. Los repositorios se muestran como referencia (detalle en 10.5.7c).
+
+> **Render:** exportar en **SVG** (vectorial, sin límite de tamaño). En PNG, PlantUML recorta a 4096 px (`PLANTUML_LIMIT_SIZE`).
 
 ---
 
@@ -13,20 +15,22 @@ skinparam classAttributeIconSize 0
 skinparam packageStyle rectangle
 skinparam defaultFontName Arial
 skinparam defaultFontSize 11
+skinparam nodesep 30
+skinparam ranksep 70
+hide empty members
 
 skinparam class {
   BackgroundColor #FFFFFF
-  BorderColor #2E8B57
-  HeaderBackgroundColor #C3EDCF
   FontColor #111111
-
-  BackgroundColor<<repository>> #FFFFFF
+  BorderColor<<service>> #2E8B57
+  HeaderBackgroundColor<<service>> #C3EDCF
   BorderColor<<repository>> #D4620A
   HeaderBackgroundColor<<repository>> #FDDCB5
-  FontColor<<repository>> #111111
+  BorderColor #3B82F6
+  HeaderBackgroundColor #DBEAFE
 }
 skinparam arrow {
-  Color #444444
+  Color #555555
   FontColor #333333
   FontSize 10
 }
@@ -35,11 +39,11 @@ skinparam package {
   FontStyle bold
   FontSize 12
 }
-
-' ─── SERVICIOS ────────────────────────────────────────────
-
-package "Servicios" #EBFBF0 {
-
+package "Servicios — SilverbackApi.Services" #EBFBF0 {
+  class AuthService <<service>> {
+    +login(email: String, password: String): String
+    +generarToken(miembroId: UUID, rol: Rol, clanId: UUID, onboardingCompletado: Boolean): String
+  }
   class IncorporacionService <<service>> {
     +registrarBiometricos(datos: DatosBiometricos): Miembro
     +asignarArquetipo(miembroId: UUID, arquetipo: Arquetipo): Miembro
@@ -50,24 +54,27 @@ package "Servicios" #EBFBF0 {
     -construirLineaBase(datos: DatosBiometricos): DatosBiometricos
     -calcularMultiplicadorCER(arquetipo: Arquetipo): Float
   }
-
   class SantuarioService <<service>> {
     +cargarDashboard(miembroId: UUID, clanId: UUID): Object
-    +listarDesafiosPorTier(clanId: UUID, tier: TierDesafio): Desafio[]
+    +listarDesafiosPorTier(clanId: UUID, tier: TierDesafio): DesafioClan[]
     +aceptarDesafio(miembroId: UUID, desafioId: UUID): AceptacionDesafio
-    +obtenerMensajes(clanId: UUID, desde: Date): Mensaje[]
-    +enviarMensaje(clanId: UUID, miembroId: UUID, contenido: String, tipo: TipoMensaje): Mensaje
+    +obtenerMensajes(clanId: UUID, desde: Date): MensajeClan[]
+    +enviarMensaje(clanId: UUID, miembroId: UUID, contenido: String, tipo: TipoMensaje): MensajeClan
     +listarMiembrosClan(clanId: UUID): Miembro[]
     +actualizarRol(miembroId: UUID, nuevoRol: Rol, liderClanId: UUID): Miembro
     +obtenerMiembro(miembroId: UUID): Miembro
     +expulsarMiembro(miembroId: UUID, clanId: UUID, liderClanId: UUID): void
     +crearDesafio(clanId: UUID, silverbackId: UUID, descripcion: String, tier: TierDesafio, recompensaXp: Int, fechaExpiracion: Date): DesafioClan
   }
-
   class ArenaService <<service>> {
     +obtenerGuerraActiva(): GuerraGlobal
     +registrarEntrenamiento(datos: Entrenamiento): ResultadoCER
     +obtenerHistorial(miembroId: UUID, filtros: Object, pagina: Int): Entrenamiento[]
+  }
+  class CERService <<service>> {
+    +calcular(pesoKg: Float, reps: Int, arquetipo: Arquetipo): ResultadoCER
+    +obtenerMultiplicador(arquetipo: Arquetipo): Float
+    -calcularPuntaje(pesoKg: Float, reps: Int, multiplicador: Float): Float
   }
   class GuerraService <<service>> {
     +asegurarGuerraActiva(): GuerraGlobal
@@ -76,17 +83,6 @@ package "Servicios" #EBFBF0 {
     -semanaDe(fecha: Date): String
     -posicionRival(posicion: Int): Int
   }
-  class AuthService <<service>> {
-    +login(email: String, password: String): String
-    +generarToken(miembroId: UUID, rol: Rol, clanId: UUID, onboardingCompletado: Boolean): String
-  }
-
-  class CERService <<service>> {
-    +calcular(pesoKg: Float, reps: Int, arquetipo: Arquetipo): ResultadoCER
-    +obtenerMultiplicador(arquetipo: Arquetipo): Float
-    -calcularPuntaje(pesoKg: Float, reps: Int, multiplicador: Float): Float
-  }
-
   class EvolucionService <<service>> {
     +cargarProgreso(miembroId: UUID): Object
     +obtenerCofresDisponibles(miembroId: UUID): Cofre[]
@@ -97,7 +93,6 @@ package "Servicios" #EBFBF0 {
     -determinarLoot(rareza: RarezaCofre): Item
     -calcularXPParaSiguienteRango(rango: Rango, xpActual: Int): Int
   }
-
   class PerfilService <<service>> {
     +cargarDashboard(miembroId: UUID): Object
     +consultarRacha(miembroId: UUID): Racha
@@ -114,101 +109,66 @@ package "Servicios" #EBFBF0 {
     -generarCupon(beneficioId: UUID, miembroId: UUID): String
   }
 
-  ' Forzar layout 2 columnas dentro del paquete
-  IncorporacionService -[hidden]r- SantuarioService
-  ArenaService -[hidden]r- CERService
-  EvolucionService -[hidden]r- PerfilService
-  IncorporacionService -[hidden]d- ArenaService
-  ArenaService -[hidden]d- EvolucionService
+  ' Dos filas para que la capa no quede demasiado ancha
+  AuthService -[hidden]d- CERService
+  IncorporacionService -[hidden]d- GuerraService
+  SantuarioService -[hidden]d- EvolucionService
+  ArenaService -[hidden]d- PerfilService
 }
 
-' ─── REPOSITORIOS (referencia) ────────────────────────────
+package "Repositorios — SilverbackApi.Data" #FFF3EB {
+  class MiembroRepository <<repository>>
+  class ClanRepository <<repository>>
+  class DesafioRepository <<repository>>
+  class MensajeRepository <<repository>>
+  class EntrenamientoRepository <<repository>>
+  class GuerraRepository <<repository>>
+  class RachaRepository <<repository>>
+  class AdminHistorialRepository <<repository>>
+  class SkillTreeRepository <<repository>>
+  class CofreRepository <<repository>>
+  class MarketplaceRepository <<repository>>
+  class FatigaRepository <<repository>>
+  class TrofeoRepository <<repository>>
+  class BeneficioRepository <<repository>>
 
-package "Repositorios" #FFF3EB {
-
-  class MiembroRepository <<repository>> {
-  }
-  class ClanRepository <<repository>> {
-  }
-  class EntrenamientoRepository <<repository>> {
-  }
-  class GuerraRepository <<repository>> {
-  }
-  class RachaRepository <<repository>> {
-  }
-  class FatigaRepository <<repository>> {
-  }
-  class DesafioRepository <<repository>> {
-  }
-  class MensajeRepository <<repository>> {
-  }
-  class AdminHistorialRepository <<repository>> {
-  }
-  class SkillTreeRepository <<repository>> {
-  }
-  class CofreRepository <<repository>> {
-  }
-  class MarketplaceRepository <<repository>> {
-  }
-  class TrofeoRepository <<repository>> {
-  }
-  class BeneficioRepository <<repository>> {
-  }
-
-  ' Forzar layout 3 columnas
-  MiembroRepository -[hidden]r- ClanRepository
-  ClanRepository -[hidden]r- EntrenamientoRepository
-  EntrenamientoRepository -[hidden]r- GuerraRepository
-  RachaRepository -[hidden]r- FatigaRepository
-  FatigaRepository -[hidden]r- DesafioRepository
-  DesafioRepository -[hidden]r- MensajeRepository
-  SkillTreeRepository -[hidden]r- CofreRepository
-  CofreRepository -[hidden]r- MarketplaceRepository
-  MarketplaceRepository -[hidden]r- TrofeoRepository
-  MiembroRepository -[hidden]d- RachaRepository
-  RachaRepository -[hidden]d- SkillTreeRepository
-  SkillTreeRepository -[hidden]d- AdminHistorialRepository
-  BeneficioRepository -[hidden]r- AdminHistorialRepository
+  ' Dos filas para que la capa no quede demasiado ancha
+  MiembroRepository -[hidden]d- AdminHistorialRepository
+  ClanRepository -[hidden]d- SkillTreeRepository
+  DesafioRepository -[hidden]d- CofreRepository
+  MensajeRepository -[hidden]d- MarketplaceRepository
+  EntrenamientoRepository -[hidden]d- FatigaRepository
+  GuerraRepository -[hidden]d- TrofeoRepository
+  RachaRepository -[hidden]d- BeneficioRepository
 }
 
-' ─── Forzar Servicios ARRIBA, Repositorios ABAJO ──────────
+IncorporacionService .l.> AuthService : usa
+ArenaService .r.> CERService : compone
+ArenaService .r.> GuerraService : usa
 
-IncorporacionService -[hidden]d- MiembroRepository
-SantuarioService -[hidden]d- ClanRepository
-
-' ─── Dependencias ─────────────────────────────────────────
-
-IncorporacionService ..> MiembroRepository : usa
-IncorporacionService ..> ClanRepository : usa
-
-SantuarioService ..> ClanRepository : usa
-SantuarioService ..> DesafioRepository : usa
-SantuarioService ..> MensajeRepository : usa
-SantuarioService ..> MiembroRepository : usa
-
-ArenaService ..> EntrenamientoRepository : usa
-ArenaService ..> GuerraRepository : usa
-ArenaService ..> RachaRepository : usa
-ArenaService ..> MiembroRepository : usa
-ArenaService ..> AdminHistorialRepository : usa
-ArenaService ..> CERService : compone
-ArenaService ..> GuerraService : usa
-GuerraService ..> GuerraRepository : usa
-AuthService ..> MiembroRepository : usa
-IncorporacionService ..> AuthService : usa
-
-EvolucionService ..> SkillTreeRepository : usa
-EvolucionService ..> CofreRepository : usa
-EvolucionService ..> MarketplaceRepository : usa
-EvolucionService ..> MiembroRepository : usa
-
-PerfilService ..> MiembroRepository : usa
-PerfilService ..> RachaRepository : usa
-PerfilService ..> FatigaRepository : usa
-PerfilService ..> TrofeoRepository : usa
-PerfilService ..> BeneficioRepository : usa
-PerfilService ..> EntrenamientoRepository : usa
-PerfilService ..> ClanRepository : usa
-
+AuthService ..> MiembroRepository
+IncorporacionService ..> MiembroRepository
+IncorporacionService ..> ClanRepository
+SantuarioService ..> ClanRepository
+SantuarioService ..> DesafioRepository
+SantuarioService ..> MensajeRepository
+SantuarioService ..> MiembroRepository
+ArenaService ..> EntrenamientoRepository
+ArenaService ..> GuerraRepository
+ArenaService ..> RachaRepository
+ArenaService ..> MiembroRepository
+ArenaService ..> AdminHistorialRepository
+GuerraService ..> GuerraRepository
+EvolucionService ..> SkillTreeRepository
+EvolucionService ..> CofreRepository
+EvolucionService ..> MarketplaceRepository
+EvolucionService ..> MiembroRepository
+PerfilService ..> MiembroRepository
+PerfilService ..> RachaRepository
+PerfilService ..> FatigaRepository
+PerfilService ..> TrofeoRepository
+PerfilService ..> BeneficioRepository
+PerfilService ..> EntrenamientoRepository
+PerfilService ..> ClanRepository
 @enduml
 ```

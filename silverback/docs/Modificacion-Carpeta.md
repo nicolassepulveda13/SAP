@@ -437,15 +437,15 @@ Todas las secuencias decían `database "PostgreSQL"`. Desde S1 el motor es **SQL
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "CalibracionBiometricaPage" as Page
 end box
 
-box "Server Actions" #1C2E2E
+box "Server Actions" #FAF5FF
   participant "saveStep1()\n[onboarding.ts]" as Action
 end box
 
-box "Infraestructura" #2E2E2E
+box "Infraestructura" #F3F4F6
   participant "Cookie sb_onboarding\n(HTTP-only, 30 min)" as Cookie
 end box
 
@@ -485,15 +485,15 @@ actor Miembro2 as "Miembro (login)"
 Miembro2 -> LoginPage: ingresarCredenciales(email, password)
 LoginPage -> AuthAction: login(formData)
 
-box "API Controller" #2E1C10
+box "API Controller" #ECFEFF
   participant "AuthController" as AuthCtrl
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "AuthService" as AuthSvc
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -528,28 +528,28 @@ end
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "MatchmakingClient\n(RadarManadasPage)" as Page
 end box
 
-box "Server Actions" #1C2E2E
+box "Server Actions" #FAF5FF
   participant "crearClan()\n[onboarding.ts]" as Action
 end box
 
-box "API Controllers" #2E1C10
+box "API Controllers" #ECFEFF
   participant "IncorporacionController" as Ctrl
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "IncorporacionService" as Svc
 end box
 
-box "Repositorios" #3E2E10
+box "Repositorios" #FFF3EB
   participant "MiembroRepository" as MRepo
   participant "ClanRepository" as CRepo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -633,27 +633,27 @@ end
 
 actor Miembro
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "CuentaPage\n(/perfil/cuenta)" as Page
 end box
 
-box "Server Actions" #1C2E2E
+box "Server Actions" #FAF5FF
   participant "actualizarCuenta()\n[perfil.ts]" as Action
 end box
 
-box "API Controller" #2E1C10
+box "API Controller" #ECFEFF
   participant "PerfilController" as Ctrl
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "PerfilService" as Svc
 end box
 
-box "Repositorios" #3E2E10
+box "Repositorios" #FFF3EB
   participant "MiembroRepository" as Repo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
@@ -754,28 +754,28 @@ end
 
 actor "Silverback" as Lider
 
-box "Presentación" #1C1C2E
+box "Presentación" #F5F0FF
   participant "ForjaClient\n(ChallengeForgePage)" as Page
 end box
 
-box "Server Actions" #1C2E2E
+box "Server Actions" #FAF5FF
   participant "crearDesafio()\n[santuario.ts]" as Action
 end box
 
-box "API Controllers" #2E1C10
+box "API Controllers" #ECFEFF
   participant "SantuarioController" as Ctrl
 end box
 
-box "Servicios" #1C2E1C
+box "Servicios" #EBFBF0
   participant "SantuarioService" as Svc
 end box
 
-box "Repositorios" #3E2E10
+box "Repositorios" #FFF3EB
   participant "MiembroRepository" as MRepo
   participant "SantuarioRepository" as SRepo
 end box
 
-box "Base de Datos" #2E2E2E
+box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 

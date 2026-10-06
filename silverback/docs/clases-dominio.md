@@ -1,9 +1,11 @@
 # 10.5.7b — Diagrama de Clases: Capa de Dominio
 
-> **Actualizado 06/10:** se agregan las clases y métodos implementados después de E1 (`posicion` en ParticipacionGuerra, `xpGanado` en ResultadoCER). Detalle en `Modificacion-Carpeta.md`.
+> **Actualizado 06/10:** arquitectura documentada en **5 capas** (se incorpora Controladores — `SilverbackApi.Api`). Las clases y atributos se alinean con el código: `DesafioClan` y `MensajeClan` (antes `Desafio`/`Mensaje`), `AuthService` y `GuerraService`. Detalle en `Modificacion-Carpeta.md`.
 
-**Capa:** Dominio — proyecto `SilverbackApi.Domain`  
+**Capa:** Dominio — SilverbackApi.Domain  
 **Descripción:** Entidades del negocio. Solo atributos y relaciones. Son el modelo persistido en SQL Server vía EF Core 9. Los enums se almacenan como strings (`HasConversion<string>()`).
+
+> **Render:** exportar en **SVG** (vectorial, sin límite de tamaño). En PNG, PlantUML recorta a 4096 px (`PLANTUML_LIMIT_SIZE`).
 
 ---
 
@@ -13,15 +15,19 @@ skinparam classAttributeIconSize 0
 skinparam packageStyle rectangle
 skinparam defaultFontName Arial
 skinparam defaultFontSize 11
+skinparam nodesep 30
+skinparam ranksep 70
+hide empty members
 
 skinparam class {
   BackgroundColor #FFFFFF
+  FontColor #111111
+
   BorderColor #3B82F6
   HeaderBackgroundColor #DBEAFE
-  FontColor #111111
 }
 skinparam arrow {
-  Color #444444
+  Color #555555
   FontColor #333333
   FontSize 10
 }
@@ -30,10 +36,7 @@ skinparam package {
   FontStyle bold
   FontSize 12
 }
-
-package "Dominio" #EBF4FF {
-
-  ' ── Fila 1: Núcleo
+package "Dominio — SilverbackApi.Domain" #EBF4FF {
   class Miembro {
     +UUID id
     +String nombre
@@ -53,8 +56,6 @@ package "Dominio" #EBF4FF {
     +Int cantidadMiembros
     +Int puntosClan
   }
-
-  ' ── Fila 2: Perfil biométrico
   class DatosBiometricos {
     +UUID miembroId
     +Int edad
@@ -71,12 +72,8 @@ package "Dominio" #EBF4FF {
   class DatosFatiga {
     +UUID miembroId
     +EstadoFatiga nivelFatiga
-    +Int frecuenciaCardiacaReposo
-    +Int calidadSueno
     +Float cargaSemanal
   }
-
-  ' ── Fila 3: Arena
   class Entrenamiento {
     +UUID id
     +UUID miembroId
@@ -88,8 +85,8 @@ package "Dominio" #EBF4FF {
   }
   class ResultadoCER {
     +Float puntaje
-    +Float multiplicador
-    +Arquetipo arquetipo
+    +Float modificador
+    +String descripcion
     +Int xpGanado
   }
   class GuerraGlobal {
@@ -101,37 +98,31 @@ package "Dominio" #EBF4FF {
   class ParticipacionGuerra {
     +UUID guerraId
     +UUID clanId
-    +Float puntajeCER
+    +Float cerAcumulado
     +Int posicion
   }
-
-  ' ── Fila 4: Santuario
-  class Desafio {
+  class DesafioClan {
     +UUID id
     +UUID clanId
-    +String nombre
+    +String descripcion
     +TierDesafio tier
     +EstadoDesafio estado
-    +Int xpRecompensa
+    +Int recompensaXp
     +Date fechaExpiracion
   }
   class AceptacionDesafio {
-    +UUID id
     +UUID desafioId
     +UUID miembroId
-    +EstadoDesafio estado
-    +Date fechaAceptacion
+    +Date aceptadoEn
   }
-  class Mensaje {
+  class MensajeClan {
     +UUID id
     +UUID clanId
     +UUID miembroId
     +String contenido
     +TipoMensaje tipo
-    +Date timestamp
+    +Date enviadoEn
   }
-
-  ' ── Fila 5: Evolución
   class Nodo {
     +UUID id
     +String nombre
@@ -141,7 +132,7 @@ package "Dominio" #EBF4FF {
   class InversionNodo {
     +UUID miembroId
     +UUID nodoId
-    +Date fechaInversion
+    +Date invertidoEn
   }
   class Cofre {
     +UUID id
@@ -154,26 +145,20 @@ package "Dominio" #EBF4FF {
     +String nombre
     +CategoriaItem categoria
     +Int precio
-    +RarezaCofre rareza
   }
-
-  ' ── Fila 6: Perfil
   class Trofeo {
     +UUID id
     +UUID miembroId
     +String nombre
     +TipoTrofeo tipo
-    +Date fechaObtencion
+    +Date obtenidoEn
   }
   class BeneficioAliado {
     +UUID id
     +UUID aliadoId
-    +UUID miembroId
-    +String nombre
     +TipoBeneficio tipo
     +Rango rangoMinimo
     +EstadoBeneficio estado
-    +Date fechaReclamo
   }
   class AliadoComercial {
     +UUID id
@@ -181,29 +166,7 @@ package "Dominio" #EBF4FF {
     +String urlBase
     +String logoUrl
   }
-
-  ' ── Hidden links para grilla vertical ──────────────────
-  Miembro -[hidden]r- Clan
-  Miembro -[hidden]d- DatosBiometricos
-  DatosBiometricos -[hidden]r- Racha
-  Racha -[hidden]r- DatosFatiga
-  DatosBiometricos -[hidden]d- Entrenamiento
-  Entrenamiento -[hidden]r- ResultadoCER
-  ResultadoCER -[hidden]r- GuerraGlobal
-  GuerraGlobal -[hidden]r- ParticipacionGuerra
-  Entrenamiento -[hidden]d- Desafio
-  Desafio -[hidden]r- AceptacionDesafio
-  AceptacionDesafio -[hidden]r- Mensaje
-  Desafio -[hidden]d- Nodo
-  Nodo -[hidden]r- InversionNodo
-  InversionNodo -[hidden]r- Cofre
-  Cofre -[hidden]r- Item
-  Nodo -[hidden]d- Trofeo
-  Trofeo -[hidden]r- BeneficioAliado
-  BeneficioAliado -[hidden]r- AliadoComercial
 }
-
-' ─── Relaciones ───────────────────────────────────────────
 
 Miembro "N" --> "1" Clan : pertenece a
 Miembro "1" *-- "1" DatosBiometricos : tiene
@@ -211,23 +174,17 @@ Miembro "1" *-- "1" Racha : tiene
 Miembro "1" *-- "1" DatosFatiga : tiene
 Miembro "1" o-- "*" Trofeo : acumula
 Miembro "1" o-- "*" Entrenamiento : registra
-
-Clan "1" o-- "*" Desafio : publica
+Clan "1" o-- "*" DesafioClan : publica
 Clan "1" o-- "*" ParticipacionGuerra : acumula
 GuerraGlobal "1" o-- "*" ParticipacionGuerra : registra
-
-Desafio "1" o-- "*" AceptacionDesafio : genera
-AceptacionDesafio "N" --> "1" Miembro : pertenece a
-Mensaje "N" --> "1" Clan : enviado en
-Mensaje "N" --> "1" Miembro : enviado por
-
+DesafioClan "1" o-- "*" AceptacionDesafio : es aceptado en
+Miembro "1" o-- "*" AceptacionDesafio : acepta
+MensajeClan "N" --> "1" Clan : enviado en
+MensajeClan "N" --> "1" Miembro : enviado por
 InversionNodo "N" --> "1" Miembro : realizada por
 InversionNodo "N" --> "1" Nodo : sobre
 Nodo "*" --> "*" Nodo : depende de
 Cofre "N" --> "1" Miembro : pertenece a
-
 BeneficioAliado "N" --> "1" AliadoComercial : provisto por
-BeneficioAliado "N" --> "0..1" Miembro : reclamado por
-
 @enduml
 ```
