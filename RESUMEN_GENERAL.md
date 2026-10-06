@@ -201,7 +201,7 @@ npx playwright show-report   # reporte HTML con capturas y trazas de los fallos
 - Cada corrida crea sus propios usuarios y clanes (`e2e-…@silverback.local`, clanes `E2E Alfa/Beta/Gamma …`), así que no depende de los datos que haya.
 - ⚠️ El test de cierre de semana **modifica la guerra activa** en la base (la da por vencida). Antes hace un backup en `…\MSSQL\Backup\silverback_pre_e2e_<id>.bak`.
 - Si la base está en otra PC: `$env:E2E_SQL_SERVER = "OTRA-PC\SQLEXPRESS"; npm run test:e2e`.
-- ⚠️ `silverback/package.json` está en el `.gitignore` (decisión tomada): en otra PC hay que correr `npm install -D @playwright/test`, `npx playwright install chromium` y agregar el script `"test:e2e": "playwright test"`.
+- En otra PC: `npm install` (instala también Playwright) y `npx playwright install chromium` antes del primer `npm run test:e2e`.
 
 | # | Test | Qué verifica |
 |---|---|---|
