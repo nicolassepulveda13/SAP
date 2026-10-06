@@ -69,9 +69,15 @@
 
 **Descripción:** Este caso de uso describe el proceso mediante el cual el usuario nuevo crea una cuenta en la plataforma SilverBack ingresando sus datos de acceso, o bien el usuario existente inicia sesión con sus credenciales. Es el punto de entrada absoluto del sistema. Para usuarios nuevos, los datos de credenciales (nombre, email, contraseña) se capturan en la pantalla de Calibración Biométrica como parte de un formulario unificado y se almacenan temporalmente hasta que el usuario completa el onboarding. Para usuarios existentes con onboarding completo, el login emite un JWT definitivo y redirige al Santuario.
 
-**Actores:** Miembro (nuevo o existente), Sistema SilverBack
+**Actores Primarios:** Miembro (nuevo o existente)
+
+**Actores Secundarios:** Sistema SilverBack
 
 **Precondiciones:** El usuario accede a la plataforma por primera vez o tiene una sesión expirada.
+
+**Post Condición:** Usuario nuevo: sus credenciales y datos biométricos quedan guardados temporalmente (cookie `sb_onboarding`, 30 minutos) y avanza al paso de arquetipo; la cuenta se crea al unirse o fundar un clan. Usuario existente: queda autenticado con un JWT en la cookie HTTP-only `sb_token` y accede al Santuario.
+
+**Evento Disparador:** El usuario abre la aplicación sin una sesión activa (el sistema lo lleva a Calibración Biométrica) o presiona "¿Ya tenés cuenta? Iniciá sesión".
 
 **Escenario Principal de Éxito — Usuario nuevo:**
 
@@ -93,6 +99,8 @@
 5. El sistema emite un JWT con `onboarding_completado = true` y los claims del clan y rol del miembro.
 6. El sistema almacena el JWT en una cookie HTTP-only `sb_token`.
 7. El sistema redirige al usuario al Santuario (`/santuario`).
+
+**Extensiones:** La contraseña se almacena con hash BCrypt. El email es único en el sistema.
 
 **Flujos Alternativos:**
 
@@ -244,9 +252,15 @@
 
 **Descripción:** Este caso de uso describe el proceso mediante el cual un usuario, al no encontrar clanes disponibles o preferir liderar en lugar de seguir, funda su propia manada desde el Radar de Manadas. Al fundar un clan, el usuario se convierte automáticamente en su primer miembro y en el Silverback (líder de la manada), completando así el flujo de incorporación con permisos de administración completos. Este caso de uso fue introducido en S3 para resolver el problema de arranque en frío del sistema: sin clanes existentes, ningún usuario podría completar el onboarding.
 
-**Actores:** Miembro, Sistema SilverBack
+**Actores Primarios:** Miembro
 
-**Precondiciones:** El usuario completó los pasos previos de incorporación (CU-001-000 a CU-001-002, incluyendo arquetipo). Puede o no haber clanes disponibles en el sistema.
+**Actores Secundarios:** Sistema SilverBack
+
+**Precondiciones:** El usuario completó los pasos previos de incorporación (CU-001-000 a CU-001-002, incluyendo arquetipo), o bien tiene una cuenta existente sin clan (por ejemplo, fue expulsado). Puede o no haber clanes disponibles en el sistema.
+
+**Post Condición:** El clan queda creado con el usuario como único miembro y líder; el usuario queda con rol SILVERBACK, onboarding completado y una sesión con el clan asignado.
+
+**Evento Disparador:** En el Radar de Manadas, el usuario despliega "Fundar mi propio clan", ingresa un nombre y presiona "FUNDAR CLAN".
 
 **Escenario Principal de Éxito:**
 
@@ -256,7 +270,7 @@
 4. El sistema muestra el mensaje: "Serás el SILVERBACK — líder de tu manada."
 5. El usuario ingresa un nombre único para su clan (máximo 50 caracteres).
 6. El usuario presiona el botón "FUNDAR CLAN".
-7. El sistema registra la cuenta del usuario en la base de datos utilizando los datos acumulados del onboarding (biometría, arquetipo, credenciales).
+7. Si es un usuario nuevo, el sistema registra su cuenta en la base de datos con los datos acumulados del onboarding (biometría, arquetipo, credenciales). Si ya tenía cuenta, usa la sesión actual.
 8. El sistema crea el nuevo clan con el nombre indicado, vincula al usuario como primer miembro y lo designa líder.
 9. El sistema promueve automáticamente al usuario al rol de SILVERBACK.
 10. El sistema marca el onboarding del usuario como completado.
@@ -265,6 +279,8 @@
 13. El sistema elimina la cookie temporal de onboarding (`sb_onboarding`).
 14. El sistema redirige al usuario al Santuario (/santuario) con permisos de Silverback activos.
 15. El usuario accede por primera vez al hub del clan con capacidad para crear desafíos, gestionar roles y administrar la manada.
+
+**Extensiones:** El nombre del clan es único. Si el usuario ya pertenece a un clan, la operación se rechaza ("Ya pertenecés a un clan.").
 
 **Flujos Alternativos:**
 
@@ -491,9 +507,15 @@
 
 **Descripción:** Este caso de uso describe el proceso mediante el cual el Líder de Clan (Silverback) publica una nueva directiva semanal en La Forja. Los desafíos publicados quedan disponibles para que todos los miembros del clan los acepten y completen durante el período indicado. Cada desafío tiene un tier de dificultad (BRONCE, PLATA u ORO), una descripción de objetivo, una recompensa en XP y una fecha de expiración.
 
-**Actores:** Líder de Clan (Silverback), Sistema SilverBack
+**Actores Primarios:** Líder de Clan (Silverback)
+
+**Actores Secundarios:** Sistema SilverBack, Miembros del clan
 
 **Precondiciones:** El usuario autenticado posee el rol SILVERBACK dentro del clan y se encuentra en la pantalla de La Forja.
+
+**Post Condición:** El desafío queda registrado con estado ACTIVO, vinculado al clan, y visible para todos los miembros para que lo acepten (CU-002-003).
+
+**Evento Disparador:** El Silverback despliega "Publicar nueva directiva" en La Forja, completa el formulario y presiona "PUBLICAR DIRECTIVA".
 
 **Escenario Principal de Éxito:**
 
@@ -510,6 +532,8 @@
 11. El sistema persiste el desafío en la base de datos con estado ACTIVO, vinculado al clan.
 12. El sistema refresca la lista de directivas semanales, mostrando el nuevo desafío disponible para todos los miembros.
 13. Los miembros del clan ya pueden ver y aceptar la nueva directiva.
+
+**Extensiones:** Solo el rol SILVERBACK ve el formulario; un pedido de otro rol se rechaza con 403. Tier: BRONCE, PLATA u ORO. Recompensa entre 1 y 10.000 XP.
 
 **Flujos Alternativos:**
 
@@ -1015,9 +1039,15 @@
 
 **Descripción:** Este caso de uso describe el proceso mediante el cual el usuario consulta y modifica los datos de su cuenta: nombre de usuario, email y contraseña. Es la contraparte administrativa de CU-001-000: mientras ese CU crea las credenciales, este CU permite mantenerlas actualizadas durante la vida del miembro en la plataforma.
 
-**Actores:** Miembro, Sistema SilverBack
+**Actores Primarios:** Miembro
+
+**Actores Secundarios:** Sistema SilverBack
 
 **Precondiciones:** El usuario completó el onboarding (CU-001-004) y tiene sesión activa.
+
+**Post Condición:** Los datos modificados (nombre, email o contraseña) quedan actualizados; si cambió la contraseña, se almacena el nuevo hash.
+
+**Evento Disparador:** El usuario accede a "Cuenta" desde el menú de perfil (`/perfil/cuenta`).
 
 **Escenario Principal de Éxito:**
 
@@ -1030,6 +1060,8 @@
 7. El usuario completa los tres campos y presiona "ACTUALIZAR CONTRASEÑA".
 8. El sistema verifica que la contraseña actual es correcta y que las nuevas coinciden.
 9. El sistema actualiza el hash de contraseña y confirma el cambio.
+
+**Extensiones:** Pantalla pendiente de implementación (PKG_PERFIL, S8).
 
 **Flujos Alternativos:**
 
@@ -1055,22 +1087,6 @@
 - **Evento Disparador (10.5.3.10.1):** el evento que da inicio al caso de uso.
 - **Post Condición (10.5.3.8):** estado del sistema al finalizar el CU exitosamente. Solo se incluye si aporta valor.
 - **Extensiones (10.5.3.11):** aclaraciones o reglas de negocio que complementan el escenario. Solo se incluye si aplica.
-
----
-
-## CU-001-000 — Crear Cuenta / Iniciar Sesión
-
-> **Agregado:** CU nuevo posterior a E1 (ver `Modificacion-Carpeta.md`).
-
-**Actores Primarios:** Miembro (nuevo o existente)
-
-**Actores Secundarios:** Sistema SilverBack
-
-**Evento Disparador:** El usuario abre la aplicación sin una sesión activa (el sistema lo lleva a Calibración Biométrica) o presiona "¿Ya tenés cuenta? Iniciá sesión".
-
-**Post Condición:** Usuario nuevo: sus credenciales y datos biométricos quedan guardados temporalmente (cookie `sb_onboarding`, 30 minutos) y avanza al paso de arquetipo; la cuenta se crea al unirse o fundar un clan. Usuario existente: queda autenticado con un JWT en la cookie HTTP-only `sb_token` y accede al Santuario.
-
-**Extensiones:** La contraseña se almacena con hash BCrypt. El email es único en el sistema.
 
 ---
 
@@ -1117,22 +1133,6 @@
 **Evento Disparador:** El usuario identificó el clan de destino en el Radar de Manadas (CU-001-003) y presiona el botón "UNIRSE" en la tarjeta del clan seleccionado.
 
 **Post Condición:** El usuario queda registrado como miembro del clan con rol RECLUTA, el onboarding queda marcado como completado y el contador de miembros del clan se incrementa en una unidad.
-
----
-
-## CU-001-005 — Fundar una Manada
-
-> **Agregado:** CU nuevo posterior a E1 (ver `Modificacion-Carpeta.md`).
-
-**Actores Primarios:** Miembro
-
-**Actores Secundarios:** Sistema SilverBack
-
-**Evento Disparador:** En el Radar de Manadas, el usuario despliega "Fundar mi propio clan", ingresa un nombre y presiona "FUNDAR CLAN".
-
-**Post Condición:** El clan queda creado con el usuario como único miembro y líder; el usuario queda con rol SILVERBACK, onboarding completado y una sesión con el clan asignado.
-
-**Extensiones:** El nombre del clan es único. Si el usuario ya pertenece a un clan, la operación se rechaza ("Ya pertenecés a un clan.").
 
 ---
 
@@ -1205,22 +1205,6 @@
 **Post Condición:** El miembro queda eliminado del clan, su acceso a todas las funcionalidades colectivas es revocado y el contador de capacidad del clan se decrementa en una unidad.
 
 **Extensiones:** La expulsión es irreversible; el sistema no ofrece mecanismo de reintegración desde esta pantalla. Cada expulsión queda registrada en el historial de administración del clan con marca de tiempo y el nombre del Líder responsable.
-
----
-
-## CU-002-007 — Publicar Desafío en La Forja
-
-> **Agregado:** CU nuevo posterior a E1 (ver `Modificacion-Carpeta.md`).
-
-**Actores Primarios:** Líder de Clan (Silverback)
-
-**Actores Secundarios:** Sistema SilverBack, Miembros del clan
-
-**Evento Disparador:** El Silverback despliega "Publicar nueva directiva" en La Forja, completa el formulario y presiona "PUBLICAR DIRECTIVA".
-
-**Post Condición:** El desafío queda registrado con estado ACTIVO, vinculado al clan, y visible para todos los miembros para que lo acepten (CU-002-003).
-
-**Extensiones:** Solo el rol SILVERBACK ve el formulario; un pedido de otro rol se rechaza con 403. Tier: BRONCE, PLATA u ORO. Recompensa entre 1 y 10.000 XP.
 
 ---
 
@@ -1383,22 +1367,6 @@
 **Post Condición:** El beneficio queda activado o el código de descuento queda generado y disponible para su uso en la tienda del aliado.
 
 **Extensiones:** Los beneficios con estado "BLOQUEADO" no ejecutan ninguna acción al presionar su botón; el sistema informa el nivel mínimo requerido. Los beneficios con estado "EXPIRADO" tampoco ejecutan acciones.
-
----
-
-## CU-005-007 — Gestionar Datos de Cuenta
-
-> **Agregado:** CU nuevo posterior a E1 (ver `Modificacion-Carpeta.md`).
-
-**Actores Primarios:** Miembro
-
-**Actores Secundarios:** Sistema SilverBack
-
-**Evento Disparador:** El usuario accede a "Cuenta" desde el menú de perfil (`/perfil/cuenta`).
-
-**Post Condición:** Los datos modificados (nombre, email o contraseña) quedan actualizados; si cambió la contraseña, se almacena el nuevo hash.
-
-**Extensiones:** Pantalla pendiente de implementación (PKG_PERFIL, S8).
 
 ---
 

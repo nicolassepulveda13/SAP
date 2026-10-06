@@ -53,16 +53,16 @@ Este documento registra todas las modificaciones realizadas a la carpeta técnic
 
 | ✓ | # | Dónde | Qué hacer | Contenido |
 |---|---|---|---|---|
-| [ ] | 6 | **Antes** de CU-001-001 | Insertar C-25 — CU-001-000 Crear Cuenta / Iniciar Sesión, con su ficha (actores, evento disparador, postcondición) | §2 C-25 + ficha en el ANEXO de `casos-de-uso.md` |
-| [ ] | 7 | **Después** de CU-001-004 | Insertar C-27 — CU-001-005 Fundar una Manada, con su ficha | §2 C-27 + ficha en el ANEXO |
-| [ ] | 8 | **Después** de CU-002-006 | Insertar C-28 — CU-002-007 Publicar Desafío en La Forja, con su ficha | §2 C-28 + ficha en el ANEXO |
-| [ ] | 9 | **Al final** de CU-005 (después de CU-005-006) | Insertar C-26 — CU-005-007 Gestionar Datos de Cuenta, con su ficha | §2 C-26 + ficha en el ANEXO |
+| [ ] | 6 | **Antes** de CU-001-001 | Insertar C-25 — CU-001-000 Crear Cuenta / Iniciar Sesión (bloque completo: descripción, actores, pre y postcondición, evento disparador, escenario, flujos alternativos) | §2 C-25 |
+| [ ] | 7 | **Después** de CU-001-004 | Insertar C-27 — CU-001-005 Fundar una Manada (bloque completo) | §2 C-27 |
+| [ ] | 8 | **Después** de CU-002-006 | Insertar C-28 — CU-002-007 Publicar Desafío en La Forja (bloque completo) | §2 C-28 |
+| [ ] | 9 | **Al final** de CU-005 (después de CU-005-006) | Insertar C-26 — CU-005-007 Gestionar Datos de Cuenta (bloque completo) | §2 C-26 |
 
 **Campos UAI faltantes en todos los CU:**
 
 | ✓ | # | Dónde | Qué hacer | Contenido |
 |---|---|---|---|---|
-| [ ] | 10 | Cada uno de los 28 CU | Agregar **Actores Primarios**, **Actores Secundarios**, **Evento Disparador** y **Post Condición** (y **Extensiones** donde aplique), formato 10.5.3 | ANEXO "Campos pendientes por CU" al final de `casos-de-uso.md` (un bloque por CU) |
+| [ ] | 10 | Cada uno de los 24 CU aprobados en E1 | Agregar **Actores Primarios**, **Actores Secundarios**, **Evento Disparador** y **Post Condición** (y **Extensiones** donde aplique), formato 10.5.3 | ANEXO "Campos pendientes por CU" al final de `casos-de-uso.md` (un bloque por CU) |
 
 **Notas en CU aprobados (no se reescribe el texto aprobado: se agrega una nota al pie del CU):**
 
@@ -180,9 +180,15 @@ Los textos completos de cada CU están en `casos-de-uso.md`. Lo que sigue es el 
 
 **Descripción:** Este caso de uso describe el proceso mediante el cual el usuario nuevo crea una cuenta en la plataforma SilverBack ingresando sus datos de acceso, o bien el usuario existente inicia sesión con sus credenciales. Es el punto de entrada absoluto del sistema. Para usuarios nuevos, los datos de credenciales (nombre, email, contraseña) se capturan en la pantalla de Calibración Biométrica como parte de un formulario unificado y se almacenan temporalmente hasta que el usuario completa el onboarding. Para usuarios existentes con onboarding completo, el login emite un JWT definitivo y redirige al Santuario.
 
-**Actores:** Miembro (nuevo o existente), Sistema SilverBack
+**Actores Primarios:** Miembro (nuevo o existente)
+
+**Actores Secundarios:** Sistema SilverBack
 
 **Precondiciones:** El usuario accede a la plataforma por primera vez o tiene una sesión expirada.
+
+**Post Condición:** Usuario nuevo: sus credenciales y datos biométricos quedan guardados temporalmente (cookie `sb_onboarding`, 30 minutos) y avanza al paso de arquetipo; la cuenta se crea al unirse o fundar un clan. Usuario existente: queda autenticado con un JWT en la cookie HTTP-only `sb_token` y accede al Santuario.
+
+**Evento Disparador:** El usuario abre la aplicación sin una sesión activa (el sistema lo lleva a Calibración Biométrica) o presiona "¿Ya tenés cuenta? Iniciá sesión".
 
 **Escenario Principal de Éxito — Usuario nuevo:**
 
@@ -205,6 +211,8 @@ Los textos completos de cada CU están en `casos-de-uso.md`. Lo que sigue es el 
 6. El sistema almacena el JWT en una cookie HTTP-only `sb_token`.
 7. El sistema redirige al usuario al Santuario (`/santuario`).
 
+**Extensiones:** La contraseña se almacena con hash BCrypt. El email es único en el sistema.
+
 **Flujos Alternativos:**
 
 - **[FA-1]** Si algún campo biométrico está fuera del rango permitido, el sistema muestra el mensaje de error específico ("La edad debe estar entre 14 y 99 años.") y no avanza.
@@ -220,9 +228,15 @@ Los textos completos de cada CU están en `casos-de-uso.md`. Lo que sigue es el 
 
 **Descripción:** Este caso de uso describe el proceso mediante el cual el usuario consulta y modifica los datos de su cuenta: nombre de usuario, email y contraseña. Es la contraparte administrativa de CU-001-000: mientras ese CU crea las credenciales, este CU permite mantenerlas actualizadas durante la vida del miembro en la plataforma.
 
-**Actores:** Miembro, Sistema SilverBack
+**Actores Primarios:** Miembro
+
+**Actores Secundarios:** Sistema SilverBack
 
 **Precondiciones:** El usuario completó el onboarding y tiene sesión activa.
+
+**Post Condición:** Los datos modificados (nombre, email o contraseña) quedan actualizados; si cambió la contraseña, se almacena el nuevo hash.
+
+**Evento Disparador:** El usuario accede a "Cuenta" desde el menú de perfil (`/perfil/cuenta`).
 
 **Escenario Principal de Éxito:**
 
@@ -235,6 +249,8 @@ Los textos completos de cada CU están en `casos-de-uso.md`. Lo que sigue es el 
 7. El usuario completa los tres campos y presiona "ACTUALIZAR CONTRASEÑA".
 8. El sistema verifica que la contraseña actual es correcta y que las nuevas coinciden.
 9. El sistema actualiza el hash de contraseña y confirma el cambio.
+
+**Extensiones:** Pantalla pendiente de implementación (PKG_PERFIL, S8).
 
 **Flujos Alternativos:**
 
@@ -251,9 +267,15 @@ Los textos completos de cada CU están en `casos-de-uso.md`. Lo que sigue es el 
 
 **Descripción:** Este caso de uso describe el proceso mediante el cual un usuario, al no encontrar clanes disponibles o preferir liderar en lugar de seguir, funda su propia manada desde el Radar de Manadas. Al fundar un clan, el usuario se convierte automáticamente en su primer miembro y en el Silverback (líder de la manada), completando así el flujo de incorporación con permisos de administración completos.
 
-**Actores:** Miembro, Sistema SilverBack
+**Actores Primarios:** Miembro
 
-**Precondiciones:** El usuario completó los pasos previos de incorporación (CU-001-000 a CU-001-002, incluyendo arquetipo). Puede o no haber clanes disponibles en el sistema.
+**Actores Secundarios:** Sistema SilverBack
+
+**Precondiciones:** El usuario completó los pasos previos de incorporación (CU-001-000 a CU-001-002, incluyendo arquetipo), o bien tiene una cuenta existente sin clan (por ejemplo, fue expulsado). Puede o no haber clanes disponibles en el sistema.
+
+**Post Condición:** El clan queda creado con el usuario como único miembro y líder; el usuario queda con rol SILVERBACK, onboarding completado y una sesión con el clan asignado.
+
+**Evento Disparador:** En el Radar de Manadas, el usuario despliega "Fundar mi propio clan", ingresa un nombre y presiona "FUNDAR CLAN".
 
 **Escenario Principal de Éxito:**
 
@@ -263,7 +285,7 @@ Los textos completos de cada CU están en `casos-de-uso.md`. Lo que sigue es el 
 4. El sistema muestra el mensaje: "Serás el SILVERBACK — líder de tu manada."
 5. El usuario ingresa un nombre único para su clan (máximo 50 caracteres).
 6. El usuario presiona el botón "FUNDAR CLAN".
-7. El sistema registra la cuenta del usuario en la base de datos utilizando los datos acumulados del onboarding (biometría, arquetipo, credenciales).
+7. Si es un usuario nuevo, el sistema registra su cuenta en la base de datos con los datos acumulados del onboarding (biometría, arquetipo, credenciales). Si ya tenía cuenta, usa la sesión actual.
 8. El sistema crea el nuevo clan con el nombre indicado, vincula al usuario como primer miembro y lo designa líder.
 9. El sistema promueve automáticamente al usuario al rol de SILVERBACK.
 10. El sistema marca el onboarding del usuario como completado.
@@ -272,6 +294,8 @@ Los textos completos de cada CU están en `casos-de-uso.md`. Lo que sigue es el 
 13. El sistema elimina la cookie temporal de onboarding (`sb_onboarding`).
 14. El sistema redirige al usuario al Santuario (`/santuario`) con permisos de Silverback activos.
 15. El usuario accede por primera vez al hub del clan con capacidad para crear desafíos, gestionar roles y administrar la manada.
+
+**Extensiones:** El nombre del clan es único. Si el usuario ya pertenece a un clan, la operación se rechaza ("Ya pertenecés a un clan.").
 
 **Flujos Alternativos:**
 
@@ -288,9 +312,15 @@ Los textos completos de cada CU están en `casos-de-uso.md`. Lo que sigue es el 
 
 **Descripción:** Este caso de uso describe el proceso mediante el cual el Líder de Clan (Silverback) publica una nueva directiva semanal en La Forja. Los desafíos publicados quedan disponibles para que todos los miembros del clan los acepten y completen durante el período indicado. Cada desafío tiene un tier de dificultad (BRONCE, PLATA u ORO), una descripción de objetivo, una recompensa en XP y una fecha de expiración.
 
-**Actores:** Líder de Clan (Silverback), Sistema SilverBack
+**Actores Primarios:** Líder de Clan (Silverback)
+
+**Actores Secundarios:** Sistema SilverBack, Miembros del clan
 
 **Precondiciones:** El usuario autenticado posee el rol SILVERBACK dentro del clan y se encuentra en la pantalla de La Forja.
+
+**Post Condición:** El desafío queda registrado con estado ACTIVO, vinculado al clan, y visible para todos los miembros para que lo acepten (CU-002-003).
+
+**Evento Disparador:** El Silverback despliega "Publicar nueva directiva" en La Forja, completa el formulario y presiona "PUBLICAR DIRECTIVA".
 
 **Escenario Principal de Éxito:**
 
@@ -307,6 +337,8 @@ Los textos completos de cada CU están en `casos-de-uso.md`. Lo que sigue es el 
 11. El sistema persiste el desafío en la base de datos con estado ACTIVO, vinculado al clan.
 12. El sistema refresca la lista de directivas semanales, mostrando el nuevo desafío disponible para todos los miembros.
 13. Los miembros del clan ya pueden ver y aceptar la nueva directiva.
+
+**Extensiones:** Solo el rol SILVERBACK ve el formulario; un pedido de otro rol se rechaza con 403. Tier: BRONCE, PLATA u ORO. Recompensa entre 1 y 10.000 XP.
 
 **Flujos Alternativos:**
 
