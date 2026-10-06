@@ -22,7 +22,12 @@ public class SantuarioController(ISantuarioService svc) : SilverbackControllerBa
     [HttpGet("{clanId:guid}")]
     public async Task<IActionResult> ObtenerClan(Guid clanId)
     {
-        try { return Ok(await svc.ObtenerClan(clanId)); }
+        try
+        {
+            // DTO: la entidad Clan arrastra Miembros (con PasswordHash) si están cargados en el contexto
+            var clan = await svc.ObtenerClan(clanId);
+            return Ok(new { clan.Id, clan.Nombre, clan.PuntosClan, clan.CantidadMiembros });
+        }
         catch (Exception ex) { return NotFound(new { error = ex.Message }); }
     }
 
@@ -69,7 +74,13 @@ public class SantuarioController(ISantuarioService svc) : SilverbackControllerBa
         try
         {
             var desafio = await svc.CrearDesafio(clanId, silverbackId.Value, req.Descripcion, req.Tier, req.RecompensaXp, req.FechaExpiracion);
-            return CreatedAtAction(nameof(ListarDesafios), new { clanId }, desafio);
+            // S6-Fix: DTO. Devolver la entidad generaba un ciclo Desafio → Clan → Miembros → Clan (500)
+            // y alcanzaba a serializar el PasswordHash del líder antes de romper.
+            return CreatedAtAction(nameof(ListarDesafios), new { clanId }, new
+            {
+                desafio.Id, desafio.Descripcion, Tier = desafio.Tier.ToString(),
+                Estado = desafio.Estado.ToString(), desafio.RecompensaXp, desafio.FechaExpiracion,
+            });
         }
         catch (UnauthorizedAccessException) { return Forbid(); }
         catch (Exception ex) { return BadRequest(new { error = ex.Message }); }

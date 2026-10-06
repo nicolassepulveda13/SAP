@@ -30,5 +30,8 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     throw new Error((err as { error?: string }).error ?? res.statusText);
   }
 
-  return res.json() as Promise<T>;
+  // S6-Fix: respuestas sin cuerpo (204 NoContent, p. ej. aceptar desafío) no se parsean como JSON.
+  // Antes res.json() tiraba "Unexpected end of JSON input" y la acción se mostraba como error.
+  const texto = await res.text();
+  return (texto ? JSON.parse(texto) : undefined) as T;
 }
