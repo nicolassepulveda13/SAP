@@ -10,7 +10,7 @@
 
 ## 1. Resumen en 30 segundos
 
-- **Stack:** Next.js 16 + React 19 (`silverback/`) · ASP.NET Core 9, Clean Architecture (`silverback-api/`) · SQL Server + EF Core 9 · JWT en cookie HTTP-only.
+- **Stack:** Next.js 16 + React 19 (`silverback/`) · ASP.NET Core 9, Clean Architecture (`silverback-api/`) · SQL Server + EF Core 9 · JWT en cookie HTTP-only · **todo dockerizado** (`docker compose up --build`).
 - **Funciona de punta a punta:** Incorporación (alta, arquetipo, unirse/fundar clan), Santuario (panel, Forja, Tácticas, Roles) y Arena (registro manual y por voz, CER, Guerra Global semanal, Historial de Batallas).
 - **Oculto hasta implementarse:** Evolución/Bóveda (S7) y Perfil (S8). Las pantallas están, pero no se muestran.
 - **28 casos de uso:** 24 aprobados en E1 + 4 agregados (C-25 a C-28).
@@ -19,7 +19,63 @@
 
 ---
 
-## 2. ▶️ Cómo levantarlo (manual)
+## 2. 🐳 Cómo levantarlo con Docker (recomendado para la demo)
+
+Levanta **todo junto**: SQL Server 2022 + API .NET 9 + front Next.js 16. La API aplica las migraciones sola y, si la base está vacía, carga datos de demo. No hace falta tener instalado .NET, Node ni SQL Server: solo Docker.
+
+### Requisitos (una sola vez)
+1. Instalar **Docker Desktop** para Windows: https://www.docker.com/products/docker-desktop/ (usa WSL 2; la PC tiene la virtualización habilitada).
+2. Abrir Docker Desktop y esperar a que diga *Engine running*.
+3. Si la API o el front de desarrollo están corriendo, bajarlos (usan los mismos puertos 3000 y 5057), o cambiar los puertos en `.env`.
+
+### Levantar
+
+```powershell
+cd C:\Users\nico_\Documents\repos\SAP
+docker compose up --build
+```
+
+La primera vez tarda varios minutos (descarga imágenes y compila). Está listo cuando el log de `silverback-api` muestra `Datos de demo cargados` y `Now listening on: http://[::]:8080`.
+
+| Qué | URL |
+|---|---|
+| App | http://localhost:3000 |
+| API (Scalar) | http://localhost:5057/scalar/v1 |
+| SQL Server (SSMS / Azure Data Studio) | `localhost,14333` · usuario `sa` · contraseña `Silverback.2026!` |
+
+### Usuarios de demo (contraseña `Test1234!`)
+
+| Usuario | Email | Rol | Clan |
+|---|---|---|---|
+| Lider Demo | `lider@silverback.demo` | SILVERBACK | Manada Demo |
+| Recluta Demo | `recluta@silverback.demo` | RECLUTA | Manada Demo |
+| Rival Demo | `rival@silverback.demo` | SILVERBACK | Clan Rival Demo |
+
+Ya vienen con 2 desafíos publicados en La Forja, un mensaje en Tácticas y entrenamientos registrados, así que la Guerra Global de la semana muestra **Manada Demo vs Clan Rival Demo**.
+
+### Otros comandos
+
+| Acción | Comando |
+|---|---|
+| Levantar en segundo plano | `docker compose up --build -d` |
+| Ver los logs | `docker compose logs -f api` (o `web`, `db`) |
+| Bajar todo (los datos quedan) | `docker compose down` |
+| Bajar y **borrar la base** (la próxima vez arranca de cero con la demo) | `docker compose down -v` |
+| Reconstruir después de cambiar código | `docker compose up --build` |
+
+### Configuración (opcional)
+Copiar `.env.example` a `.env` y cambiar contraseña de SQL, secreto JWT, puertos o si se carga la demo (`SEMBRAR_DEMO=false`). Sin `.env` se usan los valores por defecto.
+
+### Cómo está armado
+- **`docker-compose.yml`** (raíz): servicios `db`, `api` y `web` en una red interna. La API espera a que SQL Server responda (healthcheck).
+- **`silverback-api/Dockerfile`**: compila con el SDK de .NET 9 y corre con la imagen `aspnet:9.0` en el puerto 8080.
+- **`silverback-api/SilverbackApi.Api/DbInicializador.cs`**: con `Database__MigrarAlIniciar=true` aplica las migraciones al arrancar (con reintentos mientras SQL Server levanta); con `Database__SembrarDemo=true` carga la demo **usando los mismos services de la app**. Si la demo falla, la API arranca igual y lo deja en el log. En desarrollo local está apagado.
+- **`silverback/Dockerfile`**: `next build` + `next start`. El front llama a la API **desde el servidor** de Next (`API_URL=http://api:8080`), nunca desde el navegador.
+- La cookie de sesión no se marca `Secure` (`COOKIE_SECURE=false`) para que el login funcione por `http://`, también entrando por IP desde otra PC.
+
+---
+
+## 2b. ▶️ Cómo levantarlo sin Docker (desarrollo)
 
 > Requisitos: SQL Server Express corriendo (servicio `SQL Server (SQLEXPRESS)`), .NET 9 SDK, Node 20+.
 > Connection string actual: `DESKTOP-JQBGOKE\SQLEXPRESS` (en `silverback-api/SilverbackApi.Api/appsettings.json`). En la otra PC hay que cambiarlo, o usar `localhost\SQLEXPRESS`, que funciona en las dos.

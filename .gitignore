@@ -9,3 +9,6 @@ silverback-api/**/obj/
 # Next.js
 silverback/.next/
 silverback/node_modules/
+
+# Docker: variables locales (usar .env.example como plantilla)
+.env

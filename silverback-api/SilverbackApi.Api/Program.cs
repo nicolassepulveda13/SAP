@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
+using SilverbackApi.Api;
 using SilverbackApi.Data;
 using SilverbackApi.Data.Repositories;
 using SilverbackApi.Services;
@@ -111,5 +112,8 @@ app.MapGet("/health", (AppDbContext db) =>
     db.Database.ExecuteSqlRaw("SELECT 1");
     return Results.Ok(new { status = "ok", db = "connected" });
 });
+
+// Docker: migraciones + datos de demo al arrancar (apagado salvo que lo active la configuración)
+await DbInicializador.EjecutarAsync(app);
 
 app.Run();

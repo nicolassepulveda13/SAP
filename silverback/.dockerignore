@@ -1,0 +1,10 @@
+node_modules
+.next
+.env*
+e2e
+test-results
+playwright-report
+blob-report
+prisma
+prisma.config.ts
+npm-debug.log*

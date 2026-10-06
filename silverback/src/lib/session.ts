@@ -18,7 +18,9 @@ export async function setToken(token: string): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    // Docker: con NODE_ENV=production la cookie Secure no se guarda si se entra por http:// con una IP
+    // (por ejemplo, desde otra PC de la facultad). Se activa solo con COOKIE_SECURE=true (cuando haya HTTPS).
+    secure: process.env.COOKIE_SECURE === "true",
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 7, // 7 días
     path: "/",

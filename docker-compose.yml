@@ -1,0 +1,60 @@
+# SilverBack — entorno completo en Docker: SQL Server + API .NET 9 + Front Next.js 16
+#
+#   docker compose up --build        → levanta todo (la primera vez tarda: descarga imágenes y compila)
+#   http://localhost:3000            → app
+#   http://localhost:5057/scalar/v1  → documentación de la API
+#   docker compose down              → baja todo (los datos quedan en el volumen)
+#   docker compose down -v           → baja todo y BORRA la base (la próxima vez arranca de cero con la demo)
+#
+# Variables opcionales en un archivo .env al lado de este (ver .env.example). Sin .env usa los valores por defecto.
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: silverback-db
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Express
+      MSSQL_SA_PASSWORD: ${DB_PASSWORD:-Silverback.2026!}
+    ports:
+      - "${DB_PORT:-14333}:1433"          # para conectarse con SSMS/Azure Data Studio: localhost,14333
+    volumes:
+      - silverback-db:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$${MSSQL_SA_PASSWORD}\" -C -Q 'SELECT 1' -b -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  api:
+    build: ./silverback-api
+    container_name: silverback-api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Development habilita Scalar y el OpenAPI JSON (útil para la demo)
+      ASPNETCORE_ENVIRONMENT: ${API_ENV:-Development}
+      ConnectionStrings__DefaultConnection: "Server=db,1433;Database=silverback;User Id=sa;Password=${DB_PASSWORD:-Silverback.2026!};TrustServerCertificate=True"
+      Jwt__Secret: ${JWT_SECRET:-cambiar-este-secreto-por-uno-largo-de-32-caracteres-o-mas}
+      Database__MigrarAlIniciar: "true"     # aplica las migraciones de EF al arrancar
+      Database__SembrarDemo: ${SEMBRAR_DEMO:-true}   # carga usuarios/clanes de demo si la base está vacía
+    ports:
+      - "${API_PORT:-5057}:8080"
+    restart: unless-stopped
+
+  web:
+    build: ./silverback
+    container_name: silverback-web
+    depends_on:
+      - api
+    environment:
+      API_URL: http://api:8080              # red interna de Docker: Next llama a la API desde el servidor
+      COOKIE_SECURE: "false"                # true solo si se sirve detrás de HTTPS
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    restart: unless-stopped
+
+volumes:
+  silverback-db:
