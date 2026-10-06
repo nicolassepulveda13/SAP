@@ -39,13 +39,16 @@ export function middleware(request: NextRequest) {
     if (pathname.startsWith("/login")) {
       return NextResponse.redirect(new URL("/santuario", request.url));
     }
-    // S3-CrearClan: onboarding completo intentando volver al onboarding → santuario
-    if (completado && isOnboarding) {
-      return NextResponse.redirect(new URL("/santuario", request.url));
+    // S6-Fix: con sesión ya hay cuenta → no se vuelve a registrar (biometría/arquetipo crean una cuenta nueva).
+    // El Radar de Manadas sí queda accesible: un expulsado o una cuenta sin clan elige clan desde ahí.
+    // Si ya tiene clan, la propia página lo manda al Santuario (el JWT puede estar desactualizado).
+    const esRadar = pathname.startsWith("/onboarding/matchmaking");
+    if (isOnboarding && !esRadar) {
+      return NextResponse.redirect(new URL(completado ? "/santuario" : "/onboarding/matchmaking", request.url));
     }
-    // S2-Auth: onboarding incompleto intentando acceder a rutas protegidas → forzar onboarding
+    // S2-Auth: onboarding incompleto intentando acceder a rutas protegidas → elegir clan
     if (!completado && !isPublic) {
-      return NextResponse.redirect(new URL("/onboarding/biometrics", request.url));
+      return NextResponse.redirect(new URL("/onboarding/matchmaking", request.url));
     }
     // S4-Entrega: pantallas maquetadas sin integración → no se muestran (ver lib/features.ts)
     if (estaOculta(pathname)) {

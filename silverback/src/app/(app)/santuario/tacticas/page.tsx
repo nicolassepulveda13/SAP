@@ -3,6 +3,7 @@ import { PageLabel } from "@/components/ui/PageLabel";
 import { requireClan } from "@/lib/clan-context";
 import { apiFetch } from "@/lib/api-client";
 import { enviarMensaje } from "@/app/actions/santuario";
+import { AutoRefresh } from "@/components/ui/AutoRefresh";
 
 type Mensaje = {
   id: string;
@@ -21,6 +22,7 @@ export default async function TacticsRoomPage() {
   return (
     <div className="max-w-2xl mx-auto flex flex-col">
       <PageLabel page="P6" />
+      <AutoRefresh cadaMs={5000} />
       <h1 className="font-heading font-bold text-3xl text-[#F97316] uppercase tracking-wider mb-4">
         SALA DE TÁCTICAS
       </h1>

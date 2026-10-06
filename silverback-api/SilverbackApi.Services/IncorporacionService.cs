@@ -48,6 +48,7 @@ public class IncorporacionService(
 
     public async Task<CrearClanResult> CrearClan(string nombre, Guid liderClanId)
     {
+        await ValidarSinClan(liderClanId);
         var clan = new Clan { Nombre = nombre, LiderClanId = liderClanId, CantidadMiembros = 1 };
         await clanRepo.Crear(clan);
         await miembroRepo.ActualizarClan(liderClanId, clan.Id);
@@ -65,12 +66,27 @@ public class IncorporacionService(
 
     public async Task<string> UnirseAClan(Guid miembroId, Guid clanId)
     {
+        await ValidarSinClan(miembroId);
         var clan = await clanRepo.BuscarPorId(clanId)
             ?? throw new InvalidOperationException("Clan no encontrado.");
+        if (clan.CantidadMiembros >= CapacidadMaximaClan)
+            throw new InvalidOperationException("El clan está lleno.");
+
         await miembroRepo.ActualizarClan(miembroId, clanId);
+        await miembroRepo.ActualizarRol(miembroId, Rol.RECLUTA); // quien vuelve tras una expulsión entra de cero
         await miembroRepo.CompletarOnboarding(miembroId);
         await clanRepo.ActualizarCantidadMiembros(clanId, 1);
         var token = authService.GenerarToken(miembroId, Rol.RECLUTA.ToString(), clanId, true);
         return token;
+    }
+
+    // S6-Fix: sin este control un miembro podía llamar a /unirse o /clan y cambiarse de clan
+    // dejando mal los contadores de ambos clanes
+    private async Task ValidarSinClan(Guid miembroId)
+    {
+        var miembro = await miembroRepo.BuscarPorId(miembroId)
+            ?? throw new InvalidOperationException("Miembro no encontrado.");
+        if (miembro.ClanId is not null)
+            throw new InvalidOperationException("Ya pertenecés a un clan.");
     }
 }

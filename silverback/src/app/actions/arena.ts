@@ -23,6 +23,7 @@ export type EntrenamientoHistorial = {
 };
 
 // S6-Guerra: GET /api/arena/guerra
+// Ojo: la API serializa con WhenWritingNull, así que los campos null NO vienen (llegan como undefined).
 export type ClanEnGuerra = {
   clanId: string;
   nombre: string;
@@ -37,8 +38,8 @@ export type GuerraDto = {
   fechaInicio: string;
   fechaFin: string;
   diasRestantes: number;
-  nuestro: ClanEnGuerra | null; // null si el clan todavía no sumó CER esta semana
-  rival: ClanEnGuerra | null;   // null = SIN RIVAL ASIGNADO
+  nuestro?: ClanEnGuerra | null; // ausente si el clan todavía no sumó CER esta semana
+  rival?: ClanEnGuerra | null;   // ausente = SIN RIVAL ASIGNADO
   ranking: ClanEnGuerra[];      // top 10
   totalClanes: number;
 };
@@ -50,8 +51,8 @@ export type Batalla = {
   fechaFin: string;
   nuestroCer: number;
   nuestraPosicion: number;
-  rival: string | null;
-  rivalCer: number | null;
+  rival?: string | null;
+  rivalCer?: number | null;
   resultado: "VICTORIA" | "DERROTA" | "SIN_RIVAL";
 };
 

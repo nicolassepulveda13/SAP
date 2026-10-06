@@ -72,13 +72,13 @@ export default async function ArenaPage() {
           <div className="grid grid-cols-2 gap-4 mb-8">
             <TarjetaClan
               titulo="NUESTRA MANADA"
-              clan={guerra.nuestro}
+              clan={guerra.nuestro ?? null}
               destacada
               vacio="Tu clan todavía no sumó CER esta semana. Registrá un entrenamiento para entrar a la guerra."
             />
             <TarjetaClan
               titulo="CLAN RIVAL"
-              clan={guerra.rival}
+              clan={guerra.rival ?? null}
               destacada={false}
               vacio="SIN RIVAL ASIGNADO"
             />

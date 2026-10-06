@@ -95,7 +95,7 @@ export default async function HistorialPage({
                   <p className="text-xs text-[#9CA3AF] uppercase">CER</p>
                   <p className="font-heading font-bold text-white">
                     {b.nuestroCer.toLocaleString("es-AR")}
-                    {b.rivalCer !== null && <span className="text-[#9CA3AF]"> / {b.rivalCer.toLocaleString("es-AR")}</span>}
+                    {b.rivalCer != null && <span className="text-[#9CA3AF]"> / {b.rivalCer.toLocaleString("es-AR")}</span>}
                   </p>
                 </div>
                 <span className={`font-heading font-bold uppercase tracking-wider min-w-24 text-right ${estilo.color}`}>

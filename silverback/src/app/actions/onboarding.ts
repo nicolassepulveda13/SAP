@@ -112,6 +112,22 @@ export async function getClanesDisponibles(): Promise<ClanDisponible[]> {
   }
 }
 
+async function tieneSesion(): Promise<boolean> {
+  return Boolean((await cookies()).get("sb_token")?.value);
+}
+
+// S6-Fix: unirse o fundar con la sesión actual (sin draft). La API devuelve un token nuevo
+// con el clanId y onboarding_completado=true, que reemplaza al anterior.
+async function conSesionActual(ruta: string, body: object, mensajeError: string): Promise<OnboardingState> {
+  try {
+    const data = await apiFetch<{ token: string }>(ruta, { method: "POST", body: JSON.stringify(body) });
+    await setToken(data.token);
+  } catch (e) {
+    return { error: (e as Error).message || mensajeError };
+  }
+  redirect("/santuario");
+}
+
 // S2-Onboarding: joinClan — paso final cuando el usuario elige unirse a un clan existente
 // Patrón "token preliminar": registrar() devuelve tokenPreliminar (sin clan, sin onboarding),
 // ese token se usa como Bearer para llamar a /unirse. El token final SÍ tiene onboarding=true.
@@ -123,7 +139,11 @@ export async function joinClan(
   if (!clanId) return { error: "Seleccioná un clan." };
 
   const draft = await leerDraft();
-  if (!draft?.arquetipo) redirect("/onboarding/biometrics");
+  if (!draft?.arquetipo) {
+    // S6-Fix: cuenta existente sin clan (expulsado, o creada por API) → se une con su sesión actual
+    if (await tieneSesion()) return conSesionActual("/api/incorporacion/unirse", { clanId }, "Error al unirse al clan.");
+    redirect("/onboarding/biometrics");
+  }
 
   // 1. Registrar — no hay token en cookie todavía, apiFetch envía sin Authorization
   let tokenPreliminar: string;
@@ -186,7 +206,10 @@ export async function crearClan(
   if (!nombre) return { error: "Ingresá un nombre para tu clan." };
 
   const draft = await leerDraft();
-  if (!draft?.arquetipo) redirect("/onboarding/biometrics");
+  if (!draft?.arquetipo) {
+    if (await tieneSesion()) return conSesionActual("/api/incorporacion/clan", { nombre }, "Error al crear el clan.");
+    redirect("/onboarding/biometrics");
+  }
 
   // 1. Registrar cuenta con el draft acumulado
   let tokenPreliminar: string;
