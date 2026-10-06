@@ -1,6 +1,8 @@
 // S4-Arena: ArenaService — lógica del registro de entrenamiento y racha
 // S4-RegistrarEntrenamiento: calcula CER via ICerService, persiste Entrenamiento, acumula CER al Clan y a la GuerraGlobal activa
 // S4-Racha: ActualizarRacha() — incrementa racha si el último entrenamiento fue ayer; resetea si hubo salto de días
+// S6-Guerra: el CER se acredita a la guerra de la semana actual (GuerraService la abre/cierra si hace falta)
+// S6-XP: suma XP al miembro (1 XP cada 10 de CER), como pide la secuencia aprobada de CU-003-002
 using SilverbackApi.Data.Repositories;
 using SilverbackApi.Domain;
 using SilverbackApi.Domain.Models;
@@ -15,10 +17,10 @@ public class ArenaService(
     ClanRepository clanRepo,
     RachaRepository rachaRepo,
     AdminHistorialRepository historialRepo,
-    ICerService cerService) : IArenaService
+    ICerService cerService,
+    IGuerraService guerraService) : IArenaService
 {
-    public Task<GuerraGlobal?> ObtenerGuerraActiva() =>
-        guerraRepo.FindGuerraActiva();
+    private const int CerPorXp = 10;
 
     public async Task<ResultadoCER> RegistrarEntrenamiento(Guid miembroId, string ejercicio, decimal pesoKg, int repeticiones)
     {
@@ -38,20 +40,25 @@ public class ArenaService(
 
         if (miembro.ClanId.HasValue)
         {
-            var guerra = await guerraRepo.FindGuerraActiva();
+            var guerra = await guerraService.AsegurarGuerraActiva();
             await clanRepo.SumarCER(miembro.ClanId.Value, resultado.Puntaje);
-            if (guerra is not null)
-                await guerraRepo.SumarCER(guerra.Id, miembro.ClanId.Value, resultado.Puntaje);
+            await guerraRepo.SumarCER(guerra.Id, miembro.ClanId.Value, resultado.Puntaje);
         }
 
-        await ActualizarRacha(miembroId);
-        await historialRepo.Registrar(miembroId, "ENTRENAMIENTO", $"CER: {resultado.Puntaje}");
+        var xp = (int)Math.Floor(resultado.Puntaje / CerPorXp);
+        if (xp > 0) await miembroRepo.ActualizarXP(miembroId, xp);
 
-        return resultado;
+        await ActualizarRacha(miembroId);
+        await historialRepo.Registrar(miembroId, "ENTRENAMIENTO", $"CER: {resultado.Puntaje} · XP: {xp}");
+
+        return resultado with { XpGanado = xp };
     }
 
-    public Task<List<Entrenamiento>> ObtenerHistorial(Guid miembroId, int pagina) =>
-        entrenamientoRepo.Listar(miembroId, pagina);
+    public Task<List<Entrenamiento>> ObtenerHistorial(Guid miembroId, int pagina, string? ejercicio) =>
+        entrenamientoRepo.Listar(miembroId, pagina, ejercicio: ejercicio);
+
+    public async Task<Guid?> ObtenerClanId(Guid miembroId) =>
+        (await miembroRepo.BuscarPorId(miembroId))?.ClanId;
 
     private async Task ActualizarRacha(Guid miembroId)
     {

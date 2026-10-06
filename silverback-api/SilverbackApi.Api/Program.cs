@@ -38,6 +38,7 @@ builder.Services.AddScoped<IPerfilService, PerfilService>();
 builder.Services.AddScoped<IEvolucionService, EvolucionService>();
 builder.Services.AddScoped<ISantuarioService, SantuarioService>();
 builder.Services.AddScoped<ICerService, CerService>();
+builder.Services.AddScoped<IGuerraService, GuerraService>();
 
 // JWT
 var jwtSecret = builder.Configuration["Jwt:Secret"]!;

@@ -1,36 +1,53 @@
 // S4-Arena: ArenaPage (Guerra Global) — Server Component, hub del módulo Arena (P8)
-// S4-GuerraGlobal: conecta a GET /api/arena/guerra; muestra participaciones reales del clan (CU-003-001)
-// Si no hay guerra activa muestra fallback; el botón REGISTRAR lleva a la pantalla funcional (CU-003-002)
+// S6-GuerraGlobal: GET /api/arena/guerra — la guerra de la semana se abre sola; muestra NUESTRA MANADA vs CLAN RIVAL,
+// barras de progreso relativas al líder, cuenta regresiva y top 10 (CU-003-001).
+// Rival = pareja consecutiva del ranking (1º vs 2º, 3º vs 4º…). Sin pareja → "SIN RIVAL ASIGNADO" (FA-1).
 import Link from "next/link";
-import { cookies } from "next/headers";
-import { Dumbbell, Clock } from "lucide-react";
+import { Dumbbell, Clock, Trophy } from "lucide-react";
 import { PageLabel } from "@/components/ui/PageLabel";
-import { getGuerra } from "@/app/actions/arena";
+import { getGuerra, type ClanEnGuerra } from "@/app/actions/arena";
 
-function decodeJwtPayload(token: string): Record<string, string> | null {
-  try {
-    return JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString("utf-8"));
-  } catch {
-    return null;
-  }
+function TarjetaClan({
+  titulo, clan, destacada, vacio,
+}: { titulo: string; clan: ClanEnGuerra | null; destacada: boolean; vacio: string }) {
+  const color = destacada ? "#F97316" : "#9CA3AF";
+  return (
+    <div className={`bg-[#242424] border rounded-xl p-6 ${destacada ? "border-[#F97316]/60" : "border-[#333]"}`}>
+      <div className="flex items-center justify-between mb-3">
+        <span className="font-heading font-bold uppercase text-sm" style={{ color: destacada ? "#F97316" : "white" }}>
+          {titulo}
+        </span>
+        {clan && (
+          <span className="text-xs bg-[#2e2e2e] text-white px-2 py-0.5 rounded font-heading uppercase">
+            RANGO #{clan.posicion}
+          </span>
+        )}
+      </div>
+      {clan ? (
+        <>
+          <p className="font-heading font-bold text-white uppercase truncate mb-1">{clan.nombre}</p>
+          <div className="mb-4">
+            <span className="font-heading font-bold text-5xl text-white">{clan.cer.toLocaleString("es-AR")}</span>
+            <span className="text-sm text-[#9CA3AF] ml-2">CER</span>
+          </div>
+          <div className="h-2 bg-[#1a1a1a] rounded-full overflow-hidden">
+            <div className="h-full rounded-full" style={{ width: `${clan.progreso}%`, backgroundColor: color }} />
+          </div>
+          <p className="text-xs text-[#9CA3AF] mt-1">{clan.progreso}% del líder</p>
+        </>
+      ) : (
+        <>
+          <span className="font-heading font-bold text-5xl text-[#555]">0</span>
+          <div className="h-2 bg-[#1a1a1a] rounded-full mt-4" />
+          <p className="text-xs text-[#9CA3AF] mt-2">{vacio}</p>
+        </>
+      )}
+    </div>
+  );
 }
 
 export default async function ArenaPage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("sb_token")?.value;
-  const payload = token ? decodeJwtPayload(token) : null;
-  const clanId = payload?.clanId;
-
   const guerra = await getGuerra();
-
-  const nuestro = clanId && guerra
-    ? guerra.participaciones.find((p) => p.clanId === clanId)
-    : null;
-  const topRival = guerra?.participaciones.find((p) => p.clanId !== clanId);
-
-  const diasRestantes = guerra
-    ? Math.max(0, Math.ceil((new Date(guerra.fechaFin).getTime() - Date.now()) / 86400000))
-    : 0;
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -38,68 +55,72 @@ export default async function ArenaPage() {
       <div className="text-center mb-10">
         <h1 className="font-heading font-bold text-6xl text-white uppercase mb-2">GUERRA GLOBAL</h1>
         <p className="text-sm text-[#9CA3AF] uppercase tracking-widest">
-          {guerra ? guerra.semana : "SIN GUERRA ACTIVA"}
+          {guerra ? guerra.semana : "NO SE PUDO CARGAR LA GUERRA"}
         </p>
+        {guerra && (
+          <p className="text-xs text-[#9CA3AF] mt-2 flex items-center justify-center gap-1">
+            <Clock size={12} />
+            {guerra.diasRestantes === 0 ? "Cierra hoy" : `Cierra en ${guerra.diasRestantes} días`}
+            {" · "}
+            {new Date(guerra.fechaFin).toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "numeric" })}
+          </p>
+        )}
       </div>
 
-      {guerra ? (
+      {guerra && (
         <>
           <div className="grid grid-cols-2 gap-4 mb-8">
-            {/* Nuestro clan */}
-            <div className="bg-[#242424] border border-[#F97316]/60 rounded-xl p-6">
-              <div className="flex items-center justify-between mb-3">
-                <span className="font-heading font-bold text-[#F97316] uppercase text-sm">NUESTRA MANADA</span>
-                {nuestro && (
-                  <span className="text-xs bg-[#2e2e2e] text-white px-2 py-0.5 rounded font-heading uppercase">
-                    RANGO #{nuestro.posicion || "—"}
-                  </span>
-                )}
-              </div>
-              <div className="mb-4">
-                <span className="font-heading font-bold text-5xl text-white">
-                  {nuestro ? nuestro.cerAcumulado.toLocaleString("es-AR") : "0"}
-                </span>
-                <span className="text-sm text-[#9CA3AF] ml-2">CER</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-[#9CA3AF]">
-                <Clock size={12} />
-                <span>{diasRestantes} días restantes</span>
-              </div>
-            </div>
-
-            {/* Rival */}
-            <div className="bg-[#242424] border border-[#333] rounded-xl p-6">
-              <div className="flex items-center justify-between mb-3">
-                <span className="font-heading font-bold text-white uppercase text-sm">CLAN RIVAL</span>
-                {topRival && (
-                  <span className="text-xs bg-[#2e2e2e] text-[#9CA3AF] px-2 py-0.5 rounded font-heading uppercase">
-                    RANGO #1
-                  </span>
-                )}
-              </div>
-              <div className="mb-4">
-                <span className="font-heading font-bold text-5xl text-white">
-                  {topRival ? topRival.cerAcumulado.toLocaleString("es-AR") : "—"}
-                </span>
-                {topRival && <span className="text-sm text-[#9CA3AF] ml-2">CER</span>}
-              </div>
-              {!topRival && (
-                <p className="text-xs text-[#9CA3AF]">No hay rivales aún esta semana.</p>
-              )}
-            </div>
+            <TarjetaClan
+              titulo="NUESTRA MANADA"
+              clan={guerra.nuestro}
+              destacada
+              vacio="Tu clan todavía no sumó CER esta semana. Registrá un entrenamiento para entrar a la guerra."
+            />
+            <TarjetaClan
+              titulo="CLAN RIVAL"
+              clan={guerra.rival}
+              destacada={false}
+              vacio="SIN RIVAL ASIGNADO"
+            />
           </div>
 
-          <div className="flex items-center justify-center -mt-20 mb-8 relative z-10 pointer-events-none">
+          <div className="flex items-center justify-center -mt-24 mb-14 relative z-10 pointer-events-none">
             <div className="w-14 h-14 rounded-full bg-[#181818] border-2 border-[#F97316] flex items-center justify-center">
               <span className="font-heading font-bold text-sm text-white">VS</span>
             </div>
           </div>
+
+          <div className="bg-[#242424] border border-[#333] rounded-xl p-5 mb-8">
+            <p className="text-xs text-[#9CA3AF] uppercase tracking-widest mb-3 flex items-center gap-2">
+              <Trophy size={12} /> RANKING DE LA SEMANA
+              <span className="ml-auto normal-case tracking-normal">{guerra.totalClanes} clanes en guerra</span>
+            </p>
+            {guerra.ranking.length === 0 ? (
+              <p className="text-sm text-[#9CA3AF]">Ningún clan sumó CER todavía. El primero en entrenar arranca arriba.</p>
+            ) : (
+              <ol className="space-y-1.5">
+                {guerra.ranking.map((c) => {
+                  const esNuestro = c.clanId === guerra.nuestro?.clanId;
+                  return (
+                    <li
+                      key={c.clanId}
+                      className={`flex items-center gap-3 px-3 py-2 rounded ${esNuestro ? "bg-[#F97316]/15 border border-[#F97316]/40" : ""}`}
+                    >
+                      <span className="font-heading font-bold text-[#9CA3AF] w-6">#{c.posicion}</span>
+                      <span className={`flex-1 font-heading font-bold uppercase truncate ${esNuestro ? "text-[#F97316]" : "text-white"}`}>
+                        {c.nombre}
+                      </span>
+                      <span className="font-heading font-bold text-white">{c.cer.toLocaleString("es-AR")}</span>
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
+            <p className="text-[11px] text-[#555] mt-3">
+              Las parejas se arman por posición (1º vs 2º, 3º vs 4º…). Al cierre gana el mejor posicionado de cada pareja.
+            </p>
+          </div>
         </>
-      ) : (
-        <div className="bg-[#242424] border border-[#333] rounded-xl p-8 text-center mb-8">
-          <p className="text-[#9CA3AF] mb-2">No hay ninguna Guerra Global activa esta semana.</p>
-          <p className="text-xs text-[#555]">Registrá tu entrenamiento igual — el CER se acumulará cuando empiece la próxima guerra.</p>
-        </div>
       )}
 
       <Link

@@ -14,9 +14,11 @@ public class EntrenamientoRepository(AppDbContext db)
         return e;
     }
 
-    public Task<List<Entrenamiento>> Listar(Guid miembroId, int pagina = 1, int porPagina = 20) =>
+    // S6-Historial: filtro opcional por nombre de ejercicio (contiene, sin distinguir mayúsculas)
+    public Task<List<Entrenamiento>> Listar(Guid miembroId, int pagina = 1, int porPagina = 20, string? ejercicio = null) =>
         db.Entrenamientos
             .Where(e => e.MiembroId == miembroId)
+            .Where(e => string.IsNullOrWhiteSpace(ejercicio) || e.Ejercicio.Contains(ejercicio))
             .OrderByDescending(e => e.FechaHora)
             .Skip((pagina - 1) * porPagina)
             .Take(porPagina)
