@@ -1,7 +1,7 @@
 // S1-Santuario: ClanHubPage — Server Component, hub principal post-login (P4)
 // Llama a GET /api/perfil/dashboard para obtener miembro + estadísticas + clan
 // S3-Santuario: si el usuario tiene clan, llama getPanelClan() y muestra puntosClan, posicionRanking, cantidadMiembros
-// Los tres botones de acción (ARENA, FORJA, CHAT) son Links — ARENA y CHAT son pantallas mock (S3 no los implementa)
+// Los tres botones de acción (ARENA, FORJA, CHAT) son Links a pantallas integradas (Arena y Chat conectados en S4)
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Flame, Users, Trophy, Swords, Zap, MessageSquare, Shield } from "lucide-react";
@@ -51,12 +51,10 @@ export default async function ClanHubPage() {
         <div className="w-52 h-52 rounded-full border-4 border-[#333] bg-[#242424] flex items-center justify-center overflow-hidden">
           <span className="text-9xl">🦍</span>
         </div>
-        <Link
-          href="/perfil/racha"
-          className="bg-[#F97316] hover:bg-[#EA6800] text-white font-heading font-bold uppercase tracking-wider px-6 py-2.5 rounded flex items-center gap-2 transition-colors"
-        >
+        {/* S4-Entrega: antes linkeaba a /perfil/racha (maqueta, PKG_PERFIL S8) — ahora es solo un badge */}
+        <span className="bg-[#F97316] text-white font-heading font-bold uppercase tracking-wider px-6 py-2.5 rounded flex items-center gap-2">
           <Flame size={16} /> {miembro.rango}
-        </Link>
+        </span>
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-8">

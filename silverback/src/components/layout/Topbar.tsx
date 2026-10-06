@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Settings, User } from "lucide-react";
+import { estaOculta } from "@/lib/features";
 
+// S4-Entrega: se filtran las pestañas de paquetes sin integración (Bóveda, Perfil).
+// "Arena" queda activa en todas las subrutas /arena/*.
 const tabs = [
   { label: "Santuario", href: "/santuario" },
   { label: "Arena", href: "/arena" },
   { label: "Desafíos", href: "/santuario/forja" },
   { label: "Bóveda", href: "/evolucion/botin" },
   { label: "Perfil", href: "/perfil" },
-];
+].filter((t) => !estaOculta(t.href));
 
 export default function Topbar() {
   const pathname = usePathname();
@@ -23,8 +25,11 @@ export default function Topbar() {
 
       <nav className="flex items-center gap-1 flex-1">
         {tabs.map((tab) => {
-          const isActive = pathname.startsWith(tab.href) ||
-            (tab.href === "/santuario" && (pathname === "/santuario" || pathname.startsWith("/santuario/tacticas") || pathname.startsWith("/santuario/roles")));
+          const isActive = tab.href === "/santuario"
+            ? pathname === "/santuario" || pathname.startsWith("/santuario/tacticas") || pathname.startsWith("/santuario/roles")
+            : tab.href.startsWith("/arena")
+              ? pathname.startsWith("/arena")
+              : pathname.startsWith(tab.href);
           return (
             <Link
               key={tab.href}
@@ -40,18 +45,6 @@ export default function Topbar() {
           );
         })}
       </nav>
-
-      <div className="flex items-center gap-3 shrink-0">
-        <button className="text-[#9CA3AF] hover:text-white transition-colors">
-          <Bell size={18} />
-        </button>
-        <button className="text-[#9CA3AF] hover:text-white transition-colors">
-          <Settings size={18} />
-        </button>
-        <div className="w-8 h-8 rounded-full bg-[#2e2e2e] border border-[#444] flex items-center justify-center">
-          <User size={16} className="text-[#9CA3AF]" />
-        </div>
-      </div>
     </header>
   );
 }

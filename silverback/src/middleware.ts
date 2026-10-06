@@ -2,6 +2,7 @@
 // S2-Auth: ampliado para leer claims del JWT y redirigir según estado de onboarding
 // S3-Landing: cambiada la landing de /login a /onboarding/biometrics
 import { NextRequest, NextResponse } from "next/server";
+import { estaOculta } from "@/lib/features";
 
 // S1-Infraestructura: rutas que no requieren autenticación
 const PUBLIC_ROUTES = ["/login", "/onboarding", "/api/"];
@@ -45,6 +46,10 @@ export function middleware(request: NextRequest) {
     // S2-Auth: onboarding incompleto intentando acceder a rutas protegidas → forzar onboarding
     if (!completado && !isPublic) {
       return NextResponse.redirect(new URL("/onboarding/biometrics", request.url));
+    }
+    // S4-Entrega: pantallas maquetadas sin integración → no se muestran (ver lib/features.ts)
+    if (estaOculta(pathname)) {
+      return NextResponse.redirect(new URL("/santuario", request.url));
     }
   }
 
