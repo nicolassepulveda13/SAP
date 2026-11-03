@@ -100,6 +100,7 @@ export type ClanDisponible = {
   nombre: string;
   cantidadMiembros: number;
   capacidadMaxima: number;
+  arquetipoDominante?: string | null;
 };
 
 export async function getClanesDisponibles(): Promise<ClanDisponible[]> {
@@ -194,6 +195,38 @@ export async function joinClan(
   cookieStore.delete("sb_onboarding");
 
   redirect("/santuario");
+}
+
+// CU-001-003 FA-2: iniciarViaje — asignación automática al clan con mayor afinidad por arquetipo.
+// Si no hay match por arquetipo, usa el primer clan disponible (ya vienen ordenados por PuntosClan desc).
+export async function iniciarViaje(
+  _state: OnboardingState,
+  _formData: FormData
+): Promise<OnboardingState> {
+  const draft = await leerDraft();
+  const clanes = (await getClanesDisponibles()).filter(
+    (c) => c.cantidadMiembros < c.capacidadMaxima
+  );
+  if (clanes.length === 0) return { error: "No hay clanes disponibles. Fundá el tuyo." };
+
+  let arquetipoUsuario = draft?.arquetipo ?? null;
+  // Cuenta existente sin clan: leer arquetipo del perfil
+  if (!arquetipoUsuario && (await tieneSesion())) {
+    try {
+      const d = await apiFetch<{ miembro?: { arquetipo?: string | null } }>("/api/perfil/dashboard");
+      arquetipoUsuario = d.miembro?.arquetipo ?? null;
+    } catch {
+      // sin arquetipo, el fallback alcanza
+    }
+  }
+
+  const sugerido = (arquetipoUsuario &&
+    clanes.find((c) => c.arquetipoDominante === arquetipoUsuario)) ||
+    clanes[0];
+
+  const fd = new FormData();
+  fd.append("clanId", sugerido.id);
+  return joinClan(undefined, fd);
 }
 
 // S3-CrearClan: crearClan — paso final cuando el usuario funda su propia manada (CU-001-005)

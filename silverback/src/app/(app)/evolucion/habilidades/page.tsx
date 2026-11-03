@@ -1,133 +1,83 @@
-"use client";
-
-import { useState } from "react";
-import { Dumbbell, Activity, Flame, Lock, TrendingUp } from "lucide-react";
+// S7-Evolucion: CU-004-002 — Mejorar Nodo del Árbol de Habilidades (P13). Lista real de nodos.
+import { Lock, Check } from "lucide-react";
 import { PageLabel } from "@/components/ui/PageLabel";
+import { getProgreso, getNodos } from "@/app/actions/evolucion";
+import { MejorarNodoButton } from "./MejorarNodoButton";
 
-const nodes = [
-  { id: "root", label: "FUERZA", icon: <Dumbbell size={16} />, level: null, unlocked: true, x: 50, y: 10, children: ["resist", "ataque"] },
-  { id: "resist", label: "RESISTENCIA", icon: <Activity size={12} />, level: 3, unlocked: true, x: 25, y: 45, children: ["locked1"] },
-  { id: "ataque", label: "ATAQUE", icon: <Dumbbell size={12} />, level: 1, unlocked: true, x: 75, y: 45, children: ["fuego"] },
-  { id: "locked1", label: "BLOQUEADO", icon: <Lock size={12} />, level: null, unlocked: false, x: 25, y: 80, children: [] },
-  { id: "fuego", label: "FUEGO", icon: <Flame size={12} />, level: null, unlocked: true, x: 75, y: 80, cost: 2000, children: [] },
-];
-
-export default function HabilidadesPage() {
-  const [selected, setSelected] = useState("resist");
+export default async function HabilidadesPage() {
+  const [progreso, nodos] = await Promise.all([getProgreso(), getNodos()]);
+  const invertidos = new Set(nodos.filter((n) => n.invertido).map((n) => n.id));
+  const xp = progreso.miembro.xp;
 
   return (
-    <div className="grid grid-cols-[1fr_300px] gap-6 h-full">
-      {/* Left: tree */}
-      <div>
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <PageLabel page="P13" />
-            <h1 className="font-heading font-bold text-4xl text-white uppercase">SKILL TREE</h1>
-            <p className="text-sm text-[#9CA3AF]">Desbloquea el potencial de tu clan.</p>
+    <div>
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <PageLabel page="P13" />
+          <h1 className="font-heading font-bold text-4xl text-white uppercase">ÁRBOL DE HABILIDADES</h1>
+          <p className="text-sm text-[#9CA3AF]">Invertí XP para desbloquear habilidades permanentes.</p>
+        </div>
+        <div className="bg-[#242424] border border-[#333] rounded-xl px-5 py-3 flex items-center gap-3 shrink-0">
+          <div className="w-8 h-8 bg-[#F97316] rounded-full flex items-center justify-center">
+            <span className="text-sm">⚡</span>
           </div>
-          <div className="bg-[#242424] border border-[#333] rounded-xl px-5 py-3 flex items-center gap-3">
-            <div className="w-8 h-8 bg-[#F97316] rounded-full flex items-center justify-center">
-              <span className="text-sm">🪙</span>
-            </div>
-            <div>
-              <p className="text-xs text-[#9CA3AF] uppercase">PUNTOS DE CLAN</p>
-              <p className="font-heading font-bold text-xl text-[#F97316]">12,450</p>
-            </div>
+          <div>
+            <p className="text-xs text-[#9CA3AF] uppercase">XP DISPONIBLE</p>
+            <p className="font-heading font-bold text-xl text-[#F97316]">{xp.toLocaleString()}</p>
           </div>
         </div>
+      </div>
 
-        {/* Tree diagram */}
-        <div className="bg-[#1a1a1a] border border-[#333] rounded-xl p-8 relative" style={{ minHeight: 400 }}>
-          {/* SVG lines */}
-          <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: "none" }}>
-            <line x1="50%" y1="18%" x2="25%" y2="52%" stroke="#F97316" strokeWidth="2" />
-            <line x1="50%" y1="18%" x2="75%" y2="52%" stroke="#F97316" strokeWidth="2" />
-            <line x1="25%" y1="52%" x2="25%" y2="86%" stroke="#555" strokeWidth="2" />
-            <line x1="75%" y1="52%" x2="75%" y2="86%" stroke="#555" strokeWidth="2" />
-          </svg>
+      {nodos.length === 0 ? (
+        <p className="text-[#9CA3AF] text-sm text-center py-12">
+          Todavía no hay nodos disponibles en el árbol.
+        </p>
+      ) : (
+        <div className="grid grid-cols-2 gap-4">
+          {nodos.map((n) => {
+            const prereqsOk = n.prerequisitos.every((id) => invertidos.has(id));
+            const bloqueado = !prereqsOk;
+            const sinXp = xp < n.costoXp;
 
-          {/* Nodes */}
-          {nodes.map((node) => (
-            <button
-              key={node.id}
-              onClick={() => node.unlocked && setSelected(node.id)}
-              className="absolute transform -translate-x-1/2 -translate-y-1/2"
-              style={{ left: `${node.x}%`, top: `${node.y}%` }}
-            >
+            return (
               <div
-                className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center border-2 transition-all relative ${
-                  node.id === selected
-                    ? "bg-[#F97316] border-[#F97316]"
-                    : node.unlocked
-                    ? "bg-[#2e2e2e] border-[#F97316]"
-                    : "bg-[#242424] border-[#444]"
+                key={n.id}
+                className={`bg-[#242424] border rounded-xl p-5 ${
+                  n.invertido ? "border-[#F97316]" : bloqueado ? "border-[#333] opacity-70" : "border-[#333]"
                 }`}
               >
-                <span className={node.unlocked ? "text-white" : "text-[#555]"}>{node.icon}</span>
-                {node.level && (
-                  <span className="absolute -top-2 -right-2 text-[9px] bg-[#F97316] text-white px-1 rounded font-bold">
-                    Lvl {node.level}
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="font-heading font-bold text-white uppercase">{n.nombre}</h3>
+                  {n.invertido ? (
+                    <span className="text-xs bg-[#F97316] text-white px-2 py-0.5 rounded font-heading uppercase flex items-center gap-1">
+                      <Check size={10} /> INVERTIDO
+                    </span>
+                  ) : bloqueado ? (
+                    <span className="text-xs bg-[#333] text-[#9CA3AF] px-2 py-0.5 rounded font-heading uppercase flex items-center gap-1">
+                      <Lock size={10} /> BLOQUEADO
+                    </span>
+                  ) : null}
+                </div>
+                <p className="text-xs text-[#9CA3AF] mb-4">{n.descripcion}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-[#9CA3AF] uppercase">
+                    COSTO <span className="text-white font-bold">{n.costoXp.toLocaleString()} XP</span>
                   </span>
+                  {!n.invertido && (
+                    <MejorarNodoButton nodoId={n.id} disabled={bloqueado || sinXp} nombre={n.nombre} />
+                  )}
+                </div>
+                {!n.invertido && bloqueado && (
+                  <p className="text-xs text-[#9CA3AF] mt-2">Requiere invertir en los nodos previos.</p>
                 )}
-                {node.cost && (
-                  <span className="absolute -top-2 -right-6 text-[9px] bg-[#333] text-[#9CA3AF] px-1 rounded">
-                    {node.cost / 1000}k
-                  </span>
+                {!n.invertido && !bloqueado && sinXp && (
+                  <p className="text-xs text-red-400 mt-2">XP insuficiente.</p>
                 )}
               </div>
-            </button>
-          ))}
+            );
+          })}
         </div>
-      </div>
-
-      {/* Right: detail panel */}
-      <div className="space-y-4">
-        <div className="bg-[#242424] border border-[#333] rounded-xl p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 bg-[#F97316] rounded-lg flex items-center justify-center">
-              <Activity size={20} className="text-white" />
-            </div>
-            <div>
-              <p className="font-heading font-bold text-white uppercase">RESISTENCIA</p>
-              <span className="text-xs bg-[#F97316] text-white px-2 py-0.5 rounded font-heading uppercase">NIVEL 3 / 5</span>
-            </div>
-          </div>
-          <p className="text-sm text-[#9CA3AF] mb-4">
-            Aumenta la capacidad cardiovascular del clan, permitiendo sesiones de entrenamiento más largas con menor penalización por fatiga.
-          </p>
-          <div className="space-y-1 text-xs mb-4">
-            <div className="flex justify-between">
-              <span className="text-[#9CA3AF] uppercase">EFECTO ACTUAL</span>
-              <span className="text-[#F97316] font-bold">+15% Stamina</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[#9CA3AF] uppercase">PRÓXIMO NIVEL</span>
-              <span className="text-white font-bold">+20% Stamina</span>
-            </div>
-          </div>
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-xs text-[#9CA3AF] uppercase">COSTO MEJORA</span>
-            <span className="font-heading font-bold text-white flex items-center gap-1">🪙 3,500</span>
-          </div>
-          <button className="w-full bg-[#F97316] hover:bg-[#EA6800] text-white font-heading font-bold uppercase tracking-wider py-3 rounded flex items-center justify-center gap-2 transition-colors">
-            <TrendingUp size={16} /> MEJORAR NODO
-          </button>
-        </div>
-
-        <div className="bg-[#242424] border border-[#333] rounded-xl p-5">
-          <p className="text-xs text-[#9CA3AF] uppercase tracking-wider mb-3">ÚLTIMAS INVERSIONES</p>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-white flex items-center gap-2"><Activity size={12} className="text-[#F97316]" /> Resistencia Lvl 3</span>
-              <span className="text-[#ef4444]">-2,000 pts</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-white flex items-center gap-2"><Dumbbell size={12} className="text-[#F97316]" /> Ataque Crítico Lvl 1</span>
-              <span className="text-[#ef4444]">-1,500 pts</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Shield, MessageSquare, Users, Swords, PlusCircle, Calculator, Clock,
-  LayoutGrid, Zap, Gift, Trophy,
+  LayoutGrid, Zap, Gift, Trophy, Flame, Package, Activity, UserCog, HeartPulse,
 } from "lucide-react";
 import { estaOculta } from "@/lib/features";
 
@@ -34,15 +34,21 @@ const secciones = [
   {
     titulo: "Evolución",
     items: [
+      { label: "Progreso", href: "/evolucion", icon: Flame },
       { label: "Árbol de Habilidades", href: "/evolucion/habilidades", icon: LayoutGrid },
-      { label: "Mercado", href: "/evolucion/tienda", icon: Zap },
+      { label: "Bóveda", href: "/evolucion/botin", icon: Package },
+      { label: "Marketplace", href: "/evolucion/tienda", icon: Zap },
     ],
   },
   {
     titulo: "Perfil",
     items: [
-      { label: "Beneficios", href: "/perfil/beneficios", icon: Gift },
+      { label: "Dashboard", href: "/perfil", icon: LayoutDashboard },
+      { label: "Racha", href: "/perfil/racha", icon: Activity },
+      { label: "Fatiga", href: "/perfil/fatiga", icon: HeartPulse },
       { label: "Trofeos", href: "/perfil/trofeos", icon: Trophy },
+      { label: "Beneficios", href: "/perfil/beneficios", icon: Gift },
+      { label: "Datos de Cuenta", href: "/perfil/cuenta", icon: UserCog },
     ],
   },
 ]
@@ -79,8 +85,9 @@ export default function Sidebar({ usuario }: { usuario: SidebarUsuario }) {
               {s.titulo}
             </p>
             {s.items.map(({ label, href, icon: Icon }) => {
-              // Match exacto para las raíces (/santuario, /arena) así no quedan activas en sus subrutas
+              // Match exacto para las raíces (/santuario, /arena, /evolucion, /perfil) así no quedan activas en sus subrutas
               const isActive = href === "/santuario" || href === "/arena"
+                || href === "/evolucion" || href === "/perfil"
                 ? pathname === href
                 : pathname === href || pathname.startsWith(href + "/");
               return (

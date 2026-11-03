@@ -14,4 +14,6 @@ public interface IPerfilService
     Task<List<Trofeo>> CargarTrofeos(Guid miembroId);
     Task<List<BeneficioAliado>> CargarBeneficios(Guid miembroId);
     Task<string> ReclamarBeneficio(Guid beneficioId, Guid miembroId);
+    // CU-005-007: Gestionar Datos de Cuenta
+    Task<Miembro> ActualizarCuenta(Guid miembroId, string nombre, string email, string? passwordActual, string? passwordNueva);
 }

@@ -73,4 +73,43 @@ public class PerfilService(
         await beneficioRepo.RegistrarReclamo(beneficioId, miembroId);
         return $"SB-{beneficioId.ToString()[..4].ToUpper()}-{miembroId.ToString()[..4].ToUpper()}";
     }
+
+    // CU-005-007: Gestionar Datos de Cuenta — permite cambiar nombre, email y (opcional) contraseña.
+    // Si se envía passwordNueva se exige la actual para evitar que un token robado cambie la credencial.
+    public async Task<Miembro> ActualizarCuenta(Guid miembroId, string nombre, string email, string? passwordActual, string? passwordNueva)
+    {
+        var miembro = await miembroRepo.BuscarPorId(miembroId)
+            ?? throw new InvalidOperationException("Miembro no encontrado.");
+
+        nombre = (nombre ?? "").Trim();
+        email = (email ?? "").Trim();
+        if (nombre.Length < 2) throw new InvalidOperationException("El nombre es demasiado corto.");
+        if (!email.Contains('@')) throw new InvalidOperationException("El email no es válido.");
+
+        if (!string.Equals(email, miembro.Email, StringComparison.OrdinalIgnoreCase))
+        {
+            var otro = await miembroRepo.BuscarPorEmail(email);
+            if (otro != null && otro.Id != miembroId)
+                throw new InvalidOperationException("Ese email ya está en uso.");
+        }
+
+        await miembroRepo.ActualizarDatosCuenta(miembroId, nombre, email);
+        miembro.Nombre = nombre;
+        miembro.Email = email;
+
+        if (!string.IsNullOrEmpty(passwordNueva))
+        {
+            if (string.IsNullOrEmpty(passwordActual))
+                throw new InvalidOperationException("Ingresá tu contraseña actual para cambiarla.");
+            if (!BCrypt.Net.BCrypt.Verify(passwordActual, miembro.PasswordHash))
+                throw new InvalidOperationException("La contraseña actual no coincide.");
+            if (passwordNueva.Length < 8)
+                throw new InvalidOperationException("La nueva contraseña debe tener al menos 8 caracteres.");
+
+            var nuevoHash = BCrypt.Net.BCrypt.HashPassword(passwordNueva, 10);
+            await miembroRepo.ActualizarPassword(miembroId, nuevoHash);
+        }
+
+        return miembro;
+    }
 }

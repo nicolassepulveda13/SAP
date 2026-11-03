@@ -1,8 +1,8 @@
 # SilverBack — Resumen general del desarrollo
 
 **Alumno:** Sepúlveda Nicolás — UAI, Ingeniería en Sistemas, 5to B — SAP 2026
-**Actualizado:** 06/10/2026
-**Estado:** S1 ✅ · S2 ✅ · S3 ✅ · S4 ✅ · S5 ✅ · S6 ✅ — verificado con 13 tests E2E · todo commiteado y subido a `origin/main`
+**Actualizado:** 03/11/2026
+**Estado:** S1 ✅ · S2 ✅ · S3 ✅ · S4 ✅ · S5 ✅ · S6 ✅ · S7 ✅ · S8 ✅ — 28 CU implementados (E1 completa + 4 agregados) · E2E S7/S8 pendientes
 
 > Este documento es el punto de entrada. El detalle de cada sprint está en `PLAN_EJECUCION_TECNOLOGIA.md`. Los cambios para la carpeta del TP están en `silverback/docs/Modificacion-Carpeta.md` → **sección 0, checklist de balanceo** (v1.4).
 
@@ -11,9 +11,8 @@
 ## 1. Resumen en 30 segundos
 
 - **Stack:** Next.js 16 + React 19 (`silverback/`) · ASP.NET Core 9, Clean Architecture (`silverback-api/`) · SQL Server + EF Core 9 · JWT en cookie HTTP-only · **todo dockerizado** (`docker compose up --build`).
-- **Funciona de punta a punta:** Incorporación (alta, arquetipo, unirse/fundar clan), Santuario (panel, Forja, Tácticas, Roles) y Arena (registro manual y por voz, CER, Guerra Global semanal, Historial de Batallas).
-- **Oculto hasta implementarse:** Evolución/Bóveda (S7) y Perfil (S8). Las pantallas están, pero no se muestran.
-- **28 casos de uso:** 24 aprobados en E1 + 4 agregados (C-25 a C-28).
+- **Funciona de punta a punta:** Incorporación (alta, arquetipo, buscador + unirse/fundar/INICIAR VIAJE), Santuario (panel, Forja, Tácticas, Roles con historial de admin), Arena (manual + voz, CER, Guerra Global semanal, Historial), Evolución (progreso, árbol de habilidades, bóveda, marketplace) y Perfil (dashboard, racha + salvar, fatiga, trofeos, beneficios, datos de cuenta).
+- **28 casos de uso:** 24 aprobados en E1 + 4 agregados (C-25 a C-28), todos implementados.
 - **Calidad:** suite E2E de 13 tests con Playwright. Encontró 7 bugs reales (incluida una fuga de contraseñas) y quedaron todos corregidos.
 - **Carpeta del TP:** todo lo que hay que balancear está en **una sola checklist**: `silverback/docs/Modificacion-Carpeta.md` → **sección 0** (v1.4, 33 ítems ordenados por sección de la guía SAP, más los pendientes).
 
@@ -227,11 +226,11 @@ Solo se ven las pantallas **integradas con la API**. Las maquetadas sin integrac
 
 | Paquete | Pantallas visibles | Estado |
 |---|---|---|
-| Incorporación | Login · Biometría · Arquetipo · Radar de Manadas (unirse / fundar) | ✅ |
-| Santuario | Panel del Clan · La Forja · Sala de Tácticas · Roles | ✅ |
+| Incorporación | Login · Biometría · Arquetipo · Radar de Manadas (buscador + unirse / fundar / INICIAR VIAJE) | ✅ |
+| Santuario | Panel del Clan · La Forja · Sala de Tácticas · Roles (con historial de admin) | ✅ |
 | Arena | Guerra Global · Registrar (manual + voz) · Calculadora CER · Historial de Batallas | ✅ |
-| Evolución / Bóveda | Evolución · Habilidades · Botín · Tienda | 🙈 Oculto (S7) |
-| Perfil | Dashboard · Racha · Fatiga · Trofeos · Beneficios | 🙈 Oculto (S8) |
+| Evolución / Bóveda | Progreso · Árbol de Habilidades · Bóveda · Marketplace | ✅ |
+| Perfil | Dashboard · Racha (+ salvar) · Fatiga · Trofeos · Beneficios · Datos de Cuenta | ✅ |
 
 **Cómo volver a mostrar algo:** sacarlo de `silverback/src/lib/features.ts` (`RUTAS_OCULTAS` para un paquete entero, `PANTALLAS_OCULTAS` para una ruta exacta). Lo usan el menú y el middleware.
 
@@ -249,6 +248,9 @@ Solo se ven las pantallas **integradas con la API**. Las maquetadas sin integrac
 | **S6** | 05/10 | `51024f9` | Guerra Global semanal automática (abre y cierra sola), rival por parejas del ranking, Historial de Batallas |
 | Correcciones | 05/10 – 06/10 | `c2f1e34` `b193269` `f7bf0f5` `baed15b` | Bugs encontrados con los tests (ver sección 7) |
 | Infra y docs | 05/10 – 06/10 | `4b7b73e` `603189f` `fd61d86` `7ade5d1` y otros | Pantallas ocultas, Scalar, suite E2E, balanceo de la carpeta |
+| Brechas E1 | 03/11 | pendiente commit | CU-001-003 (buscador + INICIAR VIAJE con afinidad por arquetipo), CU-002-005 (bloqueo 2° SILVERBACK), CU-002-006 (confirmación + historial + bloqueo expulsión SILVERBACK) |
+| **S7** | 03/11 | pendiente commit | Evolución/Bóveda: progreso real, árbol con prerequisitos, bóveda, marketplace. Seed de catálogo (4 nodos, 6 ítems, 1 cofre por miembro) |
+| **S8** | 03/11 | pendiente commit | Perfil: dashboard, racha + salvar, fatiga, trofeos, beneficios con cupón, Datos de Cuenta (CU-005-007 nuevo endpoint PUT /api/perfil/cuenta) |
 
 ---
 
@@ -307,14 +309,15 @@ Todas están registradas para el profe en `Modificacion-Carpeta.md` (secciones 1
 
 ### Brechas con CU aprobados (detalle en `Modificacion-Carpeta.md` §4.6)
 
-- [ ] **CU-002-005:** impedir que haya dos SILVERBACK en un clan (hoy el selector lo permite).
-- [ ] **CU-002-006:** confirmación antes de expulsar, registro en el historial de administración y no permitir expulsar a un SILVERBACK.
-- [ ] **CU-001-003:** buscador de clanes por nombre y "INICIAR VIAJE" con asignación automática.
+- [x] **CU-002-005:** `SantuarioService.AsignarRol` rechaza asignar SILVERBACK si ya existe uno; el selector de la UI oculta SILVERBACK.
+- [x] **CU-002-006:** `ExpulsarButton` pide confirmación; `SantuarioService.ExpulsarMiembro` rechaza expulsar a un SILVERBACK y registra la expulsión en `AdminHistorial`.
+- [x] **CU-001-003:** `MatchmakingClient` muestra buscador por nombre (filtro vivo + FA-1 "No se encontraron clanes") y el botón **INICIAR VIAJE** (FA-2) ejecuta `iniciarViaje`, que une al clan con `ArquetipoDominante` igual al del usuario (fallback: primer clan disponible por ranking).
 
 ### Próximos sprints
 
-- [ ] **S7** — Evolución / Bóveda (CU-004-001 a 004). Resolver antes las discrepancias de rangos y de tipos de cofre. Las tablas de catálogo (Items, Nodos, Cofres) están vacías.
-- [ ] **S8** — Perfil (CU-005-001 a 007), incluida `/perfil/cuenta` (CU-005-007).
+- [x] **S7** — Evolución / Bóveda (CU-004-001 a 004) · catálogo sembrado (4 nodos con prerequisitos, 6 ítems, 1 cofre por miembro demo).
+- [x] **S8** — Perfil (CU-005-001 a 007) · incluye `/perfil/cuenta` (CU-005-007) con cambio de contraseña validado.
+- [ ] **E2E S7 + S8** — ampliar `silverback/e2e/s4-s6.spec.ts` con tests para los nuevos CU.
 - [ ] **S9** — Análisis del entorno de las máquinas de la facultad.
 - [ ] **S10–S11** — Integración final, hardening y despliegue.
 

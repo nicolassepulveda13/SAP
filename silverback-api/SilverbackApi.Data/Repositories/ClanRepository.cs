@@ -16,6 +16,7 @@ public class ClanRepository(AppDbContext db)
 
     public Task<List<Clan>> ListarDisponibles(int capacidadMaxima) =>
         db.Clanes
+            .Include(c => c.Miembros)
             .Where(c => c.CantidadMiembros < capacidadMaxima)
             .OrderByDescending(c => c.PuntosClan)
             .ToListAsync();

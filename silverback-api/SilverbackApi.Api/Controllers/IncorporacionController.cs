@@ -29,6 +29,13 @@ public class IncorporacionController(IIncorporacionService svc) : SilverbackCont
             c.Nombre,
             c.CantidadMiembros,
             CapacidadMaxima = CapacidadMaximaClan,
+            // CU-001-003 FA-2: INICIAR VIAJE sugiere el clan con mayor afinidad al arquetipo del usuario
+            ArquetipoDominante = c.Miembros
+                .Where(m => m.Arquetipo != null)
+                .GroupBy(m => m.Arquetipo)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.Key!.ToString())
+                .FirstOrDefault(),
         }));
     }
 

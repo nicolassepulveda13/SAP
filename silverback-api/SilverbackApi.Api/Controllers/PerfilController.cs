@@ -11,6 +11,7 @@ public class PerfilController(IPerfilService svc) : SilverbackControllerBase
 {
     public record SalvarRachaRequest(Guid ClanId);
     public record ReclamarBeneficioRequest(Guid BeneficioId);
+    public record ActualizarCuentaRequest(string Nombre, string Email, string? PasswordActual, string? PasswordNueva);
 
     [HttpGet("dashboard")]
     public async Task<IActionResult> Dashboard()
@@ -108,6 +109,20 @@ public class PerfilController(IPerfilService svc) : SilverbackControllerBase
         {
             var cupon = await svc.ReclamarBeneficio(req.BeneficioId, miembroId.Value);
             return Ok(new { cupon });
+        }
+        catch (Exception ex) { return BadRequest(new { error = ex.Message }); }
+    }
+
+    // CU-005-007: Gestionar Datos de Cuenta
+    [HttpPut("cuenta")]
+    public async Task<IActionResult> ActualizarCuenta([FromBody] ActualizarCuentaRequest req)
+    {
+        var miembroId = ObtenerMiembroId();
+        if (miembroId is null) return Unauthorized();
+        try
+        {
+            var m = await svc.ActualizarCuenta(miembroId.Value, req.Nombre, req.Email, req.PasswordActual, req.PasswordNueva);
+            return Ok(new { m.Id, m.Nombre, m.Email });
         }
         catch (Exception ex) { return BadRequest(new { error = ex.Message }); }
     }

@@ -33,6 +33,14 @@ public class EvolucionService(
         return new ProgresoEvolucion(miembro, xpParaSiguiente);
     }
 
+    // CU-004-002: catálogo de nodos con "invertido" por miembro (el estado de desbloqueo es per-user)
+    public async Task<List<NodoConEstado>> ObtenerNodos(Guid miembroId)
+    {
+        var nodos = await nodoRepo.Listar();
+        var invertidos = await nodoRepo.IdsInvertidosPor(miembroId);
+        return nodos.Select(n => new NodoConEstado(n, invertidos.Contains(n.Id))).ToList();
+    }
+
     public Task<List<Cofre>> ObtenerCofresDisponibles(Guid miembroId) =>
         cofreRepo.ListarDisponibles(miembroId);
 
@@ -44,7 +52,7 @@ public class EvolucionService(
         return new { tipo = "cosmético", rareza = cofre.Rareza.ToString() };
     }
 
-    public Task<List<Item>> ObtenerItems(CategoriaItem categoria) =>
+    public Task<List<Item>> ObtenerItems(CategoriaItem? categoria) =>
         marketplaceRepo.Listar(categoria);
 
     public async Task<Item> ComprarItem(Guid itemId, Guid miembroId)
@@ -69,6 +77,18 @@ public class EvolucionService(
             ?? throw new InvalidOperationException("Miembro no encontrado.");
         if (miembro.Xp < nodo.CostoXp)
             throw new InvalidOperationException("XP insuficiente.");
+
+        // CU-004-002: un miembro no puede invertir dos veces en el mismo nodo
+        var invertidos = await nodoRepo.IdsInvertidosPor(miembroId);
+        if (invertidos.Contains(nodoId))
+            throw new InvalidOperationException("Ya invertiste en este nodo.");
+
+        // CU-004-002: todos los prerequisitos deben estar invertidos primero
+        foreach (var dep in nodo.Requiere)
+        {
+            if (!invertidos.Contains(dep.PrerequisiteId))
+                throw new InvalidOperationException("Faltan prerequisitos para desbloquear este nodo.");
+        }
 
         await miembroRepo.ActualizarXP(miembroId, -nodo.CostoXp);
         return await nodoRepo.CrearInversion(miembroId, nodoId);

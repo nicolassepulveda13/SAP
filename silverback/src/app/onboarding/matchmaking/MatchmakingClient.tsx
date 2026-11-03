@@ -1,19 +1,26 @@
 // S2-Onboarding: MatchmakingClient — Paso 3/3 del onboarding (P3), Client Component
 // S2-Onboarding: joinClan via useActionState — lee el draft cookie y registra+une al clan en un paso
 // S3-CrearClan: crearClan via useActionState — patrón token preliminar: registrar() → crearClan() → token definitivo con rol=SILVERBACK
-// useState(mostrarCrear) controla el formulario colapsable de fundación de clan
+// CU-001-003: buscador por nombre + INICIAR VIAJE (FA-2) con asignación automática por afinidad
 "use client";
 
 import { useActionState, useState } from "react";
-import { Users, Lock, Plus } from "lucide-react";
+import { Users, Lock, Plus, Search } from "lucide-react";
 import { PageLabel } from "@/components/ui/PageLabel";
-import { joinClan, crearClan, type ClanDisponible } from "@/app/actions/onboarding";
+import { joinClan, crearClan, iniciarViaje, type ClanDisponible } from "@/app/actions/onboarding";
 
 export default function MatchmakingClient({ clanes }: { clanes: ClanDisponible[] }) {
   const [joinState, joinAction, joinPending] = useActionState(joinClan, undefined);
   const [createState, createAction, createPending] = useActionState(crearClan, undefined);
+  const [viajeState, viajeAction, viajePending] = useActionState(iniciarViaje, undefined);
   const [mostrarCrear, setMostrarCrear] = useState(false);
-  const pending = joinPending || createPending;
+  const [filtro, setFiltro] = useState("");
+  const pending = joinPending || createPending || viajePending;
+
+  const clanesFiltrados = filtro.trim()
+    ? clanes.filter((c) => c.nombre.toLowerCase().includes(filtro.trim().toLowerCase()))
+    : clanes;
+  const hayDisponibles = clanes.some((c) => c.cantidadMiembros < c.capacidadMaxima);
 
   return (
     <div className="w-full max-w-lg">
@@ -23,13 +30,31 @@ export default function MatchmakingClient({ clanes }: { clanes: ClanDisponible[]
       </h2>
       <p className="text-[#9CA3AF] mb-6">Encuentra tu manada. Domina la arena.</p>
 
+      {/* CU-001-003 paso 2: buscador por nombre con ícono de lupa a la izquierda */}
+      <div className="relative mb-4">
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+        <input
+          type="text"
+          value={filtro}
+          onChange={(e) => setFiltro(e.target.value)}
+          placeholder="Buscar Clanes..."
+          disabled={pending}
+          className="w-full rounded bg-[#242424] border border-[#333] pl-9 pr-3 py-2 text-white text-sm placeholder-[#555] focus:outline-none focus:border-[#F97316] disabled:opacity-50"
+        />
+      </div>
+
       {clanes.length === 0 ? (
         <p className="text-[#9CA3AF] text-sm text-center py-6">
           No hay clanes disponibles. Creá el tuyo y liderá la manada.
         </p>
+      ) : clanesFiltrados.length === 0 ? (
+        // CU-001-003 FA-1: filtro sin coincidencias
+        <p className="text-[#9CA3AF] text-sm text-center py-6">
+          No se encontraron clanes con ese nombre.
+        </p>
       ) : (
         <div className="space-y-2 mb-6">
-          {clanes.map((clan) => {
+          {clanesFiltrados.map((clan) => {
             const lleno = clan.cantidadMiembros >= clan.capacidadMaxima;
             return (
               <form key={clan.id} action={joinAction}>
@@ -112,6 +137,22 @@ export default function MatchmakingClient({ clanes }: { clanes: ClanDisponible[]
           </form>
         )}
       </div>
+
+      {/* CU-001-003 FA-2: INICIAR VIAJE → asigna automáticamente el clan con mayor afinidad por arquetipo */}
+      {hayDisponibles && (
+        <form action={viajeAction}>
+          <button
+            type="submit"
+            disabled={pending}
+            className="w-full bg-[#F97316] hover:bg-[#EA6800] disabled:opacity-50 text-white font-heading font-bold uppercase text-sm tracking-wider py-2.5 rounded transition-colors"
+          >
+            {viajePending ? "ASIGNANDO MANADA..." : "INICIAR VIAJE →"}
+          </button>
+          {viajeState?.error && (
+            <p className="text-red-400 text-xs text-center mt-2">{viajeState.error}</p>
+          )}
+        </form>
+      )}
 
       <div className="flex justify-center gap-2 mt-4">
         <div className="w-6 h-1 bg-[#444] rounded-full" />

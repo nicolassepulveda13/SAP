@@ -12,7 +12,8 @@ namespace SilverbackApi.Services;
 public class SantuarioService(
     ClanRepository clanRepo,
     MiembroRepository miembroRepo,
-    SantuarioRepository santuarioRepo) : ISantuarioService
+    SantuarioRepository santuarioRepo,
+    AdminHistorialRepository historialRepo) : ISantuarioService
 {
     public async Task<Clan> ObtenerClan(Guid clanId) =>
         await clanRepo.BuscarPorId(clanId) ?? throw new InvalidOperationException("Clan no encontrado.");
@@ -72,7 +73,7 @@ public class SantuarioService(
             Contenido = contenido,
         });
 
-    // S4-Roles: AsignarRol() — solo el SILVERBACK del mismo clan puede cambiar el rol de otro miembro (CU-002-006)
+    // S4-Roles: AsignarRol() — solo el SILVERBACK del mismo clan puede cambiar el rol de otro miembro (CU-002-005/006)
     public async Task<Miembro> AsignarRol(Guid clanId, Guid liderId, Guid miembroId, string rol)
     {
         // Sin este control el SILVERBACK podía bajarse el rol y dejar el clan sin líder
@@ -90,7 +91,15 @@ public class SantuarioService(
             throw new InvalidOperationException("El miembro no pertenece a este clan.");
 
         var nuevoRol = Enum.Parse<Rol>(rol);
+        // CU-002-005: no puede haber dos SILVERBACK en un clan (si no, el clan tendría dos líderes
+        // y se podría tomar el control sin que el líder original lo acepte)
+        if (nuevoRol == Rol.SILVERBACK && miembro.Rol != Rol.SILVERBACK
+            && await miembroRepo.ExisteSilverbackEnClan(clanId, miembroId))
+            throw new InvalidOperationException("Ya hay un SILVERBACK en este clan.");
+
         await miembroRepo.ActualizarRol(miembroId, nuevoRol);
+        await historialRepo.Registrar(liderId, "ROL_ASIGNADO",
+            $"{miembro.Nombre}: {miembro.Rol} → {nuevoRol}");
         miembro.Rol = nuevoRol;
         return miembro;
     }
@@ -111,8 +120,13 @@ public class SantuarioService(
         if (miembro.ClanId != clanId)
             throw new InvalidOperationException("El miembro no pertenece a este clan.");
 
+        // CU-002-006: nunca expulsar a un SILVERBACK (si hubiera dos por un bug previo, el clan quedaría sin líder)
+        if (miembro.Rol == Rol.SILVERBACK)
+            throw new InvalidOperationException("No se puede expulsar a un SILVERBACK.");
+
         await miembroRepo.ActualizarClan(miembroId, null);
         await miembroRepo.ActualizarRol(miembroId, Rol.RECLUTA);
         await clanRepo.ActualizarCantidadMiembros(clanId, -1);
+        await historialRepo.Registrar(liderId, "MIEMBRO_EXPULSADO", $"{miembro.Nombre} ({miembro.Email})");
     }
 }

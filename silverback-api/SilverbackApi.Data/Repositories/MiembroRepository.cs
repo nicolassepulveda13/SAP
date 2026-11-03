@@ -38,4 +38,21 @@ public class MiembroRepository(AppDbContext db)
     public Task ActualizarRol(Guid id, Rol rol) =>
         db.Miembros.Where(m => m.Id == id)
             .ExecuteUpdateAsync(s => s.SetProperty(m => m.Rol, rol));
+
+    // CU-002-005: solo puede haber un SILVERBACK por clan. excluirMiembroId permite ignorar al propio
+    // miembro cuando se re-asigna su rol (aunque hoy no debería pasar: el líder no cambia su rol).
+    public Task<bool> ExisteSilverbackEnClan(Guid clanId, Guid? excluirMiembroId = null) =>
+        db.Miembros.AnyAsync(m => m.ClanId == clanId && m.Rol == Rol.SILVERBACK
+            && (excluirMiembroId == null || m.Id != excluirMiembroId));
+
+    // CU-005-007: actualizar datos de la cuenta. Se escribe solo lo que cambia (email o password).
+    public Task ActualizarDatosCuenta(Guid id, string nombre, string email) =>
+        db.Miembros.Where(m => m.Id == id)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(m => m.Nombre, nombre)
+                .SetProperty(m => m.Email, email));
+
+    public Task ActualizarPassword(Guid id, string passwordHash) =>
+        db.Miembros.Where(m => m.Id == id)
+            .ExecuteUpdateAsync(s => s.SetProperty(m => m.PasswordHash, passwordHash));
 }

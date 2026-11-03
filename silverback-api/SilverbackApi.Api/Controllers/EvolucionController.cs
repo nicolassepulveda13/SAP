@@ -37,6 +37,20 @@ public class EvolucionController(IEvolucionService svc) : SilverbackControllerBa
         catch (Exception ex) { return BadRequest(new { error = ex.Message }); }
     }
 
+    [HttpGet("nodos")]
+    public async Task<IActionResult> ObtenerNodos()
+    {
+        var miembroId = ObtenerMiembroId();
+        if (miembroId is null) return Unauthorized();
+        var nodos = await svc.ObtenerNodos(miembroId.Value);
+        return Ok(nodos.Select(n => new
+        {
+            n.Nodo.Id, n.Nodo.Nombre, n.Nodo.Descripcion, n.Nodo.CostoXp,
+            Prerequisitos = n.Nodo.Requiere.Select(d => d.PrerequisiteId),
+            n.Invertido,
+        }));
+    }
+
     [HttpGet("cofres")]
     public async Task<IActionResult> ObtenerCofres()
     {
@@ -56,10 +70,15 @@ public class EvolucionController(IEvolucionService svc) : SilverbackControllerBa
     }
 
     [HttpGet("items")]
-    public async Task<IActionResult> ObtenerItems([FromQuery] string categoria = "SKIN")
+    public async Task<IActionResult> ObtenerItems([FromQuery] string? categoria = null)
     {
-        if (!Enum.TryParse<CategoriaItem>(categoria, out var cat))
-            return BadRequest(new { error = "Categoría inválida." });
+        CategoriaItem? cat = null;
+        if (!string.IsNullOrWhiteSpace(categoria))
+        {
+            if (!Enum.TryParse<CategoriaItem>(categoria, out var c))
+                return BadRequest(new { error = "Categoría inválida." });
+            cat = c;
+        }
         var items = await svc.ObtenerItems(cat);
         return Ok(items.Select(ItemDto));
     }

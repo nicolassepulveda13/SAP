@@ -24,7 +24,7 @@ El `Context.md` fue diseñado originalmente para la carpeta de **Negocios**. Par
 - Voz: Web Speech API del navegador (es-AR)
 - Wearables: fuera de alcance (10.4.3)
 
-## Estado actual (octubre 2026)
+## Estado actual (noviembre 2026)
 - Canvas ✅ aprobado · E1 Tecnología ✅ entregada
-- Desarrollo: S1–S6 ✅ (verificado con E2E: `cd silverback && npm run test:e2e`) — ver `RESUMEN_GENERAL.md` y `PLAN_EJECUCION_TECNOLOGIA.md`
-- 28 CU (24 de E1 + 4 agregados); cambios a la carpeta: checklist única en `silverback/docs/Modificacion-Carpeta.md` (sección 0)
+- Desarrollo: S1–S8 ✅ · 28 CU implementados (24 E1 + 4 agregados). S1–S6 verificados con E2E (`cd silverback && npm run test:e2e`); E2E para S7/S8 pendiente.
+- Fuentes: `RESUMEN_GENERAL.md` y `PLAN_EJECUCION_TECNOLOGIA.md`; cambios a la carpeta: checklist única en `silverback/docs/Modificacion-Carpeta.md` (sección 0)

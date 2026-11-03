@@ -1,12 +1,14 @@
-import { Users, UserMinus } from "lucide-react";
+import { Users } from "lucide-react";
 import { PageLabel } from "@/components/ui/PageLabel";
 import { requireClan } from "@/lib/clan-context";
 import { apiFetch } from "@/lib/api-client";
-import { asignarRol, expulsarMiembro } from "@/app/actions/santuario";
+import { asignarRol } from "@/app/actions/santuario";
+import { ExpulsarButton } from "./ExpulsarButton";
 
 type MiembroClan = { id: string; nombre: string; rol: string; rango: string; xp: number };
 
-const ROLES = ["SILVERBACK", "BETA", "EXPLORADOR", "RECLUTA"] as const;
+// CU-002-005: SILVERBACK no es asignable desde la UI — solo puede haber uno por clan y es el fundador
+const ROLES_ASIGNABLES = ["BETA", "EXPLORADOR", "RECLUTA"] as const;
 
 export default async function RolesPage() {
   const { data, clanId } = await requireClan();
@@ -49,7 +51,8 @@ export default async function RolesPage() {
               </p>
               <p className="text-xs text-[#9CA3AF]">Rango {m.rango} · {m.xp} XP</p>
             </div>
-            {esLider && m.id !== data.miembro.id ? (
+            {esLider && m.id !== data.miembro.id && m.rol !== "SILVERBACK" ? (
+              // CU-002-005/006: no se puede cambiar rol ni expulsar a un SILVERBACK (el servidor también lo valida)
               <div className="flex items-center gap-2 shrink-0">
                 <form action={asignarRol.bind(null, clanId, m.id)} className="flex items-center gap-2">
                   <select
@@ -57,7 +60,7 @@ export default async function RolesPage() {
                     defaultValue={m.rol}
                     className="bg-white text-[#333] text-xs rounded px-2 py-1.5 outline-none"
                   >
-                    {ROLES.map((r) => (
+                    {ROLES_ASIGNABLES.map((r) => (
                       <option key={r} value={r}>{r}</option>
                     ))}
                   </select>
@@ -68,15 +71,7 @@ export default async function RolesPage() {
                     GUARDAR
                   </button>
                 </form>
-                <form action={expulsarMiembro.bind(null, clanId, m.id)}>
-                  <button
-                    type="submit"
-                    title="Expulsar del clan"
-                    className="border border-red-500/50 text-red-400 hover:bg-red-500/10 p-2 rounded transition-colors"
-                  >
-                    <UserMinus size={14} />
-                  </button>
-                </form>
+                <ExpulsarButton clanId={clanId} miembroId={m.id} nombre={m.nombre} />
               </div>
             ) : (
               <span className="text-xs text-[#9CA3AF] uppercase font-heading font-bold">{m.rol}</span>

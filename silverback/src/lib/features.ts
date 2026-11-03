@@ -3,9 +3,8 @@
 // Cuando algo se implementa, se saca de la lista y vuelve a aparecer solo.
 
 // Paquetes completos (la ruta y todas sus subrutas)
-//   /evolucion → PKG_EVOLUCIÓN / BÓVEDA (S7): evolución, árbol de habilidades, botín, tienda
-//   /perfil    → PKG_PERFIL (S8): dashboard, racha, fatiga, trofeos, beneficios
-export const RUTAS_OCULTAS = ["/evolucion", "/perfil"];
+//   (vacía desde S8: todos los paquetes están integrados a la API)
+export const RUTAS_OCULTAS: string[] = [];
 
 // Pantallas sueltas (solo la ruta exacta, sus hermanas siguen visibles)
 //   (vacía desde S6: Guerra Global ya tiene ciclo semanal real)

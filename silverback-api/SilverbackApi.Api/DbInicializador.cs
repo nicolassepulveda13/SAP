@@ -3,6 +3,8 @@
 // En desarrollo local queda apagado: las migraciones se siguen aplicando con `dotnet ef database update`.
 using Microsoft.EntityFrameworkCore;
 using SilverbackApi.Data;
+using SilverbackApi.Domain;
+using SilverbackApi.Domain.Models;
 using SilverbackApi.Services.Interfaces;
 
 namespace SilverbackApi.Api;
@@ -91,6 +93,42 @@ public static class DbInicializador
         await Accion(sp => Are(sp).RegistrarEntrenamiento(recluta, "PRESS BANCA", 60, 10));
         await Accion(sp => Are(sp).RegistrarEntrenamiento(rival, "PESO MUERTO", 90, 6));
 
-        log.LogInformation("Datos de demo cargados: 3 usuarios (contraseña {Password}), 2 clanes, 2 desafíos, guerra de la semana con rival.", PasswordDemo);
+        // S7: catálogo de Evolución (nodos del árbol de habilidades, ítems del Marketplace, un cofre por miembro)
+        await Accion(sp => SembrarCatalogoEvolucion(sp.GetRequiredService<AppDbContext>(), lider, recluta, rival));
+
+        log.LogInformation("Datos de demo cargados: 3 usuarios (contraseña {Password}), 2 clanes, 2 desafíos, guerra de la semana con rival, catálogo S7.", PasswordDemo);
+    }
+
+    // S7: seed del catálogo de Evolución — 4 nodos (2 raíces + 2 dependientes), 6 ítems, 1 cofre por miembro
+    private static async Task SembrarCatalogoEvolucion(AppDbContext db, Guid lider, Guid recluta, Guid rival)
+    {
+        if (await db.Nodos.AnyAsync()) return;
+
+        var fuerza = new Nodo { Nombre = "Fuerza Bruta", Descripcion = "Ganás 5% de CER en ejercicios de pecho y piernas.", CostoXp = 100, Estado = EstadoNodo.DISPONIBLE };
+        var resistencia = new Nodo { Nombre = "Resistencia", Descripcion = "Reducís la fatiga semanal un 10%.", CostoXp = 100, Estado = EstadoNodo.DISPONIBLE };
+        var furia = new Nodo { Nombre = "Furia del Silverback", Descripcion = "Multiplicador x1.1 cuando entrenás en días consecutivos.", CostoXp = 300, Estado = EstadoNodo.BLOQUEADO };
+        var titan = new Nodo { Nombre = "Titán", Descripcion = "Suma el 2% de tu CER al puntaje del clan.", CostoXp = 500, Estado = EstadoNodo.BLOQUEADO };
+        db.Nodos.AddRange(fuerza, resistencia, furia, titan);
+        // Prerequisitos: furia depende de fuerza; titán depende de furia y resistencia
+        db.NodoDependencias.AddRange(
+            new NodoDependencia { Nodo = furia, Prerequisito = fuerza },
+            new NodoDependencia { Nodo = titan, Prerequisito = furia },
+            new NodoDependencia { Nodo = titan, Prerequisito = resistencia });
+
+        db.Items.AddRange(
+            new Item { Nombre = "Skin Alfa Dorado", Descripcion = "Dorado espejado para tu avatar.", Categoria = CategoriaItem.SKIN, Precio = 300 },
+            new Item { Nombre = "Skin Guerrero Negro", Descripcion = "Mate con detalles rojos.", Categoria = CategoriaItem.SKIN, Precio = 200 },
+            new Item { Nombre = "Hábitat Jungla", Descripcion = "Fondo de perfil con bioma tropical.", Categoria = CategoriaItem.HABITAT, Precio = 150 },
+            new Item { Nombre = "Hábitat Volcán", Descripcion = "Fondo de perfil con cráter en erupción.", Categoria = CategoriaItem.HABITAT, Precio = 250 },
+            new Item { Nombre = "Accesorio Collar Alfa", Descripcion = "Collar visible en la Arena.", Categoria = CategoriaItem.ACCESORIO, Precio = 100 },
+            new Item { Nombre = "Aura Oro", Descripcion = "Halo dorado alrededor de tu avatar.", Categoria = CategoriaItem.AURA, Precio = 400 });
+
+        // Un cofre reclamable por cada miembro demo, para que la Bóveda no esté vacía
+        db.Cofres.AddRange(
+            new Cofre { MiembroId = lider, Rareza = RarezaCofre.EPICO },
+            new Cofre { MiembroId = recluta, Rareza = RarezaCofre.COMUN },
+            new Cofre { MiembroId = rival, Rareza = RarezaCofre.RARO });
+
+        await db.SaveChangesAsync();
     }
 }
