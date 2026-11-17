@@ -45,7 +45,7 @@ package "Repositorios — SilverbackApi.Data" #FFF3EB {
     +asignarClan(miembroId: UUID, clanId: UUID, rol: Rol): Miembro
     +actualizarArquetipo(miembroId: UUID, arquetipo: Arquetipo, multiplicadorCER: Float): Miembro
     +actualizarRol(miembroId: UUID, rol: Rol): Miembro
-    +actualizarXP(miembroId: UUID, xp: Int): Miembro
+    +actualizarXP(miembroId: UUID, xp: Int): void
     +actualizarCoins(miembroId: UUID, delta: Int): Miembro
     +actualizar(miembroId: UUID, datos: Object): void
     +eliminarMembresia(miembroId: UUID): void
@@ -56,7 +56,9 @@ package "Repositorios — SilverbackApi.Data" #FFF3EB {
     +obtenerConMiembros(id: UUID): Clan
     +verificarDisponibilidad(id: UUID): Boolean
     +actualizarContadorMiembros(id: UUID, delta: Int): Clan
-    +descontarPuntos(id: UUID, puntos: Int): void
+    +sumarCER(clanId: UUID, cer: Float): void
+    +sumarPuntos(clanId: UUID, puntos: Int): void
+    +descontarPuntos(clanId: UUID, puntos: Int): Boolean
   }
   class DesafioRepository <<repository>> {
     +listarActivos(clanId: UUID): DesafioClan[]
@@ -77,16 +79,19 @@ package "Repositorios — SilverbackApi.Data" #FFF3EB {
     +findGuerraActiva(): GuerraGlobal
     +findRankingClanes(guerraId: UUID, top: Int): Clan[]
     +obtenerPuntajeActual(clanId: UUID): GuerraGlobal
+    +sumarCER(guerraId: UUID, clanId: UUID, cer: Float): void
   }
   class RachaRepository <<repository>> {
     +obtenerPorMiembro(miembroId: UUID): Racha
-    +actualizar(miembroId: UUID, datos: Object): Racha
-    +restaurar(miembroId: UUID): Racha
+    +crearOActualizar(miembroId: UUID, dias: Int, estado: EstadoRacha, ultimoEntrenamiento: Date): Racha
+    +restaurar(miembroId: UUID, ahora: Date): void
+    +actualizarEstado(miembroId: UUID, estado: EstadoRacha): void
   }
   class AdminHistorialRepository <<repository>> {
-    +registrar(evento: String): void
+    +registrar(miembroId: UUID, tipo: String, detalle: String): void
   }
   class SkillTreeRepository <<repository>> {
+    +buscarPorId(nodoId: UUID): Nodo
     +listar(): Nodo[]
     +nivelesDelClan(clanId: UUID): Map
     +subirNivel(clanId: UUID, nodoId: UUID, nivelActual: Int): Boolean
@@ -164,6 +169,7 @@ GuerraRepository ..> GuerraGlobal : gestiona
 RachaRepository ..> Racha : gestiona
 SkillTreeRepository ..> Nodo : gestiona
 SkillTreeRepository ..> InversionNodo : gestiona
+SkillTreeRepository ..> NodoClan : gestiona
 CofreRepository ..> Cofre : gestiona
 MarketplaceRepository ..> Item : gestiona
 FatigaRepository ..> DatosFatiga : gestiona

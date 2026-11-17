@@ -11,7 +11,7 @@ public class EvolucionService(
     MiembroRepository miembroRepo,
     ClanRepository clanRepo,
     EntrenamientoRepository entrenamientoRepo,
-    NodoRepository nodoRepo,
+    SkillTreeRepository skillTreeRepo,
     CofreRepository cofreRepo,
     RachaRepository rachaRepo,
     MarketplaceRepository marketplaceRepo,
@@ -40,8 +40,8 @@ public class EvolucionService(
     {
         var clanId = await ClanDe(miembroId);
         var clan = await clanRepo.BuscarPorId(clanId) ?? throw new InvalidOperationException("Clan no encontrado.");
-        var nodos = await nodoRepo.Listar();
-        var niveles = await nodoRepo.NivelesDelClan(clanId);
+        var nodos = await skillTreeRepo.Listar();
+        var niveles = await skillTreeRepo.NivelesDelClan(clanId);
         var nombres = nodos.ToDictionary(n => n.Id, n => n.Nombre);
 
         var vista = nodos.Select(n =>
@@ -53,7 +53,7 @@ public class EvolucionService(
             return new NodoArbol(n, nivel, faltan.Count > 0, faltan, costo);
         }).ToList();
 
-        return new ArbolClan(clan.PuntosClan, vista, await nodoRepo.UltimasInversiones(clanId));
+        return new ArbolClan(clan.PuntosClan, vista, await skillTreeRepo.UltimasInversiones(clanId));
     }
 
     // Cada nivel cuesta CostoPuntos × nivel (nivel 1 = base, nivel 2 = doble…)
@@ -62,9 +62,9 @@ public class EvolucionService(
     public async Task<InversionNodo> MejorarNodo(Guid nodoId, Guid miembroId)
     {
         var clanId = await ClanDe(miembroId);
-        var nodo = await nodoRepo.BuscarPorId(nodoId)
+        var nodo = await skillTreeRepo.BuscarPorId(nodoId)
             ?? throw new InvalidOperationException("Nodo no encontrado.");
-        var niveles = await nodoRepo.NivelesDelClan(clanId);
+        var niveles = await skillTreeRepo.NivelesDelClan(clanId);
         var nivel = niveles.GetValueOrDefault(nodoId);
 
         // FA-1: no se mejora un nodo bloqueado
@@ -80,13 +80,13 @@ public class EvolucionService(
         if (!await clanRepo.DescontarPuntos(clanId, costo))
             throw new InvalidOperationException("PUNTOS INSUFICIENTES");
 
-        if (!await nodoRepo.SubirNivel(clanId, nodoId, nivel))
+        if (!await skillTreeRepo.SubirNivel(clanId, nodoId, nivel))
         {
             await clanRepo.SumarPuntos(clanId, costo); // otro miembro lo mejoró en paralelo: se devuelven los puntos
             throw new InvalidOperationException("El nodo cambió de nivel mientras mejorabas. Probá de nuevo.");
         }
 
-        return await nodoRepo.RegistrarInversion(new InversionNodo
+        return await skillTreeRepo.RegistrarInversion(new InversionNodo
         {
             ClanId = clanId, NodoId = nodoId, MiembroId = miembroId, NivelAlcanzado = nivel + 1, Costo = costo,
         });

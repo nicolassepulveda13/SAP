@@ -4,7 +4,7 @@ using SilverbackApi.Domain.Models;
 namespace SilverbackApi.Data.Repositories;
 
 // CU-004-002: árbol colectivo del clan — catálogo de nodos, nivel de cada nodo por clan e historial de inversiones
-public class NodoRepository(AppDbContext db)
+public class SkillTreeRepository(AppDbContext db)
 {
     public Task<Nodo?> BuscarPorId(Guid id) =>
         db.Nodos

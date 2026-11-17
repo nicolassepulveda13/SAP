@@ -25,7 +25,7 @@ builder.Services.AddScoped<BiometricosRepository>();
 builder.Services.AddScoped<GuerraRepository>();
 builder.Services.AddScoped<TrofeoRepository>();
 builder.Services.AddScoped<CofreRepository>();
-builder.Services.AddScoped<NodoRepository>();
+builder.Services.AddScoped<SkillTreeRepository>();
 builder.Services.AddScoped<MarketplaceRepository>();
 builder.Services.AddScoped<BeneficioRepository>();
 builder.Services.AddScoped<SantuarioRepository>();

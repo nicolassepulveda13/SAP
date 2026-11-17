@@ -6,7 +6,7 @@ import { PageLabel } from "@/components/ui/PageLabel";
 import { getArbol } from "@/app/actions/evolucion";
 import { ArbolClient } from "./ArbolClient";
 
-export default async function HabilidadesPage() {
+export default async function SkillTreePage() {
   const arbol = await getArbol();
 
   return (

@@ -67,11 +67,11 @@ package "Servicios — SilverbackApi.Services" #EBFBF0 {
     +crearDesafio(clanId: UUID, silverbackId: UUID, descripcion: String, tier: TierDesafio, recompensaXp: Int, fechaExpiracion: Date): DesafioClan
   }
   class ArenaService <<service>> {
-    +obtenerGuerraActiva(): GuerraGlobal
-    +registrarEntrenamiento(datos: Entrenamiento): ResultadoCER
+    +registrarEntrenamiento(miembroId: UUID, ejercicio: String, pesoKg: Float, repeticiones: Int): ResultadoCER
     +obtenerHistorial(miembroId: UUID, filtros: Object, pagina: Int): Entrenamiento[]
+    -actualizarRacha(miembroId: UUID): Int
   }
-  class CERService <<service>> {
+  class CerService <<service>> {
     +calcular(pesoKg: Float, reps: Int, arquetipo: Arquetipo): ResultadoCER
     +obtenerMultiplicador(arquetipo: Arquetipo): Float
     -calcularPuntaje(pesoKg: Float, reps: Int, multiplicador: Float): Float
@@ -133,7 +133,7 @@ package "Servicios — SilverbackApi.Services" #EBFBF0 {
   }
 
   ' Dos filas para que la capa no quede demasiado ancha
-  AuthService -[hidden]d- CERService
+  AuthService -[hidden]d- CerService
   IncorporacionService -[hidden]d- GuerraService
   SantuarioService -[hidden]d- EvolucionService
   ArenaService -[hidden]d- PerfilService
@@ -166,8 +166,10 @@ package "Repositorios — SilverbackApi.Data" #FFF3EB {
 }
 
 IncorporacionService .l.> AuthService : usa
-ArenaService .r.> CERService : compone
+ArenaService .r.> CerService : compone
 ArenaService .r.> GuerraService : usa
+ArenaService ..> RecompensasService : usa
+EvolucionService ..> RecompensasService : usa
 
 AuthService ..> MiembroRepository
 IncorporacionService ..> MiembroRepository
@@ -181,6 +183,8 @@ ArenaService ..> GuerraRepository
 ArenaService ..> RachaRepository
 ArenaService ..> MiembroRepository
 ArenaService ..> AdminHistorialRepository
+ArenaService ..> ClanRepository
+EvolucionService ..> ClanRepository
 GuerraService ..> GuerraRepository
 EvolucionService ..> SkillTreeRepository
 EvolucionService ..> CofreRepository

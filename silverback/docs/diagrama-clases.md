@@ -93,14 +93,14 @@ package "3. Servicios — SilverbackApi.Services" #EBFBF0 {
   class IncorporacionService <<service>>
   class SantuarioService <<service>>
   class ArenaService <<service>>
-  class CERService <<service>>
+  class CerService <<service>>
   class GuerraService <<service>>
   class EvolucionService <<service>>
   class PerfilService <<service>>
   class RecompensasService <<service>>
 
   ' Dos filas para que la capa no quede demasiado ancha
-  AuthService -[hidden]d- CERService
+  AuthService -[hidden]d- CerService
   IncorporacionService -[hidden]d- GuerraService
   SantuarioService -[hidden]d- EvolucionService
   ArenaService -[hidden]d- PerfilService
@@ -178,7 +178,7 @@ PerfilController ..> PerfilService
 
 ' 3 → 3
 IncorporacionService .l.> AuthService : usa
-ArenaService .r.> CERService : compone
+ArenaService .r.> CerService : compone
 ArenaService .r.> GuerraService : usa
 
 ' 3 → 4
@@ -194,6 +194,8 @@ ArenaService ..> GuerraRepository
 ArenaService ..> RachaRepository
 ArenaService ..> MiembroRepository
 ArenaService ..> AdminHistorialRepository
+ArenaService ..> ClanRepository
+EvolucionService ..> ClanRepository
 GuerraService ..> GuerraRepository
 ArenaService ..> RecompensasService
 GuerraService ..> RecompensasService
@@ -224,6 +226,7 @@ GuerraRepository ..> GuerraGlobal
 RachaRepository ..> Racha
 SkillTreeRepository ..> Nodo
 SkillTreeRepository ..> InversionNodo
+SkillTreeRepository ..> NodoClan
 CofreRepository ..> Cofre
 MarketplaceRepository ..> Item
 FatigaRepository ..> DatosFatiga

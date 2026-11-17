@@ -108,6 +108,8 @@ end
 ### CU-003-002 — Registrar un Entrenamiento
 
 > **Modificado S6:** la entrada por voz muestra lo que entendió y pide confirmación antes de completar los campos. El CER se acredita a la guerra de la semana con un incremento atómico y se suma XP al miembro (1 XP cada 10 de CER).
+>
+> **Actualizado 17/11:** la API valida los rangos (peso 0–500 kg, 1–200 reps) aunque el front ya valide, la racha se cuenta en hora Argentina, y al final se otorgan las recompensas del entrenamiento (`RecompensasService.alEntrenar`: Llave de Acero cada 5 sesiones, hitos con trofeo y cofre, subida de rango) y se registra el evento en el historial.
 
 ```plantuml
 @startuml CU-003-002
@@ -134,6 +136,7 @@ box "Servicios" #EBFBF0
   participant "ArenaService" as Svc
   participant "CerService" as CER
   participant "GuerraService" as GSvc
+  participant "RecompensasService" as Rec
 end box
 
 box "Repositorios" #FFF3EB
@@ -142,6 +145,7 @@ box "Repositorios" #FFF3EB
   participant "GuerraRepository" as GRepo
   participant "MiembroRepository" as MiembroRepo
   participant "RachaRepository" as RachaRepo
+  participant "AdminHistorialRepository" as HistRepo
 end box
 
 box "Base de Datos" #F3F4F6
@@ -167,32 +171,44 @@ Miembro -> Page: presiona "REGISTRAR ESFUERZO"
 Page -> Action: registrarEntrenamiento(formData)
 Action -> Action: validar (ejercicio no vacío, peso > 0, reps ≥ 1)
 Action -> Ctrl: POST /api/arena/entrenar { ejercicio, pesoKg, repeticiones }
-Ctrl -> Svc: RegistrarEntrenamiento(miembroId, ...)
-Svc -> CER: Calcular(pesoKg, reps, arquetipo)
+Ctrl -> Svc: registrarEntrenamiento(miembroId, ejercicio, pesoKg, repeticiones)
+alt datos fuera de rango (peso ≤ 0 o > 500 kg, reps < 1 o > 200)
+    Svc --> Ctrl: error de validación
+    Ctrl --> Action: 400 { error }
+    Action --> Page: mensaje de error
+else datos válidos
+Svc -> MiembroRepo: buscarPorId(miembroId): Miembro (arquetipo, clan)
+Svc -> CER: calcular(pesoKg, reps, arquetipo)
 CER --> Svc: ResultadoCER { puntaje, modificador }
-Svc -> EntreRepo: Crear(entrenamiento)
+Svc -> EntreRepo: crear(entrenamiento)
 EntreRepo -> DB: INSERT INTO Entrenamientos
 
 opt el miembro tiene clan
-    Svc -> GSvc: AsegurarGuerraActiva()
+    Svc -> GSvc: asegurarGuerraActiva()
     GSvc --> Svc: guerra de la semana
-    Svc -> ClanRepo: SumarCER(clanId, puntaje)
+    Svc -> ClanRepo: sumarCER(clanId, puntaje)
     ClanRepo -> DB: UPDATE Clanes SET PuntosClan = PuntosClan + @cer
-    Svc -> GRepo: SumarCER(guerraId, clanId, puntaje)
+    Svc -> GRepo: sumarCER(guerraId, clanId, puntaje)
     GRepo -> DB: UPDATE ParticipacionesGuerra\nSET CerAcumulado = CerAcumulado + @cer
     alt el clan todavía no participaba
         GRepo -> DB: INSERT INTO ParticipacionesGuerra
     end
 end
 
-Svc -> MiembroRepo: ActualizarXP(miembroId, floor(puntaje / 10))
+Svc -> MiembroRepo: actualizarXP(miembroId, floor(puntaje / 10))
 MiembroRepo -> DB: UPDATE Miembros SET Xp = Xp + @xp
-Svc -> RachaRepo: CrearOActualizar(miembroId, ...)
-RachaRepo -> DB: UPDATE Rachas SET DiasConsecutivos = ...
+Svc -> RachaRepo: crearOActualizar(miembroId, dias, ACTIVA, ahora)
+note right: dias + 1 si el último entrenamiento fue ayer\n(hora Argentina); si fue hoy no cambia; si no, 1
+RachaRepo -> DB: UPDATE Rachas SET DiasConsecutivos = @dias, Estado = 'ACTIVA'
+Svc -> Rec: alEntrenar(miembroId, dias)
+Rec -> DB: Llave de Acero cada 5 sesiones · hitos (trofeo + cofre) · rango según XP
+Svc -> HistRepo: registrar(miembroId, "ENTRENAMIENTO", "CER · XP")
+HistRepo -> DB: INSERT INTO AdminHistorial
 Svc --> Ctrl: ResultadoCER { puntaje, modificador, xpGanado }
 Ctrl --> Action: 200 OK
 Action --> Page: resultado
 Page --> Miembro: puntaje CER + XP ganada
+end
 
 @enduml
 ```
@@ -211,7 +227,7 @@ box "Presentación" #F5F0FF
 end box
 
 box "Servicios" #EBFBF0
-  participant "CERService" as Svc
+  participant "CerService" as Svc
 end box
 
 Miembro -> Page: accede a la Calculadora CER
@@ -426,10 +442,16 @@ else nodo desbloqueado
             ClanRepo --> Svc: true
             Svc -> STRepo: subirNivel(clanId, nodoId, nivel)
             STRepo -> DB: INSERT nodo_clan (nivel 1) / UPDATE nodo_clan SET nivel = nivel + 1 WHERE nivel = nivelActual
-            Svc -> STRepo: registrarInversion(clan, nodo, miembro, nivelAlcanzado, costo)
-            STRepo -> DB: INSERT INTO inversion_nodo
-            Svc --> Page: InversionNodo
-            Page --> Miembro: nodo sube de nivel, saldo actualizado, "ÚLTIMAS INVERSIONES" con la mejora
+            alt otro miembro del clan lo mejoró al mismo tiempo (0 filas)
+                Svc -> ClanRepo: sumarPuntos(clanId, costo)
+                ClanRepo -> DB: UPDATE clanes SET puntos_clan = puntos_clan + costo
+                Svc --> Page: "El nodo cambió de nivel mientras mejorabas"
+            else
+                Svc -> STRepo: registrarInversion(clan, nodo, miembro, nivelAlcanzado, costo)
+                STRepo -> DB: INSERT INTO inversion_nodo
+                Svc --> Page: InversionNodo
+                Page --> Miembro: nodo sube de nivel, saldo actualizado, "ÚLTIMAS INVERSIONES" con la mejora
+            end
         end
     end
 end

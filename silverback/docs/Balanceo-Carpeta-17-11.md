@@ -45,6 +45,7 @@
 |---|---|---|---|---|
 | [ ] | 42 | Secuencias CU-004-001 a CU-004-004 | **Reemplazar** las 4. Cambio principal: el árbol se paga con **Puntos de Clan** (antes decía XP), Bóveda con botín diario / Llaves de Acero, compra con confirmación + `TRANSACCION_MARKETPLACE` | `secuencias-cu003-cu004.md` → sección CU-004 |
 | [ ] | 43 | Secuencias CU-005-001 a CU-005-007 | **Reemplazar** las 7. Cambios: dashboard comparativo, racha EN_RIESGO/ROTA en hora Argentina, salvar **sin `clanId`** (usa el clan del miembro) + DEJAR MORIR, fatiga relativa al peso, beneficios por estado + suscripción, cuenta con dos acciones | `secuencias-cu005.md` |
+| [ ] | 48 | Secuencia CU-003-002 (Registrar un Entrenamiento) | **Reemplazar**: valida rangos en la API (peso 0–500 kg, 1–200 reps), racha en hora Argentina, `RecompensasService.alEntrenar` (llaves, hitos, rango) y registro en el historial | `secuencias-cu003-cu004.md` → CU-003-002 (primera página del Word) |
 
 ### 10.5.7 — Diagrama de Clases
 

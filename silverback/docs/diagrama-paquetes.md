@@ -72,7 +72,7 @@ node "silverback-api/\n(ASP.NET Core 9 — Puerto 5057)" as DOTNET {
     class IncorporacionService
     class SantuarioService
     class ArenaService
-    class CERService
+    class CerService
     class EvolucionService
     class PerfilService
   }

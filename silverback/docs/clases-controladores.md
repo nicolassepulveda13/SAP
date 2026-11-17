@@ -106,13 +106,13 @@ package "Servicios — SilverbackApi.Services" #EBFBF0 {
   class IncorporacionService <<service>>
   class SantuarioService <<service>>
   class ArenaService <<service>>
-  class CERService <<service>>
+  class CerService <<service>>
   class GuerraService <<service>>
   class EvolucionService <<service>>
   class PerfilService <<service>>
 
   ' Dos filas para que la capa no quede demasiado ancha
-  AuthService -[hidden]d- CERService
+  AuthService -[hidden]d- CerService
   IncorporacionService -[hidden]d- GuerraService
   SantuarioService -[hidden]d- EvolucionService
   ArenaService -[hidden]d- PerfilService
