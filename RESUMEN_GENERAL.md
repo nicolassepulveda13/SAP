@@ -1,8 +1,8 @@
 # SilverBack — Resumen general del desarrollo
 
 **Alumno:** Sepúlveda Nicolás — UAI, Ingeniería en Sistemas, 5to B — SAP 2026
-**Actualizado:** 03/11/2026
-**Estado:** S1 ✅ · S2 ✅ · S3 ✅ · S4 ✅ · S5 ✅ · S6 ✅ · S7 ✅ · S8 ✅ — 28 CU implementados (E1 completa + 4 agregados) · E2E S7/S8 pendientes
+**Actualizado:** 17/11/2026
+**Estado:** S1 ✅ · S2 ✅ · S3 ✅ · S4 ✅ · S5 ✅ · S6 ✅ · S7 ✅ · S8 ✅ · S9 ✅ (Docker) · S10 ✅ — 28 CU implementados y **los 28 cubiertos por E2E** (33 tests) · Evolución y Perfil alineados con la carpeta del 13/11 · queda S11
 
 > Este documento es el punto de entrada. El detalle de cada sprint está en `PLAN_EJECUCION_TECNOLOGIA.md`. Los cambios para la carpeta del TP están en `silverback/docs/Modificacion-Carpeta.md` → **sección 0, checklist de balanceo** (v1.4).
 
@@ -13,7 +13,7 @@
 - **Stack:** Next.js 16 + React 19 (`silverback/`) · ASP.NET Core 9, Clean Architecture (`silverback-api/`) · SQL Server + EF Core 9 · JWT en cookie HTTP-only · **todo dockerizado** (`docker compose up --build`).
 - **Funciona de punta a punta:** Incorporación (alta, arquetipo, buscador + unirse/fundar/INICIAR VIAJE), Santuario (panel, Forja, Tácticas, Roles con historial de admin), Arena (manual + voz, CER, Guerra Global semanal, Historial), Evolución (progreso, árbol de habilidades, bóveda, marketplace) y Perfil (dashboard, racha + salvar, fatiga, trofeos, beneficios, datos de cuenta).
 - **28 casos de uso:** 24 aprobados en E1 + 4 agregados (C-25 a C-28), todos implementados.
-- **Calidad:** suite E2E de 13 tests con Playwright. Encontró 7 bugs reales (incluida una fuga de contraseñas) y quedaron todos corregidos.
+- **Calidad:** suite E2E de 33 tests con Playwright (`s4-s6.spec.ts` + `s7-s8.spec.ts`). Encontró 21 bugs reales (fuga de contraseñas, gastar puntos de otro clan, doble gasto, pantallas de Evolución/Perfil que no compilaban) y quedaron todos corregidos.
 - **Carpeta del TP:** todo lo que hay que balancear está en **una sola checklist**: `silverback/docs/Modificacion-Carpeta.md` → **sección 0** (v1.4, 33 ítems ordenados por sección de la guía SAP, más los pendientes).
 
 ---
@@ -77,7 +77,7 @@ Copiar `.env.example` a `.env` y cambiar contraseña de SQL, secreto JWT, puerto
 ## 2b. ▶️ Cómo levantarlo sin Docker (desarrollo)
 
 > Requisitos: SQL Server Express corriendo (servicio `SQL Server (SQLEXPRESS)`), .NET 9 SDK, Node 20+.
-> Connection string actual: `DESKTOP-JQBGOKE\SQLEXPRESS` (en `silverback-api/SilverbackApi.Api/appsettings.json`). En la otra PC hay que cambiarlo, o usar `localhost\SQLEXPRESS`, que funciona en las dos.
+> Connection string: `localhost\SQLEXPRESS` (en `silverback-api/SilverbackApi.Api/appsettings.json`), funciona en las dos PCs. Al arrancar, la API carga sola el catálogo (nodos, ítems, aliados y beneficios) si está vacío.
 
 ### Primera vez en una PC nueva
 
@@ -218,6 +218,33 @@ npx playwright show-report   # reporte HTML con capturas y trazas de los fallos
 | 12 | Cambio de clan | Quien ya tiene clan no puede unirse a otro (400) |
 | 13 | Seguridad | Ningún endpoint responde 500 ni expone `passwordHash` |
 
+**`s7-s8.spec.ts`** (20 tests, 17/11) — recorre cada CU de Evolución y Perfil contra los pasos y FA de la carpeta, y hace de recorrido integrado de S10:
+
+| # | Test |
+|---|---|
+| 1 | Incorporación: un clan con dos miembros y un clan ajeno |
+| 2 | Estado inicial: sin entrenar no hay trofeos (CU-005-005 FA-1), rango BRONCE, nivel 1, 0 coins |
+| 3 | Validación server-side: no se aceptan entrenamientos inválidos |
+| 4 | RF-010: el primer entrenamiento otorga medallas automáticamente (una sola vez) |
+| 5 | CU-004-001: nivel, barra hacia el próximo rango, BRONCE → PLATA y atributos (RF-006) |
+| 6 | CU-004-001 FA-1 / FA-2: MAX LEVEL en ORO y atributos 999+ PTS |
+| 7 | CU-004-003: Bóveda con 4 tarjetas, botín diario, multiplicador y cofre LISTO que acredita SB + XP |
+| 8 | CU-004-003: cofre BLOQUEADO con Llaves de Acero (FA-1) y botín diario único |
+| 9 | CU-004-004: filtros SKINS/AURAS/ICONOS, confirmación de compra y saldo que nunca queda negativo |
+| 10 | CU-004-002: árbol colectivo del clan con Puntos de Clan, niveles e historial (RF-015) |
+| 11 | CU-005-001: dashboard comparativo 2×2 contra el promedio del clan (RF-007) |
+| 12 | CU-005-004: fatiga según CER de 7 días y peso corporal, protocolo mandatorio y tendencia (RF-009) |
+| 13 | CU-005-002: la racha cuenta días en hora Argentina y se reinicia a 0 si se rompe (RF-008) |
+| 14 | CU-005-003: salvar la racha desde el banner, con Puntos de Clan propios, y volver al Santuario |
+| 15 | CU-005-003 FA-2: DEJAR MORIR LA RACHA la reinicia a 0 sin cargo |
+| 16 | CU-005-003 (seguridad): no se pueden gastar los puntos de otro clan |
+| 17 | CU-005-005: vitrina con VICTORIAS, rango, trofeo destacado y detalle (FA-2) |
+| 18 | CU-005-006: beneficios por rango (bloqueados visibles), acción según el tipo y vencimiento (RF-016) |
+| 19 | CU-005-007: datos de cuenta y cambio de contraseña con confirmación (FA-1 a FA-3) |
+| 20 | S10: integración entre módulos (Arena → Evolución → Perfil → Santuario) |
+
+> El test #2 de `s4-s6` ahora verifica que Evolución y Perfil estén **visibles** (antes verificaba que estuvieran ocultas) y el de expulsar prueba también cancelar la confirmación (FA-1).
+
 ---
 
 ## 4. 🎯 Qué se muestra en la entrega
@@ -250,6 +277,7 @@ Solo se ven las pantallas **integradas con la API**. Las maquetadas sin integrac
 | Infra y docs | 05/10 – 06/10 | `4b7b73e` `603189f` `fd61d86` `7ade5d1` y otros | Pantallas ocultas, Scalar, suite E2E, balanceo de la carpeta |
 | Brechas E1 | 03/11 | pendiente commit | CU-001-003 (buscador + INICIAR VIAJE con afinidad por arquetipo), CU-002-005 (bloqueo 2° SILVERBACK), CU-002-006 (confirmación + historial + bloqueo expulsión SILVERBACK) |
 | **S7** | 03/11 | pendiente commit | Evolución/Bóveda: progreso real, árbol con prerequisitos, bóveda, marketplace. Seed de catálogo (4 nodos, 6 ítems, 1 cofre por miembro) |
+| **S7–S8 E2E + S10** | 17/11 | pendiente commit | Evolución y Perfil alineados con la carpeta del 13/11 (árbol colectivo, Llaves de Acero, dashboard comparativo, fatiga, beneficios por rango, cuenta). Suite `s7-s8.spec.ts` (20 tests). Detalle para balancear la carpeta: `silverback/docs/Balanceo-Carpeta-17-11.md` |
 | **S8** | 03/11 | pendiente commit | Perfil: dashboard, racha + salvar, fatiga, trofeos, beneficios con cupón, Datos de Cuenta (CU-005-007 nuevo endpoint PUT /api/perfil/cuenta) |
 
 ---
@@ -286,6 +314,17 @@ Todas están registradas para el profe en `Modificacion-Carpeta.md` (secciones 1
 | 5 | `/unirse` y `/clan` no verificaban si ya tenías clan | Se podía cambiar de clan por API y los contadores quedaban mal | 400 "Ya pertenecés a un clan"; validación de cupo |
 | 6 | La API omite los campos `null` y el front comparaba con `!== null` | El Radar creía que el expulsado tenía clan; el **Historial rompía** con batallas SIN RIVAL | `!= null` y tipos opcionales |
 | 7 | El SILVERBACK podía cambiarse su propio rol por API | El clan quedaba sin líder | El servidor responde 400 |
+| 8 | Las server actions de Evolución y Perfil exportaban funciones sin `async` | **Ninguna pantalla de Evolución ni Perfil compilaba** en Next 16 | `export async function` |
+| 9 | `SalvarRacha` aceptaba cualquier `clanId` | Se podían gastar los puntos de **otro clan** | Usa el clan del miembro |
+| 10 | Compra / nodo / cofre: leer saldo y después descontar | Doble gasto; cofre reclamable dos veces; comprar un ítem repetido cobraba sin dar nada | `UPDATE` condicionado + chequeo de inventario |
+| 11 | Filtro de beneficios comparaba rangos guardados como texto | Un PLATA veía y reclamaba beneficios de ORO | Lista de rangos alcanzados |
+| 12 | El rango nunca subía; no había cofres ni trofeos para usuarios nuevos | Todos BRONCE para siempre; Bóveda y Vitrina vacías; sin coins | Rango por XP histórica + hitos que dan cofres con coins |
+| 13 | Racha calculada en UTC y nunca pasaba a EN RIESGO / ROTA | Salvar racha no tenía efecto | Hora Argentina y estados reales |
+| 14 | Entrenamiento sin validar | Peso negativo **restaba** CER al clan y a la guerra | Validación server-side |
+| 15 | Árbol de habilidades sin prerequisitos en la respuesta | Mostraba "MEJORAR" en nodos bloqueados | `Include` de prerequisitos |
+| 16 | Datos de cuenta guardaba nombre antes de validar la contraseña | Cambios a medias | Valida todo antes de escribir |
+| 17 | Beneficio reclamado desaparecía de la lista | El cupón no llegaba a verse | Queda como "YA RECLAMADO" |
+| 18 | Catálogo solo en la demo de Docker | En local, árbol, Marketplace y Beneficios vacíos | Se siembra siempre al iniciar |
 | — | `TierDesafio` cambiado a `TITAN/ALPHA/BETA` en un commit | Desalineado con la carpeta | Vuelto a `BRONCE/PLATA/ORO` |
 | — | La base local tenía migraciones de una copia paralela | Faltaba la tabla `AceptacionesDesafio` | Arreglado con backup previo |
 
@@ -317,9 +356,11 @@ Todas están registradas para el profe en `Modificacion-Carpeta.md` (secciones 1
 
 - [x] **S7** — Evolución / Bóveda (CU-004-001 a 004) · catálogo sembrado (4 nodos con prerequisitos, 6 ítems, 1 cofre por miembro demo).
 - [x] **S8** — Perfil (CU-005-001 a 007) · incluye `/perfil/cuenta` (CU-005-007) con cambio de contraseña validado.
-- [ ] **E2E S7 + S8** — ampliar `silverback/e2e/s4-s6.spec.ts` con tests para los nuevos CU.
-- [ ] **S9** — Análisis del entorno de las máquinas de la facultad.
-- [ ] **S10–S11** — Integración final, hardening y despliegue.
+- [x] **E2E S7 + S8** — `silverback/e2e/s7-s8.spec.ts`, 20 tests (17/11). Suite completa: 33/33.
+- [ ] **Balancear la carpeta** — ítems 34 a 47 de `silverback/docs/Balanceo-Carpeta-17-11.md`.
+- [x] **S9** — Resuelto con Docker (`docker compose up --build`); plan B: ejecución local.
+- [x] **S10** — Integración final y hardening: recorrido completo automatizado + validaciones server-side.
+- [ ] **S11** — Probar en una máquina real de la Facultad (navegador disponible para la voz, Docker permitido) y preparar el checklist del día de la demo.
 
 ### Otros
 

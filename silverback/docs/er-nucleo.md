@@ -35,7 +35,7 @@ entity MIEMBRO {
   * email : VARCHAR(100)
   * arquetipo : ENUM(VOLUMEN,DEFINIDO,ATLETICO)
   * rol : ENUM(SILVERBACK,BETA,EXPLORADOR,RECLUTA)
-  * rango : ENUM(BRONCE,PLATA,ORO,RANGO_S)
+  * rango : ENUM(BRONCE,PLATA,ORO)
   * xp : INTEGER DEFAULT 0
   * coins : INTEGER DEFAULT 0
   clan_id : UUID <<FK>>

@@ -24,11 +24,14 @@ public class RachaRepository(AppDbContext db)
         return racha;
     }
 
-    public async Task Restaurar(Guid miembroId)
-    {
-        var racha = await db.Rachas.FirstOrDefaultAsync(r => r.MiembroId == miembroId);
-        if (racha is null) return;
-        racha.Estado = EstadoRacha.ACTIVA;
-        await db.SaveChangesAsync();
-    }
+    // CU-005-003: el día en curso queda "mantenido" (UltimoEntrenamiento = ahora) sin tocar el contador
+    public Task Restaurar(Guid miembroId, DateTime ahoraUtc) =>
+        db.Rachas.Where(r => r.MiembroId == miembroId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(r => r.Estado, EstadoRacha.ACTIVA)
+                .SetProperty(r => r.UltimoEntrenamiento, ahoraUtc));
+
+    public Task ActualizarEstado(Guid miembroId, EstadoRacha estado) =>
+        db.Rachas.Where(r => r.MiembroId == miembroId)
+            .ExecuteUpdateAsync(s => s.SetProperty(r => r.Estado, estado));
 }

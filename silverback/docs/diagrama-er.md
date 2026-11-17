@@ -42,9 +42,10 @@ entity MIEMBRO {
   * email : VARCHAR(100)
   * arquetipo : ENUM(VOLUMEN,DEFINIDO,ATLETICO)
   * rol : ENUM(SILVERBACK,BETA,EXPLORADOR,RECLUTA)
-  * rango : ENUM(BRONCE,PLATA,ORO,RANGO_S)
+  * rango : ENUM(BRONCE,PLATA,ORO)
   * xp : INTEGER DEFAULT 0
   * coins : INTEGER DEFAULT 0
+  * llaves_acero : INTEGER DEFAULT 0
   clan_id : UUID <<FK>>
 }
 
@@ -149,14 +150,34 @@ entity NODO {
   * id : UUID <<PK>>
   --
   * nombre : VARCHAR(100)
-  * costo_xp : INTEGER
+  * descripcion : TEXT
+  * costo_puntos : INTEGER
+  * nivel_maximo : INTEGER DEFAULT 3
+  * efecto : VARCHAR(200)
+  * bonus_por_nivel : INTEGER
   * estado : ENUM(BLOQUEADO,DISPONIBLE,DESBLOQUEADO)
 }
 
-entity INVERSION_NODO {
-  * miembro_id : UUID <<PK,FK>>
+entity NODO_DEPENDENCIA {
+  * nodo_id : UUID <<PK,FK>>
+  * prerequisito_id : UUID <<PK,FK>>
+}
+
+entity NODO_CLAN {
+  * clan_id : UUID <<PK,FK>>
   * nodo_id : UUID <<PK,FK>>
   --
+  * nivel : INTEGER
+}
+
+entity INVERSION_NODO {
+  * id : UUID <<PK>>
+  --
+  * clan_id : UUID <<FK>>
+  * nodo_id : UUID <<FK>>
+  * miembro_id : UUID <<FK>>
+  * nivel_alcanzado : INTEGER
+  * costo : INTEGER
   * fecha_inversion : TIMESTAMP DEFAULT NOW()
 }
 
@@ -166,6 +187,9 @@ entity COFRE {
   * miembro_id : UUID <<FK>>
   * rareza : ENUM(COMUN,RARO,EPICO,LEGENDARIO)
   * estado : ENUM(DISPONIBLE,RECLAMADO)
+  * origen : ENUM(BOTIN_DIARIO,HITO,GUERRA)
+  * llaves_requeridas : INTEGER DEFAULT 0
+  * fecha_obtencion : TIMESTAMP DEFAULT NOW()
 }
 
 ' ════════════════════════════════════════
@@ -176,7 +200,7 @@ entity ITEM {
   * id : UUID <<PK>>
   --
   * nombre : VARCHAR(100)
-  * categoria : ENUM(SKIN,HABITAT,ACCESORIO,AURA)
+  * categoria : ENUM(SKIN,AURA,ICONO)
   * precio : INTEGER
   * rareza : ENUM(COMUN,RARO,EPICO,LEGENDARIO)
 }
@@ -186,6 +210,7 @@ entity INVENTARIO_ITEMS {
   * item_id : UUID <<PK,FK>>
   --
   * fecha_obtencion : TIMESTAMP DEFAULT NOW()
+  * activo : BOOLEAN DEFAULT FALSE
 }
 
 entity TRANSACCION_MARKETPLACE {
@@ -205,6 +230,7 @@ entity TROFEO {
   --
   * miembro_id : UUID <<FK>>
   * nombre : VARCHAR(100)
+  * descripcion : TEXT
   * tipo : ENUM(RACHA,CER,CLAN,EVENTO)
   * fecha_obtencion : TIMESTAMP DEFAULT NOW()
 }
@@ -214,19 +240,28 @@ entity ALIADO_COMERCIAL {
   --
   * nombre : VARCHAR(100)
   * url_base : VARCHAR(255)
-  * logo_url : VARCHAR(255)
+  logo_url : VARCHAR(255)
 }
 
 entity BENEFICIO_ALIADO {
   * id : UUID <<PK>>
   --
   * aliado_id : UUID <<FK>>
-  * nombre : VARCHAR(150)
+  * titulo : VARCHAR(150)
+  * descripcion : TEXT
+  * categoria : VARCHAR(50)
   * tipo : ENUM(CODIGO,REDIRECCION,CUPON,SUSCRIPCION)
-  * rango_minimo : ENUM(BRONCE,PLATA,ORO,RANGO_S)
-  * estado : ENUM(DISPONIBLE,RECLAMADO,EXPIRADO)
-  fecha_reclamo : TIMESTAMP
-  miembro_id : UUID <<FK>>
+  * rango_minimo : ENUM(BRONCE,PLATA,ORO)
+  * estado : ENUM(DISPONIBLE,EXPIRADO)
+  * destacado : BOOLEAN DEFAULT FALSE
+  fecha_vencimiento : TIMESTAMP
+}
+
+entity RECLAMO_BENEFICIO {
+  * beneficio_id : UUID <<PK,FK>>
+  * miembro_id : UUID <<PK,FK>>
+  --
+  * fecha_reclamo : TIMESTAMP DEFAULT NOW()
 }
 
 entity SUSCRIPCION_ACTIVA {
@@ -287,21 +322,25 @@ ACEPTACION_DESAFIO }|--|| MIEMBRO : "aceptado por"
 MENSAJE }|--|| CLAN : "en"
 MENSAJE }|--|| MIEMBRO : "enviado por"
 
-INVERSION_NODO }|--|| MIEMBRO : "realizada por"
-INVERSION_NODO }|--|| NODO : "sobre"
-NODO }o--o{ NODO : "depende de"
+NODO_DEPENDENCIA }o--|| NODO : "nodo / requiere"
+NODO_CLAN }o--|| CLAN : "nivel en"
+NODO_CLAN }o--|| NODO : "de"
+INVERSION_NODO }o--|| CLAN : "del clan"
+INVERSION_NODO }o--|| NODO : "sobre"
+INVERSION_NODO }o--|| MIEMBRO : "realizada por"
 COFRE }o--|| MIEMBRO : "pertenece a"
+INVENTARIO_ITEMS }o--|| MIEMBRO : "de"
+INVENTARIO_ITEMS }o--|| ITEM : "contiene"
+TRANSACCION_MARKETPLACE }o--|| MIEMBRO : "realizada por"
+TRANSACCION_MARKETPLACE }o--|| ITEM : "sobre"
+BENEFICIO_ALIADO }o--|| ALIADO_COMERCIAL : "provisto por"
+RECLAMO_BENEFICIO }o--|| BENEFICIO_ALIADO : "de"
+RECLAMO_BENEFICIO }o--|| MIEMBRO : "reclamado por"
+SUSCRIPCION_ACTIVA }o--|| MIEMBRO : "de"
+SUSCRIPCION_ACTIVA }o--|| ALIADO_COMERCIAL : "con"
 
-INVENTARIO_ITEMS }|--|| MIEMBRO : "de"
-INVENTARIO_ITEMS }|--|| ITEM : "contiene"
-TRANSACCION_MARKETPLACE }|--|| MIEMBRO : "realizada por"
-TRANSACCION_MARKETPLACE }|--|| ITEM : "sobre"
 
 TROFEO }o--|| MIEMBRO : "obtenido por"
-BENEFICIO_ALIADO }|--|| ALIADO_COMERCIAL : "provisto por"
-BENEFICIO_ALIADO }o--o| MIEMBRO : "reclamado por"
-SUSCRIPCION_ACTIVA }|--|| MIEMBRO : "de"
-SUSCRIPCION_ACTIVA }|--|| ALIADO_COMERCIAL : "con"
 ADMIN_HISTORIAL }|--|| MIEMBRO : "registra acciones de"
 
 @enduml

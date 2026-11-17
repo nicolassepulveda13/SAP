@@ -26,7 +26,7 @@ Este documento registra todas las modificaciones realizadas a la carpeta técnic
 
 | ✓ | # | Dónde | Qué hacer | Contenido |
 |---|---|---|---|---|
-| [ ] | 1 | Tabla de historial de revisión | Agregar una fila por cada versión de este documento (1.0 a 1.4) con fecha y resumen | §6 de este documento |
+| [ ] | 1 | Tabla de historial de revisión | Agregar una fila por cada versión de este documento (1.0 a 1.5) con fecha y resumen | §6 de este documento |
 
 ### 10.4 — Documento Visión
 
@@ -112,16 +112,16 @@ Este documento registra todas las modificaciones realizadas a la carpeta técnic
 | [ ] | 32 | Entidad `PARTICIPACION_GUERRA` | Agregar el atributo `posicion : INTEGER` | §3.3 / `diagrama-er.md` + `er-arena-santuario.md` |
 | [ ] | 33 | Entidad `DESAFIO` | **Verificar** que `tier` siga como `ENUM(BRONCE,PLATA,ORO)` (no cambia) | `diagrama-er.md` |
 
-### ⏳ Pendiente de implementar (no se pasa a la carpeta todavía)
+### Ítems 34 a 47 — Evolución y Perfil (17/11)
 
-Brechas entre CU aprobados y la app, planificadas para S10. Cuando se implementen, la nota del CU correspondiente se actualiza. Detalle en §4.6.
+Están en **`Balanceo-Carpeta-17-11.md`** (checklist propia, mismo formato): historial de revisión, definiciones, mapa de navegación, notas de los CU, secuencias CU-004 y CU-005, diagrama de clases y DER.
+
+### ⏳ Pendiente (no se pasa a la carpeta todavía)
+
+Las brechas P1–P4 (buscador del Radar, un solo SILVERBACK, confirmación e historial al expulsar, `/perfil/cuenta`) quedaron **implementadas el 03/11** y cubiertas por la E2E. Queda:
 
 | # | CU | Qué falta |
 |---|---|---|
-| P1 | CU-001-003 | Buscador de clanes por nombre y "INICIAR VIAJE" con asignación automática |
-| P2 | CU-002-005 | Un solo SILVERBACK por clan |
-| P3 | CU-002-006 | Confirmación antes de expulsar, registro en el historial de administración, no expulsar a un SILVERBACK |
-| P4 | CU-005-007 | Pantalla `/perfil/cuenta` (PKG_PERFIL, S8) |
 | P5 | 10.5.3 (todos) | Prototipo de interfaz por CU (ver `Anexo Imágenes de pantalas SilverBack.docx`) |
 
 ---
@@ -869,9 +869,9 @@ end
 | CU-002-005 Asignar rol | FA-2: el Líder no puede cambiar su propio rol | Implementado en la pantalla (no muestra su selector) **y** en el servidor (responde 400 "No podés cambiar tu propio rol.") | Por la API podía bajarse el rol y dejar el clan sin líder |
 | CU-002-004 Tácticas | "Chat en tiempo real", "actualiza automáticamente el historial sin recargar", indicador LIVE | Refresco automático cada 5 segundos (se pausa con la pestaña oculta). No hay indicador LIVE ni cola de mensajes (FA-2) | Decisión del plan S4: polling como versión mínima viable; websockets fuera de alcance |
 
-### Brechas pendientes de implementar
+### Brechas (✅ implementadas el 03/11, verificadas con E2E)
 
-Funcionalidad que el CU aprobado describe y la aplicación **todavía no tiene**. Se planifican para S10 (Integración final y hardening).
+Funcionalidad que el CU aprobado describía y la aplicación no tenía al 06/10. La columna "Estado actual" queda como registro de lo que faltaba.
 
 | CU | El CU aprobado pide | Estado actual |
 |---|---|---|
@@ -880,6 +880,14 @@ Funcionalidad que el CU aprobado describe y la aplicación **todavía no tiene**
 | CU-002-006 Expulsar | Modal de confirmación antes de expulsar (pasos 7–11, FA-1 "CANCELAR") | La expulsión se ejecuta al presionar el botón, sin confirmación |
 | CU-002-006 Expulsar | Paso 15: registrar el evento en el historial de administración del clan | No se registra |
 | CU-002-006 Expulsar | FA-2: no se puede expulsar a un miembro con rol SILVERBACK | Solo se impide que el Líder se expulse a sí mismo |
+
+---
+
+## 4.7 S7–S8 — Evolución y Perfil alineados con la carpeta (17/11)
+
+> El 17/11 se llevó el código de Evolución y Perfil a lo que dice la carpeta del 13/11 (CU-004 y CU-005, RF-006 a RF-016, alcance 10.4.3). Los textos de los CU no cambian; cambian los diagramas de secuencia, clases y DER, porque el modelo se adaptó a los CU (árbol colectivo con Puntos de Clan, Llaves de Acero, rangos BRONCE/PLATA/ORO, `TRANSACCION_MARKETPLACE` y `SUSCRIPCION_ACTIVA` implementadas).
+>
+> **Detalle completo, decisiones numéricas, textos para copiar y bugs corregidos:** `Balanceo-Carpeta-17-11.md`.
 
 ---
 
@@ -897,6 +905,7 @@ Funcionalidad que el CU aprobado describe y la aplicación **todavía no tiene**
 | 1.1 | 22/09/2026 | S4 | Se completa C-28 (ficha + secuencia + mapa de inserción). `DESAFIO.tier` se mantiene BRONCE/PLATA/ORO. Decisiones de diseño S4: modelo de 4 roles y modificadores CER. |
 | 1.2 | 05/10/2026 | S5–S6 | Decisiones de diseño de la Guerra Global, voz y XP. Diferencias CU-003-001 a 004 vs implementación. ER: `posicion` en PARTICIPACION_GUERRA. Secuencias CU-003 reescritas, PostgreSQL → SQL Server, y las 4 secuencias nuevas insertadas en sus archivos. |
 | 1.3 | 06/10/2026 | Correcciones | Sección 4.6: flujo del expulsado hacia el Radar, FA "Ya pertenecés a un clan", cupo de 20, el Líder no cambia su propio rol, Tácticas con refresco cada 5 s. Lista de brechas pendientes entre CU aprobados e implementación (buscador del Radar, un solo SILVERBACK, confirmación e historial al expulsar). |
+| 1.5 | 17/11/2026 | S7–S8 | Evolución y Perfil alineados con la carpeta del 13/11. Ítems 34–47 en `Balanceo-Carpeta-17-11.md` (secuencias CU-004/CU-005, clases, DER, notas de CU). Brechas P1–P4 cerradas. |
 | 1.4 | 06/10/2026 | Balanceo | **Sección 0: checklist única de balanceo** (33 ítems por sección de la carpeta + pendientes). CU-001-000 corregido en `casos-de-uso.md` (flujo real: formulario unificado y cuenta creada al elegir clan; FA-3 al Radar). Fichas UAI de los 4 CU nuevos en el ANEXO. Mapa de navegación v1.1. Diagrama de clases con login, Guerra, fundar, publicar, voz, cuenta, `AceptacionDesafio` y `posicion`. Se registra el cambio de arquitectura de S1 (10.4.5, 10.5.5, 10.5.6). |
 
 ---

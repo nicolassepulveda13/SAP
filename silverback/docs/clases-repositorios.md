@@ -87,17 +87,25 @@ package "Repositorios — SilverbackApi.Data" #FFF3EB {
     +registrar(evento: String): void
   }
   class SkillTreeRepository <<repository>> {
-    +obtenerArbol(miembroId: UUID): Nodo[]
-    +crearInversion(inversion: InversionNodo): InversionNodo
+    +listar(): Nodo[]
+    +nivelesDelClan(clanId: UUID): Map
+    +subirNivel(clanId: UUID, nodoId: UUID, nivelActual: Int): Boolean
+    +registrarInversion(inversion: InversionNodo): InversionNodo
+    +ultimasInversiones(clanId: UUID): InversionNodo[]
   }
   class CofreRepository <<repository>> {
     +listarDisponibles(miembroId: UUID): Cofre[]
-    +marcarReclamado(cofreId: UUID): void
+    +existeDesde(miembroId: UUID, origen: OrigenCofre, desde: Date): Boolean
+    +crear(miembroId: UUID, rareza: RarezaCofre, origen: OrigenCofre, llaves: Int): void
+    +marcarReclamado(cofreId: UUID, miembroId: UUID): Boolean
   }
   class MarketplaceRepository <<repository>> {
     +listar(categoria: CategoriaItem): Item[]
     +buscarItem(itemId: UUID): Item
+    +posee(miembroId: UUID, itemId: UUID): Boolean
     +registrarCompra(miembroId: UUID, itemId: UUID): void
+    +inventario(miembroId: UUID): InventarioItem[]
+    +activar(miembroId: UUID, itemId: UUID): Boolean
   }
   class FatigaRepository <<repository>> {
     +obtenerPorMiembro(miembroId: UUID): DatosFatiga
@@ -107,9 +115,11 @@ package "Repositorios — SilverbackApi.Data" #FFF3EB {
     +obtenerProgreso(miembroId: UUID): Object
   }
   class BeneficioRepository <<repository>> {
-    +listarElegibles(miembroId: UUID, rango: Rango): BeneficioAliado[]
+    +listar(miembroId: UUID): BeneficioAliado[]
+    +expirarVencidos(ahora: Date): void
     +registrarReclamo(beneficioId: UUID, miembroId: UUID): void
-    +actualizarEstado(beneficioId: UUID, datos: Object): void
+    +crearSuscripcion(miembroId: UUID, aliadoId: UUID, dias: Int): void
+    +suscripcionesVigentes(miembroId: UUID): SuscripcionActiva[]
   }
 
   ' Dos filas para que la capa no quede demasiado ancha

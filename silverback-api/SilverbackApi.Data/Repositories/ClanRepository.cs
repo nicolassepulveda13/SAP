@@ -38,9 +38,14 @@ public class ClanRepository(AppDbContext db)
         return await db.Clanes.CountAsync(c => c.PuntosClan > puntos) + 1;
     }
 
-    public Task DescontarPuntos(Guid clanId, int puntos) =>
+    public Task SumarPuntos(Guid clanId, int puntos) =>
         db.Clanes.Where(c => c.Id == clanId)
-            .ExecuteUpdateAsync(s => s.SetProperty(c => c.PuntosClan, c => c.PuntosClan - puntos));
+            .ExecuteUpdateAsync(s => s.SetProperty(c => c.PuntosClan, c => c.PuntosClan + puntos));
+
+    // Atómico: descuenta solo si alcanza (un único UPDATE ... WHERE PuntosClan >= @puntos). false = saldo insuficiente.
+    public async Task<bool> DescontarPuntos(Guid clanId, int puntos) =>
+        await db.Clanes.Where(c => c.Id == clanId && c.PuntosClan >= puntos)
+            .ExecuteUpdateAsync(s => s.SetProperty(c => c.PuntosClan, c => c.PuntosClan - puntos)) == 1;
 
     public Task ActualizarCantidadMiembros(Guid clanId, int delta) =>
         db.Clanes.Where(c => c.Id == clanId)

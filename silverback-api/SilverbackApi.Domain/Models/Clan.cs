@@ -13,4 +13,6 @@ public class Clan
     public ICollection<ParticipacionGuerra> Participaciones { get; set; } = [];
     public ICollection<DesafioClan> Desafios { get; set; } = [];
     public ICollection<MensajeClan> Mensajes { get; set; } = [];
+    public ICollection<NodoClan> NodosArbol { get; set; } = [];
+    public ICollection<InversionNodo> InversionesArbol { get; set; } = [];
 }

@@ -8,6 +8,9 @@ public class TrofeoRepository(AppDbContext db)
     public Task<List<Trofeo>> ListarPorMiembro(Guid miembroId) =>
         db.Trofeos.Where(t => t.MiembroId == miembroId).ToListAsync();
 
+    public Task<bool> Tiene(Guid miembroId, string nombre) =>
+        db.Trofeos.AnyAsync(t => t.MiembroId == miembroId && t.Nombre == nombre);
+
     public async Task<Trofeo> Crear(Trofeo trofeo)
     {
         db.Trofeos.Add(trofeo);

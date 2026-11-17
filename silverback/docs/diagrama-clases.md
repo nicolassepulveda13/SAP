@@ -97,6 +97,7 @@ package "3. Servicios — SilverbackApi.Services" #EBFBF0 {
   class GuerraService <<service>>
   class EvolucionService <<service>>
   class PerfilService <<service>>
+  class RecompensasService <<service>>
 
   ' Dos filas para que la capa no quede demasiado ancha
   AuthService -[hidden]d- CERService
@@ -145,11 +146,16 @@ package "5. Dominio — SilverbackApi.Domain" #EBF4FF {
   class AceptacionDesafio
   class MensajeClan
   class Nodo
+  class NodoClan
   class InversionNodo
   class Cofre
   class Item
+  class InventarioItem
+  class TransaccionMarketplace
   class Trofeo
   class BeneficioAliado
+  class ReclamoBeneficio
+  class SuscripcionActiva
   class AliadoComercial
 }
 
@@ -189,6 +195,12 @@ ArenaService ..> RachaRepository
 ArenaService ..> MiembroRepository
 ArenaService ..> AdminHistorialRepository
 GuerraService ..> GuerraRepository
+ArenaService ..> RecompensasService
+GuerraService ..> RecompensasService
+EvolucionService ..> RecompensasService
+RecompensasService ..> TrofeoRepository
+RecompensasService ..> CofreRepository
+RecompensasService ..> MiembroRepository
 EvolucionService ..> SkillTreeRepository
 EvolucionService ..> CofreRepository
 EvolucionService ..> MarketplaceRepository

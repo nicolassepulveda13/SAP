@@ -84,27 +84,50 @@ package "Servicios — SilverbackApi.Services" #EBFBF0 {
     -posicionRival(posicion: Int): Int
   }
   class EvolucionService <<service>> {
-    +cargarProgreso(miembroId: UUID): Object
-    +obtenerCofresDisponibles(miembroId: UUID): Cofre[]
-    +mejorarNodo(nodoId: UUID, miembroId: UUID): Object
-    +reclamarCofre(cofreId: UUID, miembroId: UUID): Object
+    +cargarProgreso(miembroId: UUID): ProgresoEvolucion
+    +calcularAtributos(historial: Entrenamiento[]): Atributos
+    +obtenerArbol(miembroId: UUID): ArbolClan
+    +mejorarNodo(nodoId: UUID, miembroId: UUID): InversionNodo
+    +obtenerBoveda(miembroId: UUID): Boveda
+    +reclamarCofre(cofreId: UUID, miembroId: UUID): RecompensaCofre
     +obtenerItems(categoria: CategoriaItem): Item[]
-    +comprarItem(itemId: UUID, miembroId: UUID): Object
-    -determinarLoot(rareza: RarezaCofre): Item
-    -calcularXPParaSiguienteRango(rango: Rango, xpActual: Int): Int
+    +comprarItem(itemId: UUID, miembroId: UUID): Item
+    -costoNivel(nodo: Nodo, nivel: Int): Int
+    -multiplicador(miembroId: UUID): Float
+  }
+  class RecompensasService <<service>> {
+    +alEntrenar(miembroId: UUID, diasRacha: Int): void
+    +alGanarGuerra(clanId: UUID, semana: String): void
+    +actualizarRango(miembroId: UUID): void
+    -otorgar(miembroId: UUID, hito: Hito, origen: OrigenCofre): void
+  }
+  class Progresion <<utility>> {
+    +rangoPara(xp: Int): Rango
+    +xpParaSiguiente(rango: Rango, xp: Int): Int
+    +nivel(xp: Int): Int
+    +multiplicadorXp(diasRacha: Int): Float
+    +coinsPorCofre(rareza: RarezaCofre): Int
+  }
+  class HoraArgentina <<utility>> {
+    +hoy(): Date
+    +fechaDe(utc: Date): Date
+    +inicioDelDiaUtc(fecha: Date): Date
   }
   class PerfilService <<service>> {
     +cargarDashboard(miembroId: UUID): Object
     +consultarRacha(miembroId: UUID): Racha
-    +salvarRacha(miembroId: UUID, clanId: UUID): void
+    +salvarRacha(miembroId: UUID): void
+    +dejarMorirRacha(miembroId: UUID): void
+    +inventario(miembroId: UUID): InventarioItem[]
+    +activarItem(miembroId: UUID, itemId: UUID): void
     +cargarFatiga(miembroId: UUID): DatosFatiga
     +cargarTrofeos(miembroId: UUID): Trofeo[]
     +cargarBeneficios(miembroId: UUID): BeneficioAliado[]
     +reclamarBeneficio(beneficioId: UUID, miembroId: UUID): Object
     +actualizarCuenta(miembroId: UUID, nombre: String, email: String): Miembro
-    +cambiarPassword(miembroId: UUID, actual: String, nueva: String): void
+    +cambiarPassword(miembroId: UUID, actual: String, nueva: String, confirmacion: String): void
     -construirDashboard(miembro: Miembro, entrenamientos: Entrenamiento[], racha: Racha): Object
-    -evaluarFatiga(datos: DatosFatiga, cargaSemanal: Float): EstadoFatiga
+    -evaluarFatiga(cargaRelativa: Float): EstadoFatiga
     -calcularProgresoHaciaProximo(miembroId: UUID, proximo: Trofeo): Float
     -generarCupon(beneficioId: UUID, miembroId: UUID): String
   }

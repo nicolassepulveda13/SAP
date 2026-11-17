@@ -22,14 +22,14 @@ export default defineConfig({
       cwd: "../silverback-api",
       url: "http://localhost:5057/health",
       reuseExistingServer: true,
-      timeout: 180_000,
+      timeout: 300_000, // compile + migraciones primera vez
     },
     {
       // node directo (sin npm): en Windows Playwright mata a npm pero dejaba huérfano a next dev
       command: "node node_modules/next/dist/bin/next dev",
       url: "http://localhost:3000/api/health",
       reuseExistingServer: true,
-      timeout: 180_000,
+      timeout: 300_000, // next compila cada ruta la primera vez
     },
   ],
 });

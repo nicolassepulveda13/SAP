@@ -1061,7 +1061,7 @@
 8. El sistema verifica que la contraseña actual es correcta y que las nuevas coinciden.
 9. El sistema actualiza el hash de contraseña y confirma el cambio.
 
-**Extensiones:** Pantalla pendiente de implementación (PKG_PERFIL, S8).
+**Extensiones:** Implementado en S8 (`/perfil/cuenta`): datos personales y "CAMBIAR CONTRASEÑA" con confirmación.
 
 **Flujos Alternativos:**
 

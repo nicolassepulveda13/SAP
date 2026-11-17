@@ -13,17 +13,19 @@ using SilverbackApi.Services.Interfaces;
 
 namespace SilverbackApi.Services;
 
-public class GuerraService(GuerraRepository guerraRepo) : IGuerraService
+public class GuerraService(GuerraRepository guerraRepo, RecompensasService recompensas) : IGuerraService
 {
     private const int TopRanking = 10;
-    private static readonly TimeZoneInfo ZonaArgentina = ResolverZonaArgentina();
+    private static readonly TimeZoneInfo ZonaArgentina = HoraArgentina.Zona;
 
     public async Task<GuerraGlobal> AsegurarGuerraActiva()
     {
         var ahora = DateTime.UtcNow;
 
+        // S7: los miembros de cada clan ganador reciben el trofeo de la semana y un cofre de EVENTO LIMITADO
         foreach (var vencida in await guerraRepo.ListarActivasVencidas(ahora))
-            await guerraRepo.Finalizar(vencida.Id);
+            foreach (var clanGanador in await guerraRepo.Finalizar(vencida.Id))
+                await recompensas.AlGanarGuerra(clanGanador, EtiquetaSemana(vencida.Semana));
 
         var (semana, _, fin) = SemanaDe(ahora);
         var guerra = await guerraRepo.BuscarPorSemana(semana);
@@ -112,16 +114,5 @@ public class GuerraService(GuerraRepository guerraRepo) : IGuerraService
     {
         var partes = clave.Split("-S");
         return partes.Length == 2 ? $"SEMANA {int.Parse(partes[1])} · {partes[0]}" : clave;
-    }
-
-    // Argentina no tiene horario de verano desde 2009: si el SO no trae la zona, alcanza con UTC-3 fijo
-    private static TimeZoneInfo ResolverZonaArgentina()
-    {
-        foreach (var id in new[] { "America/Argentina/Buenos_Aires", "Argentina Standard Time" })
-        {
-            try { return TimeZoneInfo.FindSystemTimeZoneById(id); }
-            catch (TimeZoneNotFoundException) { }
-        }
-        return TimeZoneInfo.CreateCustomTimeZone("ART", TimeSpan.FromHours(-3), "Argentina", "ART");
     }
 }

@@ -310,6 +310,8 @@ Page --> Miembro: lista de sesiones (filtrada si corresponde)
 
 ## CU-004 — EVOLUCIÓN / BÓVEDA
 
+> **Actualizado 17/11 (alineado con la carpeta):** árbol de habilidades colectivo con Puntos de Clan (RF-015), atributos FUERZA / AGILIDAD / RESISTENCIA (RF-006), Bóveda con botín diario, Llaves de Acero y cofre de evento, Marketplace con confirmación e historial de compras. Los descuentos de saldo son `UPDATE` condicionados (atómicos).
+
 ---
 
 ### CU-004-001 — Visualizar Progreso de Evolución
@@ -325,35 +327,41 @@ end box
 
 box "Servicios" #EBFBF0
   participant "EvolucionService" as Svc
+  participant "Progresion" as Prog
 end box
 
 box "Repositorios" #FFF3EB
   participant "MiembroRepository" as MiembroRepo
-  participant "SkillTreeRepository" as STRepo
+  participant "EntrenamientoRepository" as EntRepo
 end box
 
 box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
-Miembro -> Page: accede a Evolución
-Page -> Svc: cargarProgreso(miembroId): Promise~ProgresoEvolucion~
-
-group Carga en paralelo
-    Svc -> MiembroRepo: buscarPorId(miembroId): Promise~Miembro~
-    MiembroRepo -> DB: SELECT xp, rango, coins FROM miembros WHERE id = miembroId
-    DB --> MiembroRepo: Miembro
-    MiembroRepo --> Svc: Miembro
-== ==
-    Svc -> STRepo: obtenerArbol(miembroId): Promise~Nodo[]~
-    STRepo -> DB: SELECT * FROM nodos WHERE miembro_id = miembroId
-    DB --> STRepo: Nodo[]
-    STRepo --> Svc: Nodo[] con EstadoNodo por cada uno
-end
-
-Svc -> Svc: calcularXPParaSiguienteRango(rango, xpActual): number
+Miembro -> Page: accede a Evolución (Bóveda/Evolución)
+Page -> Svc: cargarProgreso(miembroId): ProgresoEvolucion
+Svc -> MiembroRepo: buscarPorId(miembroId): Miembro
+MiembroRepo -> DB: SELECT xp, rango, coins, llaves_acero FROM miembros WHERE id = miembroId
+DB --> MiembroRepo: Miembro
+MiembroRepo --> Svc: Miembro
+Svc -> EntRepo: listarTodos(miembroId): Entrenamiento[]
+EntRepo -> DB: SELECT peso_kg, repeticiones, fecha_hora FROM entrenamientos WHERE miembro_id = miembroId
+DB --> EntRepo: Entrenamiento[]
+EntRepo --> Svc: Entrenamiento[]
+Svc -> Svc: calcularAtributos(historial): FUERZA = Σ(kg×reps)/100 · RESISTENCIA = Σ reps · AGILIDAD = días × 10
+Svc -> Prog: nivel(xp) · xpParaSiguiente(rango, xp) · rangoSiguiente(rango)
+Prog --> Svc: nivel, XP faltante, próximo rango
 Svc --> Page: ProgresoEvolucion
-Page --> Miembro: avatar evolutivo según Rango (BRONCE/PLATA/ORO/RANGO_S) + árbol de habilidades
+Page --> Miembro: avatar + NIVEL, barra de XP (rango actual → próximo), BRONCE — PLATA — ORO, tarjetas de atributos
+alt rango ORO (FA-1)
+    Page --> Miembro: "MAX LEVEL"
+end
+alt atributo > 999 (FA-2)
+    Page --> Miembro: "999+ PTS" con estrella
+end
+Miembro -> Page: RENDIMIENTO
+Page --> Miembro: redirige al Dashboard (CU-005-001)
 
 @enduml
 ```
@@ -377,40 +385,53 @@ end box
 
 box "Repositorios" #FFF3EB
   participant "SkillTreeRepository" as STRepo
-  participant "MiembroRepository" as MiembroRepo
+  participant "ClanRepository" as ClanRepo
 end box
 
 box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
-Miembro -> Page: selecciona nodo con EstadoNodo.DISPONIBLE
-Page --> Miembro: muestra modal con nombre y costoXP del nodo
-Miembro -> Page: confirmarInversion()
-Page -> Svc: mejorarNodo(nodoId, miembroId): Promise~ResultadoInversion~
-Svc -> MiembroRepo: buscarPorId(miembroId): Promise~Miembro~
-MiembroRepo -> DB: SELECT xp FROM miembros WHERE id = miembroId
-DB --> MiembroRepo: Miembro
-MiembroRepo --> Svc: Miembro
-Svc -> STRepo: obtenerArbol(miembroId): Promise~Nodo[]~
-STRepo -> DB: SELECT * FROM nodos WHERE id = nodoId
-DB --> STRepo: Nodo
-STRepo --> Svc: Nodo
+Miembro -> Page: accede a SKILL TREE
+Page -> Svc: obtenerArbol(miembroId): ArbolClan
+Svc -> ClanRepo: buscarPorId(clanId): Clan
+ClanRepo -> DB: SELECT puntos_clan FROM clanes WHERE id = clanId
+DB --> ClanRepo: Clan
+Svc -> STRepo: listar() · nivelesDelClan(clanId) · ultimasInversiones(clanId)
+STRepo -> DB: SELECT nodos + nodo_dependencia · SELECT nivel FROM nodo_clan WHERE clan_id = clanId · SELECT TOP 5 FROM inversion_nodo
+DB --> STRepo: catálogo, niveles del clan, historial
+STRepo --> Svc: datos del árbol
+Svc --> Page: ArbolClan (saldo de Puntos de Clan, nodos con nivel / bloqueo, últimas inversiones)
+Page --> Miembro: árbol SVG (FUERZA → RESISTENCIA / ATAQUE…) y saldo arriba a la derecha
 
-alt xp suficiente (miembro.xp >= nodo.costoXP)
-    Svc -> STRepo: crearInversion(inversion: InversionNodo): Promise~InversionNodo~
-    STRepo -> DB: INSERT INTO inversiones_nodo && UPDATE nodos SET estado = 'DESBLOQUEADO'
-    DB --> STRepo: OK
-    STRepo --> Svc: InversionNodo
-    Svc -> MiembroRepo: actualizarXP(miembroId, -nodo.costoXP): Promise~Miembro~
-    MiembroRepo -> DB: UPDATE miembros SET xp = xp - costoXP WHERE id = miembroId
-    DB --> MiembroRepo: Miembro actualizado
-    MiembroRepo --> Svc: Miembro
-    Svc --> Page: ResultadoInversion
-    Page --> Miembro: nodo pasa a DESBLOQUEADO, muestra beneficio obtenido
-else xp insuficiente
-    Svc --> Page: ResultadoInversion
-    Page --> Miembro: "Te faltan X XP para desbloquear este nodo"
+alt clic en nodo BLOQUEADO (FA-1)
+    Page --> Miembro: no se selecciona; tooltip con el prerrequisito
+else nodo desbloqueado
+    Miembro -> Page: selecciona el nodo
+    Page --> Miembro: panel: nombre, nivel actual / máximo, efecto actual y del próximo nivel, costo en Puntos de Clan
+    Miembro -> Page: MEJORAR NODO
+    Page -> Svc: mejorarNodo(nodoId, miembroId): InversionNodo
+    Svc -> STRepo: buscarPorId(nodoId) · nivelesDelClan(clanId)
+    STRepo --> Svc: nodo + prerrequisitos, nivel actual
+    alt prerrequisito sin invertir o nivel máximo
+        Svc --> Page: error
+    else
+        Svc -> ClanRepo: descontarPuntos(clanId, costo)
+        ClanRepo -> DB: UPDATE clanes SET puntos_clan = puntos_clan - costo WHERE id = clanId AND puntos_clan >= costo
+        alt 0 filas: puntos insuficientes (FA-2)
+            ClanRepo --> Svc: false
+            Svc --> Page: "PUNTOS INSUFICIENTES"
+            Page --> Miembro: botón deshabilitado con "PUNTOS INSUFICIENTES"
+        else 1 fila
+            ClanRepo --> Svc: true
+            Svc -> STRepo: subirNivel(clanId, nodoId, nivel)
+            STRepo -> DB: INSERT nodo_clan (nivel 1) / UPDATE nodo_clan SET nivel = nivel + 1 WHERE nivel = nivelActual
+            Svc -> STRepo: registrarInversion(clan, nodo, miembro, nivelAlcanzado, costo)
+            STRepo -> DB: INSERT INTO inversion_nodo
+            Svc --> Page: InversionNodo
+            Page --> Miembro: nodo sube de nivel, saldo actualizado, "ÚLTIMAS INVERSIONES" con la mejora
+        end
+    end
 end
 
 @enduml
@@ -431,48 +452,52 @@ end box
 
 box "Servicios" #EBFBF0
   participant "EvolucionService" as Svc
+  participant "RecompensasService" as Rec
 end box
 
 box "Repositorios" #FFF3EB
   participant "CofreRepository" as CofreRepo
   participant "MiembroRepository" as MiembroRepo
+  participant "EntrenamientoRepository" as EntRepo
 end box
 
 box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
-Miembro -> Page: accede a la Bóveda
-Page -> Svc: obtenerCofresDisponibles(miembroId): Promise~Cofre[]~
-Svc -> CofreRepo: listarDisponibles(miembroId): Promise~Cofre[]~
+Miembro -> Page: accede a BÓVEDA
+Page -> Svc: obtenerBoveda(miembroId): Boveda
+Svc -> EntRepo: listarDesde(miembroId, ayer 00:00 ART)
+EntRepo --> Svc: entrenamientos recientes
+alt entrenó ayer u hoy y no tiene botín de hoy
+    Svc -> CofreRepo: crear(miembroId, COMUN, BOTIN_DIARIO)
+    CofreRepo -> DB: INSERT INTO cofres
+end
+Svc -> CofreRepo: listarDisponibles(miembroId): Cofre[]
 CofreRepo -> DB: SELECT * FROM cofres WHERE miembro_id = miembroId AND estado = 'DISPONIBLE'
 DB --> CofreRepo: Cofre[]
-CofreRepo --> Svc: Cofre[]
-Svc --> Page: Cofre[] con RarezaCofre (COMUN/RARO/EPICO/LEGENDARIO)
-Page --> Miembro: muestra cofres con rareza visual
+Svc --> Page: Boveda (cajas, listos, MULTIPLICADOR XP según racha, PRÓXIMO = medianoche ART, llaves de acero)
+Page --> Miembro: 4 tarjetas + cofres: ALPHA "LISTO", OMEGA "BLOQUEADO" (Llaves de Acero), "EVENTO LIMITADO"
 
-Miembro -> Page: selecciona cofre con EstadoCofre.DISPONIBLE
-Page -> Svc: reclamarCofre(cofreId, miembroId): Promise~ResultadoCofre~
-Svc -> CofreRepo: listarDisponibles(miembroId): Promise~Cofre[]~
-CofreRepo -> DB: SELECT * FROM cofres WHERE id = cofreId
-DB --> CofreRepo: Cofre
-CofreRepo --> Svc: Cofre
-
-alt cofre DISPONIBLE
-    Svc -> Svc: determinarLoot(rareza: RarezaCofre): Item
-    Svc -> MiembroRepo: actualizar(miembroId, item): Promise~void~
-    MiembroRepo -> DB: INSERT INTO inventario_items (miembro_id, item_id)
-    DB --> MiembroRepo: OK
-    MiembroRepo --> Svc: void
-    Svc -> CofreRepo: marcarReclamado(cofreId): Promise~void~
-    CofreRepo -> DB: UPDATE cofres SET estado = 'RECLAMADO' WHERE id = cofreId
-    DB --> CofreRepo: OK
-    CofreRepo --> Svc: void
-    Svc --> Page: ResultadoCofre
-    Page --> Miembro: animación de apertura + muestra Item obtenido
-else cofre ya RECLAMADO
-    Svc --> Page: ResultadoCofre
-    Page --> Miembro: muestra mensaje de error
+alt cofre bloqueado sin llaves suficientes (FA-1)
+    Page --> Miembro: botón deshabilitado + "Ganás una cada 5 entrenamientos"
+else RECLAMAR / ABRIR / RECLAMAR AHORA
+    Miembro -> Page: reclamar cofre
+    Page -> Svc: reclamarCofre(cofreId, miembroId): RecompensaCofre
+    opt cofre con llaves requeridas
+        Svc -> MiembroRepo: gastarLlaves(miembroId, n)
+        MiembroRepo -> DB: UPDATE miembros SET llaves_acero = llaves_acero - n WHERE id = miembroId AND llaves_acero >= n
+    end
+    Svc -> CofreRepo: marcarReclamado(cofreId, miembroId)
+    CofreRepo -> DB: UPDATE cofres SET estado = 'RECLAMADO' WHERE id = cofreId AND estado = 'DISPONIBLE'
+    Svc -> MiembroRepo: actualizarCoins(+SB por rareza) · actualizarXP(+XP base × multiplicador)
+    MiembroRepo -> DB: UPDATE miembros SET coins = coins + n, xp = xp + m
+    Svc -> Rec: actualizarRango(miembroId)
+    Svc --> Page: RecompensaCofre
+    Page --> Miembro: "Abriste el COFRE ALPHA: +100 SB · +11 XP"
+end
+alt el contador PRÓXIMO llega a cero (FA-2)
+    Page -> Page: refresca la pantalla → el botín del día aparece LISTO
 end
 
 @enduml
@@ -504,45 +529,41 @@ box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
-Miembro -> Page: navega el Marketplace
-Page -> Svc: obtenerItems(categoria: CategoriaItem): Promise~Item[]~
-Svc -> MktRepo: listar(categoria): Promise~Item[]~
-MktRepo -> DB: SELECT * FROM items WHERE categoria = categoria
+Miembro -> Page: accede a MARKETPLACE (Mercado)
+Page -> Svc: obtenerItems(categoria): Item[]
+Svc -> MktRepo: listar(categoria)
+MktRepo -> DB: SELECT * FROM items [WHERE categoria = SKIN | AURA | ICONO]
 DB --> MktRepo: Item[]
-MktRepo --> Svc: Item[]
-Svc --> Page: Item[] (SKIN/HABITAT/ACCESORIO/AURA)
-Page --> Miembro: muestra catálogo con nombre, descripción y precio en coins
-
-Miembro -> Page: selecciona Item y confirma compra
-Page -> Svc: comprarItem(itemId, miembroId): Promise~ResultadoCompra~
-Svc -> MiembroRepo: buscarPorId(miembroId): Promise~Miembro~
-MiembroRepo -> DB: SELECT coins FROM miembros WHERE id = miembroId
-DB --> MiembroRepo: Miembro
-MiembroRepo --> Svc: Miembro
-Svc -> MktRepo: buscarItem(itemId): Promise~Item~
-MktRepo -> DB: SELECT * FROM items WHERE id = itemId
-DB --> MktRepo: Item
-MktRepo --> Svc: Item
-
-alt coins suficientes (miembro.coins >= item.precio)
-    Svc -> MiembroRepo: actualizarCoins(miembroId, -item.precio): Promise~Miembro~
-    MiembroRepo -> DB: UPDATE miembros SET coins = coins - precio WHERE id = miembroId
-    DB --> MiembroRepo: Miembro actualizado
-    MiembroRepo --> Svc: Miembro
-    Svc -> MktRepo: registrarCompra(miembroId, itemId): Promise~void~
-    MktRepo -> DB: INSERT INTO transacciones_marketplace (miembro_id, item_id, fecha)
-    DB --> MktRepo: OK
-    MktRepo --> Svc: void
-    Svc -> MiembroRepo: actualizar(miembroId, itemAgregado): Promise~void~
-    MiembroRepo -> DB: INSERT INTO inventario_items (miembro_id, item_id)
-    DB --> MiembroRepo: OK
-    MiembroRepo --> Svc: void
-    Svc --> Page: ResultadoCompra
-    Page --> Miembro: confirma compra, ítem disponible en inventario
-else coins insuficientes
-    Svc --> Page: ResultadoCompra
-    Page --> Miembro: "Te faltan X coins para adquirir este ítem"
+Page --> Miembro: saldo en SB, filtros TODOS / SKINS / AURAS / ICONOS, catálogo
+alt categoría sin ítems (FA-2)
+    Page --> Miembro: "No hay ítems disponibles en esta categoría."
 end
+alt saldo < precio (FA-1)
+    Page --> Miembro: COMPRAR deshabilitado y precio en rojo
+else
+    Miembro -> Page: COMPRAR
+    Page --> Miembro: confirmación con nombre del ítem y costo final
+    Miembro -> Page: CONFIRMAR
+    Page -> Svc: comprarItem(itemId, miembroId): Item
+    Svc -> MktRepo: posee(miembroId, itemId)
+    alt ya lo tiene
+        Svc --> Page: "Ya tenés este ítem."
+    else
+        Svc -> MiembroRepo: gastarCoins(miembroId, precio)
+        MiembroRepo -> DB: UPDATE miembros SET coins = coins - precio WHERE id = miembroId AND coins >= precio
+        alt 0 filas
+            Svc --> Page: "Coins insuficientes."
+        else
+            Svc -> MktRepo: registrarCompra(miembroId, itemId)
+            MktRepo -> DB: INSERT INTO inventario_items + INSERT INTO transaccion_marketplace (una transacción)
+            Svc --> Page: Item
+            Page --> Miembro: saldo actualizado; el ítem queda en el inventario
+        end
+    end
+end
+Miembro -> Page: Perfil → INVENTARIO → ACTIVAR (paso 18)
+Page -> MktRepo: activar(miembroId, itemId)
+MktRepo -> DB: UPDATE inventario_items SET activo = (item_id = itemId) WHERE miembro_id = miembroId AND categoría = la del ítem
 
 @enduml
 ```

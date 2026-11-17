@@ -46,6 +46,7 @@ package "Dominio — SilverbackApi.Domain" #EBF4FF {
     +Rango rango
     +Int xp
     +Int coins
+    +Int llavesAcero
     +UUID clanId
   }
   class Clan {
@@ -126,12 +127,25 @@ package "Dominio — SilverbackApi.Domain" #EBF4FF {
   class Nodo {
     +UUID id
     +String nombre
-    +Int costoXP
+    +String descripcion
+    +Int costoPuntos
+    +Int nivelMaximo
+    +String efecto
+    +Int bonusPorNivel
     +EstadoNodo estado
   }
-  class InversionNodo {
-    +UUID miembroId
+  class NodoClan {
+    +UUID clanId
     +UUID nodoId
+    +Int nivel
+  }
+  class InversionNodo {
+    +UUID id
+    +UUID clanId
+    +UUID nodoId
+    +UUID miembroId
+    +Int nivelAlcanzado
+    +Int costo
     +Date invertidoEn
   }
   class Cofre {
@@ -139,12 +153,27 @@ package "Dominio — SilverbackApi.Domain" #EBF4FF {
     +UUID miembroId
     +RarezaCofre rareza
     +EstadoCofre estado
+    +OrigenCofre origen
+    +Int llavesRequeridas
   }
   class Item {
     +UUID id
     +String nombre
     +CategoriaItem categoria
+    +RarezaItem rareza
     +Int precio
+  }
+  class InventarioItem {
+    +UUID miembroId
+    +UUID itemId
+    +Date compradoEn
+    +Boolean activo
+  }
+  class TransaccionMarketplace {
+    +UUID id
+    +UUID miembroId
+    +UUID itemId
+    +Date fecha
   }
   class Trofeo {
     +UUID id
@@ -156,9 +185,25 @@ package "Dominio — SilverbackApi.Domain" #EBF4FF {
   class BeneficioAliado {
     +UUID id
     +UUID aliadoId
+    +String titulo
+    +String categoria
     +TipoBeneficio tipo
     +Rango rangoMinimo
     +EstadoBeneficio estado
+    +Boolean destacado
+    +Date fechaVencimiento
+  }
+  class ReclamoBeneficio {
+    +UUID beneficioId
+    +UUID miembroId
+    +Date reclamadoEn
+  }
+  class SuscripcionActiva {
+    +UUID id
+    +UUID miembroId
+    +UUID aliadoId
+    +Date fechaInicio
+    +Date fechaFin
   }
   class AliadoComercial {
     +UUID id
@@ -181,10 +226,19 @@ DesafioClan "1" o-- "*" AceptacionDesafio : es aceptado en
 Miembro "1" o-- "*" AceptacionDesafio : acepta
 MensajeClan "N" --> "1" Clan : enviado en
 MensajeClan "N" --> "1" Miembro : enviado por
+NodoClan "N" --> "1" Clan : nivel del arbol del clan
+NodoClan "N" --> "1" Nodo : de
+InversionNodo "N" --> "1" Clan : del clan
 InversionNodo "N" --> "1" Miembro : realizada por
 InversionNodo "N" --> "1" Nodo : sobre
 Nodo "*" --> "*" Nodo : depende de
 Cofre "N" --> "1" Miembro : pertenece a
+InventarioItem "N" --> "1" Miembro : de
+InventarioItem "N" --> "1" Item : contiene
+TransaccionMarketplace "N" --> "1" Item : sobre
 BeneficioAliado "N" --> "1" AliadoComercial : provisto por
+ReclamoBeneficio "N" --> "1" BeneficioAliado : de
+ReclamoBeneficio "N" --> "1" Miembro : reclamado por
+SuscripcionActiva "N" --> "1" AliadoComercial : con
 @enduml
 ```

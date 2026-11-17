@@ -4,7 +4,7 @@
 // Los tres botones de acción (ARENA, FORJA, CHAT) son Links a pantallas integradas (Arena y Chat conectados en S4)
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Flame, Users, Trophy, Swords, Zap, MessageSquare, Shield } from "lucide-react";
+import { Flame, Users, Trophy, Swords, Zap, MessageSquare, Shield, AlertTriangle } from "lucide-react";
 import { PageLabel } from "@/components/ui/PageLabel";
 import { apiFetch } from "@/lib/api-client";
 import { logout } from "@/app/actions/auth";
@@ -17,7 +17,10 @@ type DashboardData = {
   clan: { id: string; nombre: string; puntosClan: number } | null;
 };
 
-export default async function ClanHubPage() {
+type RachaData = { diasConsecutivos: number; estado: string };
+
+export default async function ClanHubPage({ searchParams }: { searchParams: Promise<{ racha?: string }> }) {
+  const { racha: avisoRacha } = await searchParams;
   let data: DashboardData;
   try {
     data = await apiFetch<DashboardData>("/api/perfil/dashboard");
@@ -26,6 +29,8 @@ export default async function ClanHubPage() {
   }
 
   const { miembro, estadisticas, clan } = data;
+  const racha = await apiFetch<RachaData>("/api/perfil/racha", { cache: "no-store" }).catch(() => null);
+  const rachaEnRiesgo = racha?.estado === "EN_RIESGO" && racha.diasConsecutivos > 0;
 
   let panel: PanelClan | null = null;
   if (clan) {
@@ -51,10 +56,19 @@ export default async function ClanHubPage() {
         <div className="w-52 h-52 rounded-full border-4 border-[#333] bg-[#242424] flex items-center justify-center overflow-hidden">
           <span className="text-9xl">🦍</span>
         </div>
-        {/* S4-Entrega: antes linkeaba a /perfil/racha (maqueta, PKG_PERFIL S8) — ahora es solo un badge */}
-        <span className="bg-[#F97316] text-white font-heading font-bold uppercase tracking-wider px-6 py-2.5 rounded flex items-center gap-2">
-          <Flame size={16} /> {miembro.rango}
-        </span>
+        {/* CU-005-002 paso 1 / CU-005-003 paso 16: botón de racha activa → Termómetro de Racha */}
+        <Link
+          href="/perfil/racha"
+          data-testid="boton-racha"
+          className={`text-white font-heading font-bold uppercase tracking-wider px-6 py-2.5 rounded flex items-center gap-2 ${
+            rachaEnRiesgo ? "bg-red-600 hover:bg-red-700" : "bg-[#F97316] hover:bg-[#EA6800]"
+          }`}
+        >
+          {rachaEnRiesgo ? <AlertTriangle size={16} /> : <Flame size={16} />} RACHA {racha?.diasConsecutivos ?? 0} DÍAS
+        </Link>
+        {avisoRacha === "salvada" && (
+          <p role="status" className="text-green-400 text-sm font-heading font-bold uppercase">¡Racha salvada! Tu racha está asegurada.</p>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-8">

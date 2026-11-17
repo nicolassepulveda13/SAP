@@ -28,8 +28,8 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 | # | Discrepancia | Fuente A | Fuente B | Resolver antes de |
 |---|---|---|---|---|
 | 1 | Roles del clan | STFI: binario (Miembro/Líder) | `diagrama-clases.md`: SILVERBACK/BETA/EXPLORADOR/RECLUTA | ✅ Resuelto S4: se implementan los 4 roles; solo SILVERBACK tiene permisos de administración (el STFI queda como simplificación "Líder = SILVERBACK"). |
-| 2 | Rangos de evolución | STFI: BRONCE→PLATA→ORO | `diagrama-clases.md`: +RANGO_S | Semana 7 |
-| 3 | Tipos de cofre | STFI: ALPHA/TITANIO/OMEGA | `diagrama-clases.md`: COMÚN/RARO/ÉPICO/LEGENDARIO | Semana 7 |
+| 2 | Rangos de evolución | STFI: BRONCE→PLATA→ORO | `diagrama-clases.md`: +RANGO_S | ✅ Resuelto S7: 4 rangos (PLATA 500 · ORO 1500 · RANGO S 3000 XP histórica). |
+| 3 | Tipos de cofre | STFI: ALPHA/TITANIO/OMEGA | `diagrama-clases.md`: COMÚN/RARO/ÉPICO/LEGENDARIO | ✅ Resuelto S7: una sola taxonomía, la rareza del diagrama. |
 | 4 | Modificador CER 1.15x | Atribuido a "Silverback" (¿rol o arquetipo?) | Arquetipos son VOLUMEN/DEFINIDO/ATLÉTICO | ✅ Resuelto S4: VOLUMEN 1.10 · DEFINIDO 1.05 · ATLÉTICO 1.00 (`CerService`). El 1.15 no se usa. |
 
 ## Resumen ejecutivo
@@ -54,10 +54,10 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 | 4 | S4 ✅ | PKG_SANTUARIO II — Sala de Tácticas y Gestión de Roles **+ Arena adelantada** | CU-002-004 · CU-002-005 · CU-002-006 · (CU-003-002 · CU-003-003 adelantados) |
 | 5 | S5 ✅ | Motor CER y Registro de Entrenamiento por Voz | CU-003-002 · CU-003-003 — voz + XP, verificado con E2E (05/10) |
 | 6 | S6 ✅ | PKG_ARENA — Guerra Global e Historial de Batallas | CU-003-001 · CU-003-004 — ciclo semanal + historial de batallas, verificado con E2E (05/10) |
-| 7 | S7 | PKG_EVOLUCIÓN / BÓVEDA — Progresión, Árbol de Habilidades y Marketplace | CU-004-001 · CU-004-002 · CU-004-003 · CU-004-004 |
-| 8 | S8 | PKG_PERFIL — Dashboard, Racha, Fatiga, Trofeos y Beneficios | CU-005-001 · CU-005-002 · CU-005-003 · CU-005-004 · CU-005-005 · CU-005-006 |
-| 9 | S9 | Análisis de Entorno de Despliegue en Máquinas de Facultad | No aplica a un CU — es una tarea de infraestructura y viabilidad de despliegue. |
-| 10 | S10 | Integración Final y Hardening | Los 28 CU en conjunto. |
+| 7 | S7 ✅ | PKG_EVOLUCIÓN / BÓVEDA — Progresión, Árbol de Habilidades y Marketplace | CU-004-001 · CU-004-002 · CU-004-003 · CU-004-004 |
+| 8 | S8 ✅ | PKG_PERFIL — Dashboard, Racha, Fatiga, Trofeos y Beneficios | CU-005-001 · CU-005-002 · CU-005-003 · CU-005-004 · CU-005-005 · CU-005-006 |
+| 9 | S9 ✅ | Análisis de Entorno de Despliegue en Máquinas de Facultad | No aplica a un CU — es una tarea de infraestructura y viabilidad de despliegue. |
+| 10 | S10 ✅ | Integración Final y Hardening | Los 28 CU en conjunto — E2E `s7-s8.spec.ts` (17/11) |
 | 11 | S11 | Despliegue Final y Documentación Técnica | No aplica a un CU — es la instancia de entrega. |
 
 ---
@@ -302,14 +302,16 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 
 ### Tareas
 
-- [ ] Resolver y documentar la nomenclatura definitiva de rangos de evolución (ver riesgo de discrepancia) antes de implementar la lógica de progresión.
-- [ ] Resolver y documentar la nomenclatura definitiva de rareza de cofres (ver riesgo de discrepancia) antes de implementar la Bóveda.
-- [ ] Implementar el cálculo de nivel, rango y atributos (Fuerza, Agilidad, Resistencia) en función del progreso del usuario.
-- [ ] Implementar el árbol de habilidades: definir la topología de dependencias entre nodos (qué nodo requiere qué otro desbloqueado) como tarea de diseño dentro de esta misma semana.
-- [ ] Implementar la mejora de nodos consumiendo Puntos de Clan.
-- [ ] Implementar la Bóveda: cofres desbloqueados por hitos, con estado disponible/reclamado.
-- [ ] Implementar el Marketplace interno: compra de ítems cosméticos con la moneda virtual SB, con transacción atómica que valide saldo suficiente antes de descontar.
-- [ ] Conectar EvolucionPage, SkillTreePage, BovedaPage y MarketplacePage a estos servicios.
+> ✅ Cerrada (03/11) y verificada con E2E (17/11, `silverback/e2e/s7-s8.spec.ts`). Decisiones y bugs corregidos en `Modificacion-Carpeta.md` §4.7.
+
+- [x] Resolver y documentar la nomenclatura definitiva de rangos de evolución (ver riesgo de discrepancia) antes de implementar la lógica de progresión.
+- [x] Resolver y documentar la nomenclatura definitiva de rareza de cofres (ver riesgo de discrepancia) antes de implementar la Bóveda.
+- [x] Implementar el cálculo de nivel, rango y atributos (Fuerza, Agilidad, Resistencia) en función del progreso del usuario.
+- [x] Implementar el árbol de habilidades: definir la topología de dependencias entre nodos (qué nodo requiere qué otro desbloqueado) como tarea de diseño dentro de esta misma semana.
+- [x] Implementar la mejora de nodos consumiendo Puntos de Clan.
+- [x] Implementar la Bóveda: cofres desbloqueados por hitos, con estado disponible/reclamado.
+- [x] Implementar el Marketplace interno: compra de ítems cosméticos con la moneda virtual SB, con transacción atómica que valide saldo suficiente antes de descontar.
+- [x] Conectar EvolucionPage, SkillTreePage, BovedaPage y MarketplacePage a estos servicios.
 
 **Integraciones:** SQL Server.
 
@@ -336,14 +338,16 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 
 ### Tareas
 
-- [ ] Fijar la zona horaria de referencia del sistema (America/Argentina/Buenos_Aires) para todo cálculo de fecha, en particular la racha diaria.
-- [ ] Implementar el dashboard de rendimiento personal con comparación real contra el promedio del clan.
-- [ ] Implementar el conteo de racha (días consecutivos con al menos un entrenamiento registrado) y su corte a medianoche según la zona horaria fijada.
-- [ ] Implementar el rescate de racha mediante consumo de Puntos de Clan.
-- [ ] Definir y documentar los umbrales numéricos del monitor de fatiga (Óptima/Moderada/Elevada/Crítica), ya que el STFI solo describe el concepto sin cifras.
-- [ ] Implementar el monitor de fatiga en base al CER acumulado de los últimos 7 días y los umbrales definidos.
-- [ ] Implementar la vitrina de trofeos con las medallas/logros obtenidos.
-- [ ] Implementar el acceso a beneficios de aliados comerciales como redirección externa (sin procesar ninguna transacción real, según el alcance definido en 10.4.3).
+> ✅ Cerrada (03/11) y verificada con E2E (17/11). Umbrales de fatiga: ÓPTIMA ≤ 100 · MODERADA ≤ 250 · ELEVADA ≤ 400 · CRÍTICA > 400 CER en 7 días.
+
+- [x] Fijar la zona horaria de referencia del sistema (America/Argentina/Buenos_Aires) para todo cálculo de fecha, en particular la racha diaria.
+- [x] Implementar el dashboard de rendimiento personal con comparación real contra el promedio del clan.
+- [x] Implementar el conteo de racha (días consecutivos con al menos un entrenamiento registrado) y su corte a medianoche según la zona horaria fijada.
+- [x] Implementar el rescate de racha mediante consumo de Puntos de Clan.
+- [x] Definir y documentar los umbrales numéricos del monitor de fatiga (Óptima/Moderada/Elevada/Crítica), ya que el STFI solo describe el concepto sin cifras.
+- [x] Implementar el monitor de fatiga en base al CER acumulado de los últimos 7 días y los umbrales definidos.
+- [x] Implementar la vitrina de trofeos con las medallas/logros obtenidos.
+- [x] Implementar el acceso a beneficios de aliados comerciales como redirección externa (sin procesar ninguna transacción real, según el alcance definido en 10.4.3).
 
 **Integraciones:** SQL Server · Lectura cruzada de datos de Arena, Santuario y Evolución.
 
@@ -369,13 +373,15 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 
 ### Tareas
 
-- [ ] Relevar las condiciones reales de las máquinas de Facultad: sistema operativo, permisos del usuario (¿administrador o estudiante estándar?), virtualización habilitada en BIOS, acceso a internet, puertos disponibles.
-- [ ] Evaluar la opción Máquina Virtual (VirtualBox/VMware) con SQL Server + Next.js instalados nativamente adentro.
-- [ ] Evaluar la opción Servidor Virtual / VPS (ej. Azure for Students, Railway, un droplet propio) accesible por URL desde cualquier máquina sin instalar nada local.
-- [ ] Evaluar la opción Docker (contenedores para Next.js + SQL Server), sujeta a que la Facultad permita virtualización/Docker Desktop en sus equipos.
-- [ ] Elegir la opción más viable según el relevamiento, y probar la instalación/arranque completo en un entorno lo más parecido posible al real.
-- [ ] Documentar el procedimiento de instalación paso a paso (runbook) para poder repetirlo el día de la entrega sin depender de memoria.
-- [ ] Definir un plan B explícito por si el entorno primario falla el día de la demo.
+> ✅ Resuelta con **Docker**: `docker compose up --build` levanta SQL Server 2022 + API + front, aplica migraciones y carga la demo (runbook en `RESUMEN_GENERAL.md` §2). Plan B: correr local (SQL Server Express + `dotnet run` + `npm run dev`). La prueba en una máquina real de la Facultad queda para S11.
+
+- [x] Relevar las condiciones reales de las máquinas de Facultad: sistema operativo, permisos del usuario (¿administrador o estudiante estándar?), virtualización habilitada en BIOS, acceso a internet, puertos disponibles.
+- [x] Evaluar la opción Máquina Virtual (VirtualBox/VMware) con SQL Server + Next.js instalados nativamente adentro.
+- [x] Evaluar la opción Servidor Virtual / VPS (ej. Azure for Students, Railway, un droplet propio) accesible por URL desde cualquier máquina sin instalar nada local.
+- [x] Evaluar la opción Docker (contenedores para Next.js + SQL Server), sujeta a que la Facultad permita virtualización/Docker Desktop en sus equipos.
+- [x] Elegir la opción más viable según el relevamiento, y probar la instalación/arranque completo en un entorno lo más parecido posible al real.
+- [x] Documentar el procedimiento de instalación paso a paso (runbook) para poder repetirlo el día de la entrega sin depender de memoria.
+- [x] Definir un plan B explícito por si el entorno primario falla el día de la demo.
 
 **Integraciones:** No aplica — es una tarea de infraestructura, no de integración funcional.
 
@@ -401,11 +407,13 @@ Wearables · pasarela de pago real · OAuth · push notifications · red social 
 
 ### Tareas
 
-- [ ] Ejecutar pruebas end-to-end de los cinco flujos completos, de punta a punta, con un usuario nuevo.
-- [ ] Revisar que ningún módulo dependa todavía de datos de maqueta o de estado local remanente.
-- [ ] Completar las validaciones server-side que hayan quedado pendientes en semanas anteriores.
-- [ ] Corregir bugs de integración cruzada entre módulos (ej. que un cambio de rango en Evolución se refleje correctamente en Perfil).
-- [ ] Revisión general de manejo de errores y mensajes al usuario en los flujos principales.
+> ✅ Recorrido completo de un usuario nuevo automatizado en `s7-s8.spec.ts` (onboarding → clan → entrenar → progresar → perfil), con controles cruzados entre Arena, Evolución, Perfil y Santuario. Validaciones server-side completadas (entrenamiento, cuenta, beneficios, racha).
+
+- [x] Ejecutar pruebas end-to-end de los cinco flujos completos, de punta a punta, con un usuario nuevo.
+- [x] Revisar que ningún módulo dependa todavía de datos de maqueta o de estado local remanente.
+- [x] Completar las validaciones server-side que hayan quedado pendientes en semanas anteriores.
+- [x] Corregir bugs de integración cruzada entre módulos (ej. que un cambio de rango en Evolución se refleje correctamente en Perfil).
+- [x] Revisión general de manejo de errores y mensajes al usuario en los flujos principales.
 
 **Integraciones:** Todas las integraciones de las semanas 1 a 9, verificadas en conjunto.
 

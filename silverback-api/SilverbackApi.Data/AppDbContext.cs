@@ -19,12 +19,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Nodo> Nodos => Set<Nodo>();
     public DbSet<NodoDependencia> NodoDependencias => Set<NodoDependencia>();
     public DbSet<InversionNodo> InversionesNodo => Set<InversionNodo>();
+    public DbSet<NodoClan> NodosClan => Set<NodoClan>();
     public DbSet<Cofre> Cofres => Set<Cofre>();
     public DbSet<AliadoComercial> AliadosComerciales => Set<AliadoComercial>();
     public DbSet<BeneficioAliado> BeneficiosAliado => Set<BeneficioAliado>();
     public DbSet<ReclamoBeneficio> ReclamosBeneficio => Set<ReclamoBeneficio>();
     public DbSet<Item> Items => Set<Item>();
     public DbSet<InventarioItem> InventarioItems => Set<InventarioItem>();
+    public DbSet<TransaccionMarketplace> TransaccionesMarketplace => Set<TransaccionMarketplace>();
+    public DbSet<SuscripcionActiva> SuscripcionesActivas => Set<SuscripcionActiva>();
     public DbSet<MensajeClan> MensajesClan => Set<MensajeClan>();
     public DbSet<AceptacionDesafio> AceptacionesDesafio => Set<AceptacionDesafio>();
     public DbSet<AdminHistorial> AdminHistorial => Set<AdminHistorial>();
@@ -44,15 +47,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         mb.Entity<Nodo>().Property(n => n.Estado).HasConversion<string>();
         mb.Entity<Cofre>().Property(c => c.Rareza).HasConversion<string>();
         mb.Entity<Cofre>().Property(c => c.Estado).HasConversion<string>();
+        mb.Entity<Cofre>().Property(c => c.Origen).HasConversion<string>();
         mb.Entity<BeneficioAliado>().Property(b => b.Tipo).HasConversion<string>();
         mb.Entity<BeneficioAliado>().Property(b => b.RangoMinimo).HasConversion<string>();
         mb.Entity<BeneficioAliado>().Property(b => b.Estado).HasConversion<string>();
         mb.Entity<Item>().Property(i => i.Categoria).HasConversion<string>();
+        mb.Entity<Item>().Property(i => i.Rareza).HasConversion<string>();
         mb.Entity<MensajeClan>().Property(m => m.Tipo).HasConversion<string>();
 
         mb.Entity<ParticipacionGuerra>().HasKey(p => new { p.GuerraId, p.ClanId });
         mb.Entity<NodoDependencia>().HasKey(n => new { n.NodoId, n.PrerequisiteId });
-        mb.Entity<InversionNodo>().HasKey(i => new { i.MiembroId, i.NodoId });
+        mb.Entity<NodoClan>().HasKey(n => new { n.ClanId, n.NodoId });
+        mb.Entity<InversionNodo>().HasOne(i => i.Clan).WithMany(c => c.InversionesArbol).HasForeignKey(i => i.ClanId).OnDelete(DeleteBehavior.Cascade);
+        mb.Entity<InversionNodo>().HasOne(i => i.Miembro).WithMany(m => m.InversionesNodo).HasForeignKey(i => i.MiembroId).OnDelete(DeleteBehavior.NoAction);
+        mb.Entity<InversionNodo>().HasIndex(i => new { i.ClanId, i.InvertidoEn });
         mb.Entity<InventarioItem>().HasKey(i => new { i.MiembroId, i.ItemId });
         mb.Entity<ReclamoBeneficio>().HasKey(r => new { r.BeneficioId, r.MiembroId });
         mb.Entity<AceptacionDesafio>().HasKey(a => new { a.DesafioId, a.MiembroId });

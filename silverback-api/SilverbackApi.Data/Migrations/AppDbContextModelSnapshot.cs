@@ -96,13 +96,23 @@ namespace SilverbackApi.Data.Migrations
                     b.Property<Guid>("AliadoId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Categoria")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Descripcion")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("Destacado")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Estado")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("FechaVencimiento")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("RangoMinimo")
                         .IsRequired()
@@ -163,11 +173,18 @@ namespace SilverbackApi.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("LlavesRequeridas")
+                        .HasColumnType("int");
+
                     b.Property<Guid>("MiembroId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("ObtendioEn")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Origen")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Rareza")
                         .IsRequired()
@@ -344,6 +361,9 @@ namespace SilverbackApi.Data.Migrations
                     b.Property<Guid>("ItemId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("CompradoEn")
                         .HasColumnType("datetime2");
 
@@ -356,18 +376,35 @@ namespace SilverbackApi.Data.Migrations
 
             modelBuilder.Entity("SilverbackApi.Domain.Models.InversionNodo", b =>
                 {
-                    b.Property<Guid>("MiembroId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("NodoId")
+                    b.Property<Guid>("ClanId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Costo")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("InvertidoEn")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("MiembroId", "NodoId");
+                    b.Property<Guid>("MiembroId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("NivelAlcanzado")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("NodoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MiembroId");
 
                     b.HasIndex("NodoId");
+
+                    b.HasIndex("ClanId", "InvertidoEn");
 
                     b.ToTable("InversionesNodo");
                 });
@@ -395,6 +432,10 @@ namespace SilverbackApi.Data.Migrations
 
                     b.Property<int>("Precio")
                         .HasColumnType("int");
+
+                    b.Property<string>("Rareza")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -455,6 +496,9 @@ namespace SilverbackApi.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<int>("LlavesAcero")
+                        .HasColumnType("int");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -493,16 +537,26 @@ namespace SilverbackApi.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("CostoXp")
+                    b.Property<int>("BonusPorNivel")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CostoPuntos")
                         .HasColumnType("int");
 
                     b.Property<string>("Descripcion")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Efecto")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Estado")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("NivelMaximo")
+                        .HasColumnType("int");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
@@ -511,6 +565,24 @@ namespace SilverbackApi.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Nodos");
+                });
+
+            modelBuilder.Entity("SilverbackApi.Domain.Models.NodoClan", b =>
+                {
+                    b.Property<Guid>("ClanId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("NodoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Nivel")
+                        .HasColumnType("int");
+
+                    b.HasKey("ClanId", "NodoId");
+
+                    b.HasIndex("NodoId");
+
+                    b.ToTable("NodosClan");
                 });
 
             modelBuilder.Entity("SilverbackApi.Domain.Models.NodoDependencia", b =>
@@ -593,6 +665,57 @@ namespace SilverbackApi.Data.Migrations
                     b.HasIndex("MiembroId");
 
                     b.ToTable("ReclamosBeneficio");
+                });
+
+            modelBuilder.Entity("SilverbackApi.Domain.Models.SuscripcionActiva", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AliadoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("FechaFin")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaInicio")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("MiembroId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AliadoId");
+
+                    b.HasIndex("MiembroId");
+
+                    b.ToTable("SuscripcionesActivas");
+                });
+
+            modelBuilder.Entity("SilverbackApi.Domain.Models.TransaccionMarketplace", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MiembroId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("MiembroId");
+
+                    b.ToTable("TransaccionesMarketplace");
                 });
 
             modelBuilder.Entity("SilverbackApi.Domain.Models.Trofeo", b =>
@@ -724,10 +847,16 @@ namespace SilverbackApi.Data.Migrations
 
             modelBuilder.Entity("SilverbackApi.Domain.Models.InversionNodo", b =>
                 {
+                    b.HasOne("SilverbackApi.Domain.Models.Clan", "Clan")
+                        .WithMany("InversionesArbol")
+                        .HasForeignKey("ClanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("SilverbackApi.Domain.Models.Miembro", "Miembro")
                         .WithMany("InversionesNodo")
                         .HasForeignKey("MiembroId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("SilverbackApi.Domain.Models.Nodo", "Nodo")
@@ -735,6 +864,8 @@ namespace SilverbackApi.Data.Migrations
                         .HasForeignKey("NodoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Clan");
 
                     b.Navigation("Miembro");
 
@@ -768,6 +899,25 @@ namespace SilverbackApi.Data.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Clan");
+                });
+
+            modelBuilder.Entity("SilverbackApi.Domain.Models.NodoClan", b =>
+                {
+                    b.HasOne("SilverbackApi.Domain.Models.Clan", "Clan")
+                        .WithMany("NodosArbol")
+                        .HasForeignKey("ClanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SilverbackApi.Domain.Models.Nodo", "Nodo")
+                        .WithMany("NivelesPorClan")
+                        .HasForeignKey("NodoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Clan");
+
+                    b.Navigation("Nodo");
                 });
 
             modelBuilder.Entity("SilverbackApi.Domain.Models.NodoDependencia", b =>
@@ -838,6 +988,44 @@ namespace SilverbackApi.Data.Migrations
                     b.Navigation("Miembro");
                 });
 
+            modelBuilder.Entity("SilverbackApi.Domain.Models.SuscripcionActiva", b =>
+                {
+                    b.HasOne("SilverbackApi.Domain.Models.AliadoComercial", "Aliado")
+                        .WithMany()
+                        .HasForeignKey("AliadoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SilverbackApi.Domain.Models.Miembro", "Miembro")
+                        .WithMany()
+                        .HasForeignKey("MiembroId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Aliado");
+
+                    b.Navigation("Miembro");
+                });
+
+            modelBuilder.Entity("SilverbackApi.Domain.Models.TransaccionMarketplace", b =>
+                {
+                    b.HasOne("SilverbackApi.Domain.Models.Item", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SilverbackApi.Domain.Models.Miembro", "Miembro")
+                        .WithMany()
+                        .HasForeignKey("MiembroId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+
+                    b.Navigation("Miembro");
+                });
+
             modelBuilder.Entity("SilverbackApi.Domain.Models.Trofeo", b =>
                 {
                     b.HasOne("SilverbackApi.Domain.Models.Miembro", "Miembro")
@@ -863,9 +1051,13 @@ namespace SilverbackApi.Data.Migrations
                 {
                     b.Navigation("Desafios");
 
+                    b.Navigation("InversionesArbol");
+
                     b.Navigation("Mensajes");
 
                     b.Navigation("Miembros");
+
+                    b.Navigation("NodosArbol");
 
                     b.Navigation("Participaciones");
                 });
@@ -908,6 +1100,8 @@ namespace SilverbackApi.Data.Migrations
             modelBuilder.Entity("SilverbackApi.Domain.Models.Nodo", b =>
                 {
                     b.Navigation("Inversiones");
+
+                    b.Navigation("NivelesPorClan");
 
                     b.Navigation("RequeridoPor");
 

@@ -40,8 +40,9 @@ public class GuerraRepository(AppDbContext db)
         }
     }
 
-    // S6-Cierre: fija la posición final de cada clan (orden por CER) y marca la guerra como FINALIZADA
-    public async Task Finalizar(Guid guerraId)
+    // S6-Cierre: fija la posición final de cada clan (orden por CER) y marca la guerra como FINALIZADA.
+    // Devuelve los clanes ganadores (el mejor posicionado de cada pareja; SIN RIVAL no gana).
+    public async Task<List<Guid>> Finalizar(Guid guerraId)
     {
         var participaciones = await db.ParticipacionesGuerra
             .Where(p => p.GuerraId == guerraId)
@@ -53,8 +54,15 @@ public class GuerraRepository(AppDbContext db)
             participaciones[i].Posicion = i + 1;
 
         await db.SaveChangesAsync();
-        await db.GuerrasGlobales.Where(g => g.Id == guerraId)
-            .ExecuteUpdateAsync(s => s.SetProperty(g => g.Estado, EstadoGuerra.FINALIZADA));
+        // Atómico: solo quien la pasa de ACTIVA a FINALIZADA reparte premios (dos requests a la vez no duplican)
+        var cerrada = await db.GuerrasGlobales.Where(g => g.Id == guerraId && g.Estado == EstadoGuerra.ACTIVA)
+            .ExecuteUpdateAsync(s => s.SetProperty(g => g.Estado, EstadoGuerra.FINALIZADA)) == 1;
+        if (!cerrada) return [];
+
+        var ganadores = new List<Guid>();
+        for (var i = 0; i + 1 < participaciones.Count; i += 2)
+            ganadores.Add(participaciones[i].ClanId);
+        return ganadores;
     }
 
     // S6-Atomico: UPDATE ... SET CerAcumulado = CerAcumulado + @cer (sin leer-modificar-guardar).

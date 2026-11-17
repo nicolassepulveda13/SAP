@@ -1,4 +1,4 @@
-﻿# 10.5.4 — Diagramas de Secuencia: CU-005 PERFIL
+# 10.5.4 — Diagramas de Secuencia: CU-005 PERFIL
 
 **Tipo:** Diagramas de secuencia de diseño (no de sistema)
 **Convención:** Page → Service → Repository → SQL Server (DB)
@@ -7,6 +7,8 @@
 ---
 
 ## CU-005 — PERFIL
+
+> **Actualizado 17/11 (alineado con la carpeta):** dashboard comparativo 2×2 (RF-007), racha en hora Argentina con rescate y "DEJAR MORIR LA RACHA", fatiga relativa al peso corporal con protocolo y tendencia (RF-009), vitrina con victorias, beneficios por rango con vencimiento y suscripción (RF-016), cuenta con confirmación de contraseña.
 
 ---
 
@@ -18,52 +20,45 @@
 actor Miembro
 
 box "Presentación" #F5F0FF
-  participant "PerfilPage" as Page
+  participant "DashboardPage" as Page
 end box
 
 box "Servicios" #EBFBF0
   participant "PerfilService" as Svc
+  participant "EvolucionService" as Evo
 end box
 
 box "Repositorios" #FFF3EB
   participant "MiembroRepository" as MiembroRepo
-  participant "EntrenamientoRepository" as EntreRepo
-  participant "RachaRepository" as RachaRepo
+  participant "ClanRepository" as ClanRepo
+  participant "EntrenamientoRepository" as EntRepo
 end box
 
 box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
-Miembro -> Page: navegar a Perfil
-Page -> Svc: cargarDashboard(miembroId): Promise~DashboardData~
-
-group Carga en paralelo
-    Svc -> MiembroRepo: buscarPorId(miembroId): Promise~Miembro~
-    MiembroRepo -> DB: SELECT xp, rango, arquetipo, coins WHERE id = miembroId
-    DB --> MiembroRepo: Miembro
-    MiembroRepo --> Svc: Miembro
-== ==
-    Svc -> EntreRepo: listar(miembroId, filtros, 1): Promise~Entrenamiento[]~
-    EntreRepo -> DB: SELECT * FROM entrenamientos WHERE miembro_id = miembroId ORDER BY fecha DESC LIMIT 10
-    DB --> EntreRepo: Entrenamiento[]
-    EntreRepo --> Svc: Entrenamiento[]
-== ==
-    Svc -> RachaRepo: obtenerPorMiembro(miembroId): Promise~Racha~
-    RachaRepo -> DB: SELECT dias_consecutivos, estado, ultimo_entrenamiento WHERE miembro_id = miembroId
-    DB --> RachaRepo: Racha
-    RachaRepo --> Svc: Racha
+Miembro -> Page: accede a Perfil (o RENDIMIENTO desde Evolución)
+Page -> Svc: cargarDashboard(miembroId): DashboardData
+Svc -> MiembroRepo: buscarPorId(miembroId)
+Svc -> ClanRepo: buscarPorId(clanId) (con miembros)
+Svc -> EntRepo: listarDeMiembros(idsDelClan): Entrenamiento[]
+EntRepo -> DB: SELECT * FROM entrenamientos WHERE miembro_id IN (miembros del clan)
+DB --> EntRepo: Entrenamiento[]
+Svc -> Svc: Índice de Dominancia = percentil del CER de 7 días dentro del clan
+Svc -> Evo: calcularAtributos(historial) por miembro
+Svc -> Svc: radar FUERZA BRUTA / RESISTENCIA / AGILIDAD / TÉCNICA (usuario vs. promedio, 0–100)
+Svc -> Svc: volumen total (kg × reps) vs. promedio del clan
+Svc -> Svc: CER: Capacidad (vs. CER máximo del clan) · Eficiencia (vs. promedio) · Recuperación (100 − carga %)
+Svc --> Page: DashboardData + timestamp del cálculo
+Page --> Miembro: grilla 2×2: DOMINANCIA · PERFIL TÁCTICO · VOLUMEN TOTAL (KG) · PUNTAJE C.E.R.
+alt menos de 3 sesiones (FA-1)
+    Page --> Miembro: "--" e invitación a registrar 3 sesiones
 end
-
-Svc -> Svc: construirDashboard(miembro, entrenamientos, racha): DashboardData
-Svc --> Page: DashboardData
-Page --> Miembro: renderiza gráfico CER + tabla de sesiones + estado de racha
 
 @enduml
 ```
 
-
-https://www.sportograf.com/img/thumbnail/25111/search/SGF6272d9e5
 ---
 
 ### CU-005-002 — Consultar Racha de Entrenamiento
@@ -79,30 +74,36 @@ end box
 
 box "Servicios" #EBFBF0
   participant "PerfilService" as Svc
+  participant "HoraArgentina" as Hora
 end box
 
 box "Repositorios" #FFF3EB
-  participant "RachaRepository" as Repo
+  participant "RachaRepository" as RachaRepo
 end box
 
 box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
-Miembro -> Page: navegar a sección Racha
-Page -> Svc: consultarRacha(miembroId): Promise~Racha~
-Svc -> Repo: obtenerPorMiembro(miembroId): Promise~Racha~
-Repo -> DB: SELECT dias_consecutivos, estado, ultimo_entrenamiento, historial_dias WHERE miembro_id = miembroId
-DB --> Repo: Racha
-Repo --> Svc: Racha
+Miembro -> Page: botón de racha en el Santuario o "Racha" en la barra lateral
+Page -> Svc: consultarRacha(miembroId): Racha
+Svc -> RachaRepo: obtenerPorMiembro(miembroId)
+RachaRepo -> DB: SELECT * FROM rachas WHERE miembro_id = miembroId
+DB --> RachaRepo: Racha
+Svc -> Hora: hoy() · fechaDe(ultimoEntrenamiento)
+alt último entrenamiento hoy
+    Svc -> Svc: ACTIVA
+else último ayer
+    Svc -> Svc: EN_RIESGO
+else antes de ayer
+    Svc -> RachaRepo: crearOActualizar(dias = 0, ROTA)
+    RachaRepo -> DB: UPDATE rachas SET dias_consecutivos = 0, estado = 'ROTA'
+end
 Svc --> Page: Racha
-
-alt estado === EstadoRacha.ACTIVA
-    Page --> Miembro: racha activa con días consecutivos y calendario marcado
-else estado === EstadoRacha.EN_RIESGO
-    Page --> Miembro: alerta "Último día para mantener tu racha" + días consecutivos
-else estado === EstadoRacha.ROTA
-    Page --> Miembro: racha rota + botón "SALVAR RACHA" con costo en Clan Points
+alt EN_RIESGO
+    Page --> Miembro: "RACHA ACTUAL", días, banner "RACHA A PUNTO DE PERDERSE", SALVAR RACHA "50 pts (Tienes: X pts)", "DEJAR MORIR LA RACHA"
+else ya entrenó hoy (FA-1) o 0 días (FA-2)
+    Page --> Miembro: contador sin banner ni opciones
 end
 
 @enduml
@@ -126,46 +127,37 @@ box "Servicios" #EBFBF0
 end box
 
 box "Repositorios" #FFF3EB
+  participant "MiembroRepository" as MiembroRepo
   participant "ClanRepository" as ClanRepo
   participant "RachaRepository" as RachaRepo
-  participant "MiembroRepository" as MiembroRepo
 end box
 
 box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
-Miembro -> Page: presiona "SALVAR RACHA"
-Page --> Miembro: muestra modal con costo en Clan Points
-Miembro -> Page: confirma acción
-Page -> Svc: salvarRacha(miembroId, clanId): Promise~void~
-
-Svc -> ClanRepo: buscarPorId(clanId): Promise~Clan~
-ClanRepo -> DB: SELECT clan_points WHERE id = clanId
-DB --> ClanRepo: Clan
-ClanRepo --> Svc: Clan
-
-alt clan.puntosClan >= COSTO_SALVAR_RACHA
-    Svc -> ClanRepo: descontarPuntos(clanId, costo): Promise~void~
-    ClanRepo -> DB: UPDATE clanes SET clan_points = clan_points - costo WHERE id = clanId
-    DB --> ClanRepo: OK
-    ClanRepo --> Svc: void
-
-    Svc -> RachaRepo: restaurar(miembroId): Promise~Racha~
-    RachaRepo -> DB: UPDATE rachas SET estado = 'ACTIVA', dias_consecutivos = 1 WHERE miembro_id = miembroId
-    DB --> RachaRepo: Racha
-    RachaRepo --> Svc: Racha
-
-    Svc -> MiembroRepo: actualizar(miembroId, evento): Promise~void~
-    MiembroRepo -> DB: INSERT INTO eventos_miembro (miembro_id, tipo, descripcion)
-    DB --> MiembroRepo: OK
-    MiembroRepo --> Svc: void
-
-    Svc --> Page: racha restaurada
-    Page --> Miembro: "¡Racha salvada!" — estado vuelve a ACTIVA
-else puntos insuficientes
-    Svc --> Page: throw ClanPointsInsuficientesError
-    Page --> Miembro: "Tu clan no tiene puntos suficientes para salvar la racha"
+alt SALVAR RACHA
+    Miembro -> Page: SALVAR RACHA
+    Page -> Svc: salvarRacha(miembroId)
+    Svc -> MiembroRepo: buscarPorId(miembroId): Miembro (clan propio)
+    Svc -> Svc: consultarRacha(miembroId) — debe estar EN_RIESGO
+    Svc -> ClanRepo: descontarPuntos(clanDelMiembro, 50)
+    ClanRepo -> DB: UPDATE clanes SET puntos_clan = puntos_clan - 50 WHERE id = clanId AND puntos_clan >= 50
+    alt 0 filas: saldo insuficiente (FA-1)
+        Svc --> Page: "Puntos de clan insuficientes"
+        Page --> Miembro: botón deshabilitado + cómo ganar puntos
+    else
+        Svc -> RachaRepo: restaurar(miembroId, ahora)
+        RachaRepo -> DB: UPDATE rachas SET estado = 'ACTIVA', ultimo_entrenamiento = ahora
+        Svc --> Page: OK
+        Page --> Miembro: redirige al Santuario: "¡Racha salvada!" y botón de racha sin alerta
+    end
+else DEJAR MORIR LA RACHA (FA-2)
+    Miembro -> Page: DEJAR MORIR LA RACHA
+    Page -> Svc: dejarMorirRacha(miembroId)
+    Svc -> RachaRepo: crearOActualizar(dias = 0, ROTA)
+    RachaRepo -> DB: UPDATE rachas SET dias_consecutivos = 0
+    Page --> Miembro: contador en 0, sin cargo
 end
 
 @enduml
@@ -189,43 +181,32 @@ box "Servicios" #EBFBF0
 end box
 
 box "Repositorios" #FFF3EB
+  participant "EntrenamientoRepository" as EntRepo
+  participant "BiometricosRepository" as BioRepo
   participant "FatigaRepository" as FatigaRepo
-  participant "EntrenamientoRepository" as EntreRepo
 end box
 
 box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
-Miembro -> Page: navegar a sección Fatiga
-Page -> Svc: cargarFatiga(miembroId): Promise~DatosFatiga~
-
-group Carga en paralelo
-    Svc -> FatigaRepo: obtenerPorMiembro(miembroId): Promise~DatosFatiga~
-    FatigaRepo -> DB: SELECT nivel_fatiga, fc_reposo, calidad_sueno WHERE miembro_id = miembroId
-    DB --> FatigaRepo: DatosFatiga
-    FatigaRepo --> Svc: DatosFatiga
-== ==
-    Svc -> EntreRepo: obtenerEstadisticas(miembroId): Promise~Object~
-    EntreRepo -> DB: SELECT SUM(carga_total) FROM entrenamientos WHERE fecha >= NOW() - INTERVAL 7 DAYS
-    DB --> EntreRepo: cargaSemanal: number
-    EntreRepo --> Svc: cargaSemanal
+Miembro -> Page: "Fatiga" en la barra lateral
+Page -> Svc: cargarFatiga(miembroId): FatigaVista
+Svc -> EntRepo: obtenerEstadisticas(miembroId) — CER de los últimos 7 días
+Svc -> BioRepo: obtenerPorMiembro(miembroId) — peso corporal y fecha de actualización
+Svc -> Svc: carga relativa = CER 7 días / peso (kg) → ÓPTIMA ≤ 40 · MODERADA ≤ 70 · ELEVADA ≤ 100 · CRÍTICA
+Svc -> FatigaRepo: actualizarOCrear(miembroId, carga, nivel)
+FatigaRepo -> DB: UPDATE / INSERT datos_fatiga
+Svc -> EntRepo: listarDesde(lunes 00:00 ART) → CER por día (tendencia semanal)
+Svc --> Page: FatigaVista
+alt CRÍTICA
+    Page --> Miembro: "ALTO RIESGO DE FATIGA", CARGA %, "! SOBRECARGA DETECTADA", PROTOCOLO "MANDATO" (intensidad 50 %, movilidad, hidratación)
+else ÓPTIMA (FA-1)
+    Page --> Miembro: "ESTADO ÓPTIMO" en verde y mensaje positivo
 end
-
-Svc -> Svc: evaluarFatiga(datos: DatosFatiga, cargaSemanal): EstadoFatiga
-
-alt estadoFatiga === EstadoFatiga.OPTIMA
-    Svc --> Page: DatosFatiga
-    Page --> Miembro: indicador verde + recomendación de entrenar normalmente
-else estadoFatiga === EstadoFatiga.MODERADA
-    Svc --> Page: DatosFatiga
-    Page --> Miembro: indicador amarillo + alerta de carga moderada
-else estadoFatiga === EstadoFatiga.ELEVADA
-    Svc --> Page: DatosFatiga
-    Page --> Miembro: indicador naranja + recomendación de recuperación
-else estadoFatiga === EstadoFatiga.CRITICA
-    Svc --> Page: DatosFatiga
-    Page --> Miembro: indicador rojo + alerta crítica de descanso
+Page --> Miembro: TENDENCIA SEMANAL (hoy en naranja, días futuros punteados)
+alt biometría con más de 90 días (FA-2)
+    Page --> Miembro: advertencia de sincronización pendiente
 end
 
 @enduml
@@ -246,35 +227,29 @@ end box
 
 box "Servicios" #EBFBF0
   participant "PerfilService" as Svc
+  participant "GuerraService" as Guerra
 end box
 
 box "Repositorios" #FFF3EB
-  participant "TrofeoRepository" as Repo
+  participant "TrofeoRepository" as TrofeoRepo
 end box
 
 box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
-Miembro -> Page: navegar a sección Trofeos
-Page -> Svc: cargarTrofeos(miembroId): Promise~Trofeo[]~
-Svc -> Repo: listarPorMiembro(miembroId): Promise~Trofeo[]~
-Repo -> DB: SELECT nombre, descripcion, tipo, fecha_obtencion FROM trofeos WHERE miembro_id = miembroId ORDER BY fecha_obtencion DESC
-DB --> Repo: Trofeo[]
-Repo --> Svc: Trofeo[]
-
-alt trofeos.length === 0
-    Svc --> Page: []
-    Page --> Miembro: "Completá desafíos para ganar tu primer trofeo"
-else trofeos.length > 0
-    Svc -> Repo: obtenerProgreso(miembroId): Promise~Object~
-    Repo -> DB: SELECT * FROM trofeos_disponibles WHERE id NOT IN (trofeos del miembro) LIMIT 1
-    DB --> Repo: Trofeo próximo | null
-    Repo --> Svc: Trofeo próximo
-
-    Svc -> Svc: calcularProgresoHaciaProximo(miembroId, proximo): number
-    Svc --> Page:
-    Page --> Miembro: grilla de trofeos + barra de progreso hacia el próximo
+Miembro -> Page: "Trofeos" en la barra lateral
+Page -> Svc: cargarTrofeos(miembroId): Trofeo[]
+Svc -> TrofeoRepo: listarPorMiembro(miembroId)
+TrofeoRepo -> DB: SELECT * FROM trofeos WHERE miembro_id = miembroId
+DB --> TrofeoRepo: Trofeo[]
+Page -> Guerra: obtenerHistorialBatallas(clanId) → victorias
+Page --> Miembro: "VITRINA DE TROFEOS", "LOGROS DE COMBATE", VICTORIAS, rango, trofeo destacado y grilla
+alt sin trofeos (FA-1)
+    Page --> Miembro: "Aún no tienes trofeos. Participa en la Arena para comenzar tu historia."
+end
+alt clic en un trofeo (FA-2)
+    Page --> Miembro: modal con fecha de obtención y condiciones cumplidas
 end
 
 @enduml
@@ -298,67 +273,35 @@ box "Servicios" #EBFBF0
 end box
 
 box "Repositorios" #FFF3EB
-  participant "BeneficioRepository" as BeneficioRepo
+  participant "BeneficioRepository" as BenRepo
   participant "MiembroRepository" as MiembroRepo
-end box
-
-box "Externo" #FEFCE8
-  participant "AliadoComercial (externo)" as Aliado
 end box
 
 box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
-Miembro -> Page: navegar a sección Beneficios
-Page -> Svc: cargarBeneficios(miembroId): Promise~BeneficioAliado[]~
-Svc -> MiembroRepo: buscarPorId(miembroId): Promise~Miembro~
-MiembroRepo -> DB: SELECT rango FROM miembros WHERE id = miembroId
-DB --> MiembroRepo: Miembro
-MiembroRepo --> Svc: Miembro
-Svc -> BeneficioRepo: listarElegibles(miembroId, rango): Promise~BeneficioAliado[]~
-BeneficioRepo -> DB: SELECT * FROM beneficios WHERE rango_minimo <= rango AND estado = 'DISPONIBLE'
-DB --> BeneficioRepo: BeneficioAliado[]
-BeneficioRepo --> Svc: BeneficioAliado[]
-Svc --> Page: BeneficioAliado[]
-Page --> Miembro: lista de beneficios filtrados por rango
-
-Miembro -> Page: selecciona beneficio con EstadoBeneficio.DISPONIBLE
-Page -> Svc: reclamarBeneficio(beneficioId, miembroId): Promise~ResultadoReclamo~
-Svc -> BeneficioRepo: listarElegibles(miembroId, rango): Promise~BeneficioAliado[]~
-BeneficioRepo -> DB: SELECT rango_minimo FROM beneficios WHERE id = beneficioId
-DB --> BeneficioRepo: elegible: boolean
-BeneficioRepo --> Svc: esElegible
-
-alt esElegible === false
-    Svc --> Page: throw RangoInsuficienteError
-    Page --> Miembro: "Necesitás un rango mayor para reclamar este beneficio"
-else esElegible === true
-    Svc -> BeneficioRepo: registrarReclamo(beneficioId, miembroId): Promise~void~
-    BeneficioRepo -> DB: UPDATE beneficios SET estado = 'RECLAMADO', fecha_reclamo = NOW() WHERE id = beneficioId
-    DB --> BeneficioRepo: OK
-    BeneficioRepo --> Svc: void
-
-    alt tipoBeneficio === TipoBeneficio.CODIGO
-        Svc --> Page: ResultadoReclamo
-        Page --> Miembro: muestra código de descuento en pantalla
-    else tipoBeneficio === TipoBeneficio.REDIRECCION
-        Svc -> Aliado: generarUrlRedireccion(beneficioId, miembroId): Promise~string~
-        Aliado --> Svc: urlRedireccion: string
-        Svc --> Page: ResultadoReclamo
-        Page --> Miembro: abre navegador externo con URL del aliado
-    else tipoBeneficio === TipoBeneficio.CUPON
-        Svc -> Svc: generarCupon(beneficioId, miembroId): string
-        Svc --> Page: ResultadoReclamo
-        Page --> Miembro: renderiza imagen del cupón descargable
-    else tipoBeneficio === TipoBeneficio.SUSCRIPCION
-        Svc -> BeneficioRepo: actualizarEstado(beneficioId, datos): Promise~void~
-        BeneficioRepo -> DB: INSERT INTO suscripciones_activas (miembro_id, aliado_id, fecha_fin)
-        DB --> BeneficioRepo: OK
-        BeneficioRepo --> Svc: void
-        Svc --> Page: ResultadoReclamo
-        Page --> Miembro: confirmación de suscripción activa con fecha de vencimiento
+Miembro -> Page: "Beneficios" en la barra lateral
+Page -> Svc: cargarBeneficios(miembroId): BeneficioVista[]
+Svc -> BenRepo: expirarVencidos(ahora)
+BenRepo -> DB: UPDATE beneficios_aliado SET estado = 'EXPIRADO' WHERE fecha_vencimiento < ahora
+Svc -> BenRepo: listar(miembroId) · suscripcionesVigentes(miembroId)
+BenRepo -> DB: SELECT beneficios + aliado + reclamo del miembro · SELECT suscripciones activas
+Svc -> Svc: estado por beneficio: DISPONIBLE · RECLAMADO · BLOQUEADO (rango) · EXPIRADO
+Page --> Miembro: DESTACADO, FILTROS por categoría, vencimientos, bloqueados con el nivel requerido
+alt BLOQUEADO (FA-1) o EXPIRADO (FA-2)
+    Page --> Miembro: botón sin acción
+else DESBLOQUEAR CÓDIGO / CANJEAR → / COPIAR CUPÓN / ACTIVAR OFERTA
+    Miembro -> Page: acción del beneficio
+    Page -> Svc: reclamarBeneficio(beneficioId, miembroId)
+    Svc -> BenRepo: registrarReclamo(beneficioId, miembroId)
+    BenRepo -> DB: INSERT INTO reclamo_beneficio (PK beneficio + miembro)
+    opt tipo SUSCRIPCION
+        Svc -> BenRepo: crearSuscripcion(miembroId, aliadoId, 30 días)
+        BenRepo -> DB: INSERT INTO suscripcion_activa
     end
+    Svc --> Page: código + URL del aliado
+    Page --> Miembro: muestra el código / lo copia / abre la plataforma del aliado / "SUSCRIPCIÓN ACTIVA HASTA"
 end
 
 @enduml
@@ -368,23 +311,13 @@ end
 
 ### CU-005-007 — Gestionar Datos de Cuenta
 
-> **Agregado S2 (C-26).** Origen: `Modificacion-Carpeta.md`.
-
 ```plantuml
 @startuml CU-005-007
 
 actor Miembro
 
 box "Presentación" #F5F0FF
-  participant "CuentaPage\n(/perfil/cuenta)" as Page
-end box
-
-box "Server Actions" #FAF5FF
-  participant "actualizarCuenta()\n[perfil.ts]" as Action
-end box
-
-box "API Controller" #ECFEFF
-  participant "PerfilController" as Ctrl
+  participant "CuentaPage" as Page
 end box
 
 box "Servicios" #EBFBF0
@@ -392,99 +325,36 @@ box "Servicios" #EBFBF0
 end box
 
 box "Repositorios" #FFF3EB
-  participant "MiembroRepository" as Repo
+  participant "MiembroRepository" as MiembroRepo
 end box
 
 box "Base de Datos" #F3F4F6
   database "SQL Server" as DB
 end box
 
-Miembro -> Page: abrirPantalla(/perfil/cuenta)
-Page -> Action: getMiembroPerfil(miembroId)
-Action -> Ctrl: GET /api/perfil/cuenta\nAuthorization: Bearer sb_token
-Ctrl -> Svc: ObtenerDatosCuenta(miembroId)
-Svc -> Repo: ObtenerPorId(miembroId)
-Repo -> DB: SELECT nombre, email FROM Miembros WHERE Id = miembroId
-DB --> Repo: Miembro
-Repo --> Svc: Miembro
-Svc --> Ctrl: { nombre, email }
-Ctrl --> Action: 200 OK { nombre, email }
-Action --> Page: datos actuales
-Page --> Miembro: mostrarFormulario(nombre, email, secciónContraseña)
-
-== Cambio de nombre / email ==
-
-Miembro -> Page: modificarCampo(nombre | email)
-Miembro -> Page: presionarGuardarCambios()
-Page -> Action: actualizarCuenta(formData)
-Action -> Action: validarCampos(nombre, email)
-
-alt campo inválido
-    Action --> Page: { error: mensaje }
-    Page --> Miembro: mostrarError(mensaje)
-else campos válidos
-    Action -> Ctrl: PATCH /api/perfil/cuenta\n{ nombre?, email? }\nAuthorization: Bearer sb_token
-    Ctrl -> Svc: ActualizarDatos(miembroId, nombre, email)
-    Svc -> Repo: Actualizar(miembroId, datos)
-    Repo -> DB: UPDATE Miembros SET nombre, email WHERE Id = miembroId
-
-    alt email ya en uso
-        DB --> Repo: UniqueConstraintException
-        Repo --> Svc: throw RepositoryException("email duplicado")
-        Svc --> Ctrl: throw ServiceException
-        Ctrl --> Action: 409 Conflict { error: "Este email ya está en uso." }
-        Action --> Page: { error: "Este email ya está en uso." }
-        Page --> Miembro: mostrarError()
-    else actualización exitosa
-        DB --> Repo: ok
-        Repo --> Svc: ok
-        Svc --> Ctrl: ok
-        Ctrl --> Action: 200 OK
-        Action --> Page: éxito
-        Page --> Miembro: mostrarConfirmacion("Datos actualizados correctamente.")
+Miembro -> Page: /perfil/cuenta
+alt GUARDAR CAMBIOS (nombre / email)
+    Page -> Svc: actualizarCuenta(miembroId, nombre, email)
+    Svc -> MiembroRepo: buscarPorEmail(email)
+    alt email de otra cuenta (FA-1)
+        Svc --> Page: "Este email ya está en uso."
+    else
+        Svc -> MiembroRepo: actualizarDatosCuenta(miembroId, nombre, email)
+        MiembroRepo -> DB: UPDATE miembros SET nombre, email
+        Page --> Miembro: "Datos actualizados."
     end
-end
-
-== Cambio de contraseña ==
-
-Miembro -> Page: expandirSeccionContrasena()
-Miembro -> Page: ingresarDatos(passwordActual, passwordNueva, passwordConfirm)
-Miembro -> Page: presionarActualizarContrasena()
-
-Page -> Action: cambiarPassword(formData)
-Action -> Action: validar(passwordNueva === passwordConfirm)
-
-alt contraseñas no coinciden
-    Action --> Page: { error: "Las contraseñas no coinciden." }
-    Page --> Miembro: resaltarCamposError()
-else coinciden
-    Action -> Ctrl: PATCH /api/perfil/contrasena\n{ passwordActual, passwordNueva }\nAuthorization: Bearer sb_token
-    Ctrl -> Svc: CambiarPassword(miembroId, passwordActual, passwordNueva)
-    Svc -> Repo: ObtenerHashPassword(miembroId)
-    Repo -> DB: SELECT password_hash FROM Miembros WHERE Id = miembroId
-    DB --> Repo: hash
-    Repo --> Svc: hash
-    Svc -> Svc: verificarBcrypt(passwordActual, hash)
-
-    alt contraseña actual incorrecta
-        Svc --> Ctrl: throw UnauthorizedException
-        Ctrl --> Action: 401 { error: "Contraseña actual incorrecta." }
-        Action --> Page: { error: "Contraseña actual incorrecta." }
-        Page --> Miembro: mostrarError()
-    else contraseña correcta
-        Svc -> Svc: hashBcrypt(passwordNueva)
-        Svc -> Repo: ActualizarPassword(miembroId, nuevoHash)
-        Repo -> DB: UPDATE Miembros SET password_hash WHERE Id = miembroId
-        DB --> Repo: ok
-        Repo --> Svc: ok
-        Svc --> Ctrl: ok
-        Ctrl --> Action: 200 OK
-        Action --> Page: éxito
-        Page --> Miembro: mostrarConfirmacion("Contraseña actualizada.")
+else CAMBIAR CONTRASEÑA → ACTUALIZAR CONTRASEÑA
+    Page -> Svc: cambiarPassword(miembroId, actual, nueva, confirmación)
+    alt actual incorrecta (FA-2)
+        Svc --> Page: "Contraseña actual incorrecta."
+    else nueva ≠ confirmación (FA-3)
+        Svc --> Page: "Las contraseñas nuevas no coinciden." (se resaltan ambos campos)
+    else
+        Svc -> MiembroRepo: actualizarPassword(miembroId, BCrypt(nueva))
+        MiembroRepo -> DB: UPDATE miembros SET password_hash
+        Page --> Miembro: "Contraseña actualizada."
     end
 end
 
 @enduml
 ```
-
----

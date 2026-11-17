@@ -27,6 +27,37 @@ public class MiembroRepository(AppDbContext db)
         db.Miembros.Where(m => m.Id == id)
             .ExecuteUpdateAsync(s => s.SetProperty(m => m.Coins, m => m.Coins + delta));
 
+    // Atómicos: gastan solo si alcanza, en un único UPDATE (evita doble gasto con dos requests en paralelo)
+    public async Task<bool> GastarCoins(Guid id, int monto) =>
+        await db.Miembros.Where(m => m.Id == id && m.Coins >= monto)
+            .ExecuteUpdateAsync(s => s.SetProperty(m => m.Coins, m => m.Coins - monto)) == 1;
+
+    public async Task<bool> GastarXp(Guid id, int monto) =>
+        await db.Miembros.Where(m => m.Id == id && m.Xp >= monto)
+            .ExecuteUpdateAsync(s => s.SetProperty(m => m.Xp, m => m.Xp - monto)) == 1;
+
+    // Lectura sin tracking: los ExecuteUpdate no refrescan entidades ya cargadas en el contexto
+    public async Task<(int Xp, Rango Rango)> ObtenerXpYRango(Guid id)
+    {
+        var m = await db.Miembros.AsNoTracking().Where(m => m.Id == id).Select(m => new { m.Xp, m.Rango }).FirstAsync();
+        return (m.Xp, m.Rango);
+    }
+
+    public Task<List<Guid>> IdsDeClan(Guid clanId) =>
+        db.Miembros.Where(m => m.ClanId == clanId).Select(m => m.Id).ToListAsync();
+
+    public Task SumarLlaves(Guid id, int cantidad) =>
+        db.Miembros.Where(m => m.Id == id)
+            .ExecuteUpdateAsync(s => s.SetProperty(m => m.LlavesAcero, m => m.LlavesAcero + cantidad));
+
+    public async Task<bool> GastarLlaves(Guid id, int cantidad) =>
+        await db.Miembros.Where(m => m.Id == id && m.LlavesAcero >= cantidad)
+            .ExecuteUpdateAsync(s => s.SetProperty(m => m.LlavesAcero, m => m.LlavesAcero - cantidad)) == 1;
+
+    public Task ActualizarRango(Guid id, Rango rango) =>
+        db.Miembros.Where(m => m.Id == id)
+            .ExecuteUpdateAsync(s => s.SetProperty(m => m.Rango, rango));
+
     public Task ActualizarClan(Guid id, Guid? clanId) =>
         db.Miembros.Where(m => m.Id == id)
             .ExecuteUpdateAsync(s => s.SetProperty(m => m.ClanId, clanId));

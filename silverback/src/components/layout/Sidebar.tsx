@@ -37,7 +37,7 @@ const secciones = [
       { label: "Progreso", href: "/evolucion", icon: Flame },
       { label: "Árbol de Habilidades", href: "/evolucion/habilidades", icon: LayoutGrid },
       { label: "Bóveda", href: "/evolucion/botin", icon: Package },
-      { label: "Marketplace", href: "/evolucion/tienda", icon: Zap },
+      { label: "Mercado", href: "/evolucion/tienda", icon: Zap },
     ],
   },
   {

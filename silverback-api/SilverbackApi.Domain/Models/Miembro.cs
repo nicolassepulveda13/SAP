@@ -11,6 +11,8 @@ public class Miembro
     public Arquetipo? Arquetipo { get; set; }
     public int Xp { get; set; } = 0;
     public int Coins { get; set; } = 0;
+    // CU-004-003: Llaves de Acero para abrir cofres bloqueados (1 cada 5 entrenamientos)
+    public int LlavesAcero { get; set; } = 0;
     public Guid? ClanId { get; set; }
     public bool OnboardingCompletado { get; set; } = false;
     public DateTime CreadoEn { get; set; } = DateTime.UtcNow;

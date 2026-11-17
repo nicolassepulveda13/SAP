@@ -24,6 +24,22 @@ public class EntrenamientoRepository(AppDbContext db)
             .Take(porPagina)
             .ToListAsync();
 
+    public Task<int> Contar(Guid miembroId) =>
+        db.Entrenamientos.CountAsync(e => e.MiembroId == miembroId);
+
+    public async Task<decimal> CerTotal(Guid miembroId) =>
+        await db.Entrenamientos.Where(e => e.MiembroId == miembroId).SumAsync(e => (decimal?)e.PuntajeCer) ?? 0;
+
+    // Historial completo (atributos y dashboard). Volumen acotado: un miembro registra pocas sesiones por día.
+    public Task<List<Entrenamiento>> ListarTodos(Guid miembroId) =>
+        db.Entrenamientos.AsNoTracking().Where(e => e.MiembroId == miembroId).ToListAsync();
+
+    public Task<List<Entrenamiento>> ListarDeMiembros(IEnumerable<Guid> miembroIds) =>
+        db.Entrenamientos.AsNoTracking().Where(e => miembroIds.Contains(e.MiembroId)).ToListAsync();
+
+    public Task<List<Entrenamiento>> ListarDesde(Guid miembroId, DateTime desdeUtc) =>
+        db.Entrenamientos.AsNoTracking().Where(e => e.MiembroId == miembroId && e.FechaHora >= desdeUtc).ToListAsync();
+
     public async Task<EstadisticasEntrenamiento> ObtenerEstadisticas(Guid miembroId)
     {
         var hace7Dias = DateTime.UtcNow.AddDays(-7);

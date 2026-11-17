@@ -1,6 +1,9 @@
 // Docker: al arrancar la API aplica las migraciones pendientes y, si la base está vacía, carga datos de demo.
 // Se activa con Database:MigrarAlIniciar=true y Database:SembrarDemo=true (variables de entorno en docker-compose).
 // En desarrollo local queda apagado: las migraciones se siguen aplicando con `dotnet ef database update`.
+// S7-Fix: el catálogo (nodos, ítems, aliados y beneficios) es dato de referencia, no de demo: se siembra SIEMPRE
+// que esté vacío, en Docker y en local. Antes solo existía con la demo de Docker y en local el árbol,
+// el Marketplace y los Beneficios quedaban vacíos.
 using Microsoft.EntityFrameworkCore;
 using SilverbackApi.Data;
 using SilverbackApi.Domain;
@@ -16,12 +19,21 @@ public static class DbInicializador
     public static async Task EjecutarAsync(WebApplication app)
     {
         var config = app.Configuration;
-        if (!config.GetValue<bool>("Database:MigrarAlIniciar")) return;
-
         var log = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("DbInicializador");
-        await MigrarConReintentos(app.Services, log);
+        if (config.GetValue<bool>("Database:MigrarAlIniciar"))
+            await MigrarConReintentos(app.Services, log);
 
-        if (!config.GetValue<bool>("Database:SembrarDemo")) return;
+        try
+        {
+            using var scope = app.Services.CreateScope();
+            await SembrarCatalogo(scope.ServiceProvider.GetRequiredService<AppDbContext>(), log);
+        }
+        catch (Exception ex)
+        {
+            log.LogError(ex, "No se pudo sembrar el catálogo (¿faltan migraciones?). La API sigue funcionando.");
+        }
+
+        if (!config.GetValue<bool>("Database:MigrarAlIniciar") || !config.GetValue<bool>("Database:SembrarDemo")) return;
         try
         {
             await SembrarDemo(app.Services, log);
@@ -93,42 +105,69 @@ public static class DbInicializador
         await Accion(sp => Are(sp).RegistrarEntrenamiento(recluta, "PRESS BANCA", 60, 10));
         await Accion(sp => Are(sp).RegistrarEntrenamiento(rival, "PESO MUERTO", 90, 6));
 
-        // S7: catálogo de Evolución (nodos del árbol de habilidades, ítems del Marketplace, un cofre por miembro)
-        await Accion(sp => SembrarCatalogoEvolucion(sp.GetRequiredService<AppDbContext>(), lider, recluta, rival));
+        // Un cofre por miembro demo, para que la Bóveda no arranque vacía (el resto se gana por hitos)
+        await Accion(async sp =>
+        {
+            var db = sp.GetRequiredService<AppDbContext>();
+            db.Cofres.AddRange(
+                new Cofre { MiembroId = lider, Rareza = RarezaCofre.EPICO, Origen = OrigenCofre.HITO, LlavesRequeridas = 2 },
+                new Cofre { MiembroId = recluta, Rareza = RarezaCofre.RARO, Origen = OrigenCofre.HITO },
+                new Cofre { MiembroId = rival, Rareza = RarezaCofre.RARO, Origen = OrigenCofre.HITO });
+            await db.SaveChangesAsync();
+        });
 
         log.LogInformation("Datos de demo cargados: 3 usuarios (contraseña {Password}), 2 clanes, 2 desafíos, guerra de la semana con rival, catálogo S7.", PasswordDemo);
     }
 
-    // S7: seed del catálogo de Evolución — 4 nodos (2 raíces + 2 dependientes), 6 ítems, 1 cofre por miembro
-    private static async Task SembrarCatalogoEvolucion(AppDbContext db, Guid lider, Guid recluta, Guid rival)
+    // Catálogo alineado con la carpeta (CU-004-002, CU-004-004, CU-005-006). Aliados con URLs de ejemplo:
+    // sin integración real (10.4.3, Limitaciones Explícitas).
+    private static async Task SembrarCatalogo(AppDbContext db, ILogger log)
     {
-        if (await db.Nodos.AnyAsync()) return;
+        if (!await db.Nodos.AnyAsync())
+        {
+            // Árbol: FUERZA (raíz) → RESISTENCIA (izq.) y ATAQUE (der.) → FUEGO (desde ATAQUE) → TITÁN (RESISTENCIA + FUEGO)
+            var fuerza = new Nodo { Nombre = "FUERZA", Descripcion = "Nodo origen del árbol del clan.", Efecto = "CER del clan en ejercicios de fuerza", BonusPorNivel = 2, CostoPuntos = 100, NivelMaximo = 3, Estado = EstadoNodo.DISPONIBLE };
+            var resistencia = new Nodo { Nombre = "RESISTENCIA", Descripcion = "Aumenta la tolerancia del clan a la carga semanal.", Efecto = "tolerancia a la fatiga", BonusPorNivel = 5, CostoPuntos = 150, NivelMaximo = 5, Estado = EstadoNodo.BLOQUEADO };
+            var ataque = new Nodo { Nombre = "ATAQUE", Descripcion = "Potencia el aporte del clan en la Guerra Global.", Efecto = "aporte a la Guerra Global", BonusPorNivel = 3, CostoPuntos = 150, NivelMaximo = 5, Estado = EstadoNodo.BLOQUEADO };
+            var fuego = new Nodo { Nombre = "FUEGO", Descripcion = "Recompensa las rachas largas de los miembros.", Efecto = "XP por racha activa", BonusPorNivel = 5, CostoPuntos = 250, NivelMaximo = 3, Estado = EstadoNodo.BLOQUEADO };
+            var titan = new Nodo { Nombre = "TITÁN", Descripcion = "Mejora definitiva del clan.", Efecto = "poder total del clan", BonusPorNivel = 10, CostoPuntos = 500, NivelMaximo = 1, Estado = EstadoNodo.BLOQUEADO };
+            db.Nodos.AddRange(fuerza, resistencia, ataque, fuego, titan);
+            db.NodoDependencias.AddRange(
+                new NodoDependencia { Nodo = resistencia, Prerequisito = fuerza },
+                new NodoDependencia { Nodo = ataque, Prerequisito = fuerza },
+                new NodoDependencia { Nodo = fuego, Prerequisito = ataque },
+                new NodoDependencia { Nodo = titan, Prerequisito = resistencia },
+                new NodoDependencia { Nodo = titan, Prerequisito = fuego });
+        }
 
-        var fuerza = new Nodo { Nombre = "Fuerza Bruta", Descripcion = "Ganás 5% de CER en ejercicios de pecho y piernas.", CostoXp = 100, Estado = EstadoNodo.DISPONIBLE };
-        var resistencia = new Nodo { Nombre = "Resistencia", Descripcion = "Reducís la fatiga semanal un 10%.", CostoXp = 100, Estado = EstadoNodo.DISPONIBLE };
-        var furia = new Nodo { Nombre = "Furia del Silverback", Descripcion = "Multiplicador x1.1 cuando entrenás en días consecutivos.", CostoXp = 300, Estado = EstadoNodo.BLOQUEADO };
-        var titan = new Nodo { Nombre = "Titán", Descripcion = "Suma el 2% de tu CER al puntaje del clan.", CostoXp = 500, Estado = EstadoNodo.BLOQUEADO };
-        db.Nodos.AddRange(fuerza, resistencia, furia, titan);
-        // Prerequisitos: furia depende de fuerza; titán depende de furia y resistencia
-        db.NodoDependencias.AddRange(
-            new NodoDependencia { Nodo = furia, Prerequisito = fuerza },
-            new NodoDependencia { Nodo = titan, Prerequisito = furia },
-            new NodoDependencia { Nodo = titan, Prerequisito = resistencia });
+        if (!await db.Items.AnyAsync())
+        {
+            db.Items.AddRange(
+                new Item { Nombre = "Skin Alfa Dorado", Descripcion = "Dorado espejado para tu avatar.", Categoria = CategoriaItem.SKIN, Rareza = RarezaItem.EPICO, Precio = 300 },
+                new Item { Nombre = "Skin Guerrero Negro", Descripcion = "Mate con detalles rojos.", Categoria = CategoriaItem.SKIN, Rareza = RarezaItem.RARO, Precio = 200 },
+                new Item { Nombre = "Aura de Fuego", Descripcion = "Llamas alrededor de tu avatar mientras entrenás.", Categoria = CategoriaItem.AURA, Rareza = RarezaItem.LEGENDARIO, Precio = 400 },
+                new Item { Nombre = "Aura Tormenta", Descripcion = "Rayos azules activos durante el entrenamiento.", Categoria = CategoriaItem.AURA, Rareza = RarezaItem.EPICO, Precio = 350 },
+                new Item { Nombre = "Ícono Gorila Alfa", Descripcion = "Imagen de perfil exclusiva.", Categoria = CategoriaItem.ICONO, Rareza = RarezaItem.COMUN, Precio = 100 },
+                new Item { Nombre = "Ícono Manada", Descripcion = "Imagen de perfil con el emblema del clan.", Categoria = CategoriaItem.ICONO, Rareza = RarezaItem.RARO, Precio = 150 });
+        }
 
-        db.Items.AddRange(
-            new Item { Nombre = "Skin Alfa Dorado", Descripcion = "Dorado espejado para tu avatar.", Categoria = CategoriaItem.SKIN, Precio = 300 },
-            new Item { Nombre = "Skin Guerrero Negro", Descripcion = "Mate con detalles rojos.", Categoria = CategoriaItem.SKIN, Precio = 200 },
-            new Item { Nombre = "Hábitat Jungla", Descripcion = "Fondo de perfil con bioma tropical.", Categoria = CategoriaItem.HABITAT, Precio = 150 },
-            new Item { Nombre = "Hábitat Volcán", Descripcion = "Fondo de perfil con cráter en erupción.", Categoria = CategoriaItem.HABITAT, Precio = 250 },
-            new Item { Nombre = "Accesorio Collar Alfa", Descripcion = "Collar visible en la Arena.", Categoria = CategoriaItem.ACCESORIO, Precio = 100 },
-            new Item { Nombre = "Aura Oro", Descripcion = "Halo dorado alrededor de tu avatar.", Categoria = CategoriaItem.AURA, Precio = 400 });
+        if (!await db.BeneficiosAliado.AnyAsync())
+        {
+            var equipo = new AliadoComercial { Nombre = "IronGear", UrlBase = "https://example.com/irongear" };
+            var nutri = new AliadoComercial { Nombre = "ProteoLab", UrlBase = "https://example.com/proteolab" };
+            var ropa = new AliadoComercial { Nombre = "Apex Wear", UrlBase = "https://example.com/apexwear" };
+            var recup = new AliadoComercial { Nombre = "Recovery Lab", UrlBase = "https://example.com/recoverylab" };
+            var comida = new AliadoComercial { Nombre = "FitMeals", UrlBase = "https://example.com/fitmeals" };
+            db.AliadosComerciales.AddRange(equipo, nutri, ropa, recup, comida);
+            db.BeneficiosAliado.AddRange(
+                new BeneficioAliado { Aliado = equipo, Categoria = "EQUIPAMIENTO", Destacado = true, Titulo = "15% OFF en equipamiento", Descripcion = "Mancuernas, barras y discos. Desde rango BRONCE.", Tipo = TipoBeneficio.CODIGO, RangoMinimo = Rango.BRONCE },
+                new BeneficioAliado { Aliado = nutri, Categoria = "NUTRICIÓN", Titulo = "2x1 en proteína", Descripcion = "Whey y vegana, todos los sabores.", Tipo = TipoBeneficio.REDIRECCION, RangoMinimo = Rango.BRONCE, FechaVencimiento = DateTime.UtcNow.AddDays(5) },
+                new BeneficioAliado { Aliado = ropa, Categoria = "ROPA DEPORTIVA", Titulo = "Envío gratis + 20% OFF", Descripcion = "Toda la línea de ropa deportiva.", Tipo = TipoBeneficio.CUPON, RangoMinimo = Rango.BRONCE },
+                new BeneficioAliado { Aliado = recup, Categoria = "RECUPERACIÓN", Titulo = "Sesión de crioterapia", Descripcion = "Una sesión sin cargo por mes.", Tipo = TipoBeneficio.CODIGO, RangoMinimo = Rango.ORO },
+                new BeneficioAliado { Aliado = comida, Categoria = "ALIMENTACIÓN", Titulo = "Plan de alimentación a precio base", Descripcion = "Suscripción mensual con nutricionista.", Tipo = TipoBeneficio.SUSCRIPCION, RangoMinimo = Rango.PLATA });
+        }
 
-        // Un cofre reclamable por cada miembro demo, para que la Bóveda no esté vacía
-        db.Cofres.AddRange(
-            new Cofre { MiembroId = lider, Rareza = RarezaCofre.EPICO },
-            new Cofre { MiembroId = recluta, Rareza = RarezaCofre.COMUN },
-            new Cofre { MiembroId = rival, Rareza = RarezaCofre.RARO });
-
-        await db.SaveChangesAsync();
+        var cambios = await db.SaveChangesAsync();
+        if (cambios > 0) log.LogInformation("Catálogo sembrado ({Cambios} filas).", cambios);
     }
 }

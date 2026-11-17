@@ -41,13 +41,14 @@ test.describe.serial("S4–S6", () => {
     await expect(recluta.page.locator("aside")).toContainText(`RECLUTA · ${CLAN_A}`);
   });
 
-  test("Pantallas sin integración ocultas: /perfil y /evolucion redirigen", async () => {
+  // Desde S8 no queda ninguna pantalla oculta: Evolución y Perfil están integrados y visibles en el menú
+  test("Navegación: Evolución y Perfil visibles y sin redirección", async () => {
     await lider.page.goto("/perfil");
-    await expect(lider.page).toHaveURL(/\/santuario$/);
+    await expect(lider.page).toHaveURL(/\/perfil$/);
     await lider.page.goto("/evolucion/tienda");
-    await expect(lider.page).toHaveURL(/\/santuario$/);
-    await expect(lider.page.locator("header")).not.toContainText("Bóveda");
-    await expect(lider.page.locator("aside")).not.toContainText("Trofeos");
+    await expect(lider.page).toHaveURL(/\/evolucion\/tienda$/);
+    await expect(lider.page.locator("header")).toContainText("Bóveda");
+    await expect(lider.page.locator("aside")).toContainText("Trofeos");
   });
 
   test("CU-002-004: el chat de Tácticas persiste y lo ve otro miembro", async () => {
@@ -214,6 +215,14 @@ test.describe.serial("S4–S6", () => {
     await expect(tercero.page.getByText("SIN RIVAL ASIGNADO")).toBeVisible();
     await expect(tercero.page.getByText("SIN RIVAL", { exact: true })).toBeVisible();
 
+    // S7: el clan ganador recibe trofeo de la semana + cofre de EVENTO LIMITADO; el perdedor no
+    const premios = (email: string) => sql(`SELECT CONCAT((SELECT COUNT(*) FROM Trofeos t JOIN Miembros m ON m.Id = t.MiembroId WHERE m.Email = '${email}' AND t.Nombre LIKE N'Campeón de Guerra%'), '|', (SELECT COUNT(*) FROM Cofres c JOIN Miembros m ON m.Id = c.MiembroId WHERE m.Email = '${email}' AND c.Rareza = 'LEGENDARIO'))`);
+    expect(premios(lider.email)).toBe("1|1");
+    expect(premios(rival.email)).toBe("0|0");
+    await lider.page.goto("/evolucion/botin");
+    await expect(lider.page.getByText("EVENTO LIMITADO", { exact: true })).toBeVisible();
+    await expect(lider.page.getByRole("button", { name: "RECLAMAR AHORA" })).toBeVisible();
+
     // Filtro de sesiones por ejercicio
     await lider.page.goto("/arena/historial?ejercicio=press");
     await expect(lider.page.getByText("PRESS BANCA")).toBeVisible();
@@ -223,7 +232,16 @@ test.describe.serial("S4–S6", () => {
   test("CU-002-006: el SILVERBACK expulsa a un miembro", async () => {
     await lider.page.goto("/santuario/roles");
     const fila = lider.page.locator("div.rounded-xl").filter({ hasText: recluta.nombre });
+
+    // FA-1: si cancela la confirmación, el miembro sigue en el clan
+    lider.page.once("dialog", (d) => d.dismiss());
     await fila.getByTitle("Expulsar del clan").click();
+    await lider.page.reload();
+    await expect(lider.page.locator("div.rounded-xl").filter({ hasText: recluta.nombre })).toHaveCount(1);
+
+    // Confirma → expulsado
+    lider.page.once("dialog", (d) => d.accept());
+    await lider.page.locator("div.rounded-xl").filter({ hasText: recluta.nombre }).getByTitle("Expulsar del clan").click();
     await expect(lider.page.locator("div.rounded-xl").filter({ hasText: recluta.nombre })).toHaveCount(0);
 
     expect(sql(`SELECT ISNULL(CONVERT(varchar(36), ClanId), 'SIN CLAN') + '|' + Rol FROM Miembros WHERE Email = '${recluta.email}'`))
@@ -256,7 +274,7 @@ test.describe.serial("S4–S6", () => {
     const clanId = sql(`SELECT Id FROM Clanes WHERE Nombre = '${CLAN_A}'`);
     const rutas = [
       "/api/perfil/dashboard", "/api/perfil/racha", "/api/perfil/fatiga", "/api/perfil/trofeos", "/api/perfil/beneficios",
-      "/api/evolucion/progreso", "/api/evolucion/cofres", "/api/evolucion/items?categoria=SKIN",
+      "/api/evolucion/progreso", "/api/evolucion/boveda", "/api/evolucion/arbol", "/api/evolucion/items?categoria=SKIN",
       "/api/arena/guerra", "/api/arena/batallas", "/api/arena/historial",
       `/api/santuario/${clanId}`, `/api/santuario/${clanId}/panel`, `/api/santuario/${clanId}/miembros`,
       `/api/santuario/${clanId}/desafios`, `/api/santuario/${clanId}/mensajes`,

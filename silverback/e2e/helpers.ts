@@ -3,7 +3,7 @@ import { expect, type Browser, type BrowserContext, type Page } from "@playwrigh
 
 export const API = "http://localhost:5057";
 export const PASSWORD = "Test1234!";
-const SQL_SERVER = process.env.E2E_SQL_SERVER ?? "DESKTOP-JQBGOKE\\SQLEXPRESS";
+const SQL_SERVER = process.env.E2E_SQL_SERVER ?? "localhost\\SQLEXPRESS";
 
 export type Usuario = { nombre: string; email: string; context: BrowserContext; page: Page };
 

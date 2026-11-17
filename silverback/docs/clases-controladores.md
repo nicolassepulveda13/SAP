@@ -72,20 +72,26 @@ package "Controladores — SilverbackApi.Api" #ECFEFF {
   }
   class EvolucionController <<controller>> {
     +obtenerProgreso(): IActionResult
-    +obtenerCofres(): IActionResult
+    +obtenerArbol(): IActionResult
+    +mejorarNodo(req: MejorarNodoRequest): IActionResult
+    +obtenerBoveda(): IActionResult
     +reclamarCofre(cofreId: UUID): IActionResult
     +obtenerItems(categoria: String): IActionResult
     +comprarItem(req: ComprarItemRequest): IActionResult
-    +mejorarNodo(req: MejorarNodoRequest): IActionResult
   }
   class PerfilController <<controller>> {
     +dashboard(): IActionResult
     +consultarRacha(): IActionResult
-    +salvarRacha(req: SalvarRachaRequest): IActionResult
+    +salvarRacha(): IActionResult
+    +dejarMorirRacha(): IActionResult
     +obtenerFatiga(): IActionResult
     +obtenerTrofeos(): IActionResult
     +obtenerBeneficios(): IActionResult
     +reclamarBeneficio(req: ReclamarBeneficioRequest): IActionResult
+    +inventario(): IActionResult
+    +activarItem(itemId: UUID): IActionResult
+    +actualizarCuenta(req: ActualizarCuentaRequest): IActionResult
+    +cambiarPassword(req: CambiarPasswordRequest): IActionResult
   }
 
   SilverbackControllerBase <|-- IncorporacionController
@@ -132,5 +138,5 @@ PerfilController ..> PerfilService : DI
 | `IncorporacionController` | `/api/incorporacion` | Pública (salvo `unirse`) | `clanesDisponibles` → `GET /clanes` · `registrar` → `POST /registrar` · `crearClan` → `POST /clan` · `unirseAClan` → `POST /unirse` 🔒 |
 | `SantuarioController` | `/api/santuario` | JWT | `obtenerClan` → `GET /{clanId}` · `listarMiembros` → `GET /{clanId}/miembros` · `obtenerPanel` → `GET /{clanId}/panel` · `listarDesafios` → `GET /{clanId}/desafios` · `aceptarDesafio` → `POST /{clanId}/desafios/{desafioId}/aceptar` · `crearDesafio` → `POST /{clanId}/desafios` · `listarMensajes` → `GET /{clanId}/mensajes` · `enviarMensaje` → `POST /{clanId}/mensajes` · `asignarRol` → `PUT /{clanId}/miembros/{miembroId}/rol` · `expulsarMiembro` → `DELETE /{clanId}/miembros/{miembroId}` |
 | `ArenaController` | `/api/arena` | JWT | `obtenerGuerra` → `GET /guerra` · `obtenerBatallas` → `GET /batallas` · `entrenar` → `POST /entrenar` · `obtenerHistorial` → `GET /historial` |
-| `EvolucionController` | `/api/evolucion` | JWT | `obtenerProgreso` → `GET /progreso` · `obtenerCofres` → `GET /cofres` · `reclamarCofre` → `POST /cofres/{cofreId}/reclamar` · `obtenerItems` → `GET /items` · `comprarItem` → `POST /items/comprar` · `mejorarNodo` → `POST /nodos/mejorar` |
-| `PerfilController` | `/api/perfil` | JWT | `dashboard` → `GET /dashboard` · `consultarRacha` → `GET /racha` · `salvarRacha` → `POST /racha/salvar` · `obtenerFatiga` → `GET /fatiga` · `obtenerTrofeos` → `GET /trofeos` · `obtenerBeneficios` → `GET /beneficios` · `reclamarBeneficio` → `POST /beneficios/reclamar` |
+| `EvolucionController` | `/api/evolucion` | JWT | `obtenerProgreso` → `GET /progreso` · `obtenerArbol` → `GET /arbol` · `mejorarNodo` → `POST /nodos/mejorar` · `obtenerBoveda` → `GET /boveda` · `reclamarCofre` → `POST /cofres/{cofreId}/reclamar` · `obtenerItems` → `GET /items` · `comprarItem` → `POST /items/comprar` |
+| `PerfilController` | `/api/perfil` | JWT | `dashboard` → `GET /dashboard` · `consultarRacha` → `GET /racha` · `salvarRacha` → `POST /racha/salvar` · `dejarMorirRacha` → `POST /racha/dejar-morir` · `obtenerFatiga` → `GET /fatiga` · `obtenerTrofeos` → `GET /trofeos` · `obtenerBeneficios` → `GET /beneficios` · `reclamarBeneficio` → `POST /beneficios/reclamar` · `inventario` → `GET /inventario` · `activarItem` → `POST /inventario/{itemId}/activar` · `actualizarCuenta` → `PUT /cuenta` · `cambiarPassword` → `PUT /cuenta/password` |
