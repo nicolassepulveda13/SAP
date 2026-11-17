@@ -14,13 +14,23 @@ Los tres comparten una idea fuerte para contar: **los Puntos de Clan son la mone
 
 ## Antes de la demo (2 minutos)
 
-1. Levantar la API y el front (o `docker compose up`).
-2. Correr el script de preparación (se puede repetir las veces que quieras):
-   ```
-   sqlcmd -S "localhost\SQLEXPRESS" -d silverback -E -i silverback\demo\preparar-demo.sql
-   ```
-   Deja tu cuenta con **racha de 6 días en riesgo**, **60 Puntos de Clan** y el **árbol sin invertir**. En Docker, cambiá `@email` por `lider@silverback.demo` (contraseña `Test1234!`).
-3. Abrir la app en **Chrome** (el dictado usa la Web Speech API) y permitir el micrófono.
+**Cuenta de la demo:** `demo@silverback.demo` / `Test1234!` (clan "Manada Demo", arquetipo ATLÉTICO).
+
+**Con Docker (recomendado):**
+```
+docker compose up --build
+```
+En cada arranque, la API deja la cuenta lista: **racha de 6 días en riesgo**, **60 Puntos de Clan**, **árbol sin invertir** y sin entrenamientos de hoy. Lo hace `DbInicializador.PrepararDemo`, activado con `PREPARAR_DEMO=true`, que ya viene por defecto. Para repetir la demo: `docker compose restart api`.
+
+**Sin Docker (local):** levantá la API y el front, y corré el script (se puede repetir):
+```
+sqlcmd -S "localhost\SQLEXPRESS" -d silverback -E -i silverback\demo\preparar-demo.sql
+```
+La primera vez, la cuenta demo la crea la API si arranca con `Database__PrepararDemo=true`. También podés cambiar `@email` en el script y usar tu cuenta.
+
+Abrí la app en **Chrome** (el dictado usa la Web Speech API) y permití el micrófono.
+
+> Verificado el 17/11 contra la API: salvar 60 → 10 · FUERZA "PUNTOS INSUFICIENTES" · entrenamiento 800 CER y +80 XP · saldo 810 · mejorar FUERZA → 710 y aparece en "ÚLTIMAS INVERSIONES".
 
 ## Guion (≈ 5 minutos)
 

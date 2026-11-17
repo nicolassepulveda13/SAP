@@ -40,6 +40,7 @@ services:
       Jwt__Secret: ${JWT_SECRET:-cambiar-este-secreto-por-uno-largo-de-32-caracteres-o-mas}
       Database__MigrarAlIniciar: "true"     # aplica las migraciones de EF al arrancar
       Database__SembrarDemo: ${SEMBRAR_DEMO:-true}   # carga usuarios/clanes de demo si la base está vacía
+      Database__PrepararDemo: ${PREPARAR_DEMO:-true} # en cada arranque deja demo@silverback.demo lista para la demo de 3 CU (docs/Demo-3-CU.md)
     ports:
       - "${API_PORT:-5057}:8080"
     restart: unless-stopped

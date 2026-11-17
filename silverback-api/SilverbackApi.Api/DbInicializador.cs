@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using SilverbackApi.Data;
 using SilverbackApi.Domain;
 using SilverbackApi.Domain.Models;
+using SilverbackApi.Services;
 using SilverbackApi.Services.Interfaces;
 
 namespace SilverbackApi.Api;
@@ -33,16 +34,101 @@ public static class DbInicializador
             log.LogError(ex, "No se pudo sembrar el catálogo (¿faltan migraciones?). La API sigue funcionando.");
         }
 
-        if (!config.GetValue<bool>("Database:MigrarAlIniciar") || !config.GetValue<bool>("Database:SembrarDemo")) return;
+        if (config.GetValue<bool>("Database:MigrarAlIniciar") && config.GetValue<bool>("Database:SembrarDemo"))
+        {
+            try
+            {
+                await SembrarDemo(app.Services, log);
+            }
+            catch (Exception ex)
+            {
+                // La API arranca igual: la demo es opcional. Para reintentar, borrar la base (docker compose down -v)
+                log.LogError(ex, "No se pudieron cargar los datos de demo. La API sigue funcionando sin ellos.");
+            }
+        }
+
+        if (!config.GetValue<bool>("Database:PrepararDemo")) return;
         try
         {
-            await SembrarDemo(app.Services, log);
+            await PrepararDemo(app.Services, log);
         }
         catch (Exception ex)
         {
-            // La API arranca igual: la demo es opcional. Para reintentar, borrar la base (docker compose down -v)
-            log.LogError(ex, "No se pudieron cargar los datos de demo. La API sigue funcionando sin ellos.");
+            log.LogError(ex, "No se pudo preparar la cuenta de demo. La API sigue funcionando.");
         }
+    }
+
+    public const string EmailDemo = "demo@silverback.demo";
+
+    // Demo de los 3 CU core (docs/Demo-3-CU.md): corre en CADA arranque, así cada `docker compose up`
+    // (o `docker compose restart api`) deja la cuenta demo@silverback.demo lista para mostrar:
+    //   · racha de 6 días con el último entrenamiento AYER → EN_RIESGO (CU-005-003)
+    //   · 60 Puntos de Clan: alcanza para salvar la racha (50) y no para FUERZA (100) → FA-2 de CU-004-002
+    //   · árbol del clan sin invertir y sin entrenamientos de hoy (CU-003-002 arranca de cero)
+    // Es lo mismo que hace demo/preparar-demo.sql en local. Si la cuenta no existe (base sembrada antes), la crea.
+    private static async Task PrepararDemo(IServiceProvider services, ILogger log)
+    {
+        async Task<T> Paso<T>(Func<IServiceProvider, Task<T>> accion)
+        {
+            using var scope = services.CreateScope();
+            return await accion(scope.ServiceProvider);
+        }
+        static IIncorporacionService Inc(IServiceProvider sp) => sp.GetRequiredService<IIncorporacionService>();
+
+        var demo = await Paso(sp => sp.GetRequiredService<AppDbContext>().Miembros
+            .Where(m => m.Email == EmailDemo).Select(m => new { m.Id, m.ClanId }).FirstOrDefaultAsync());
+        var miembroId = demo?.Id ?? await Paso(async sp =>
+            (await Inc(sp).Registrar("Demo SilverBack", EmailDemo, PasswordDemo, "ATLETICO", 28, 78, 177, "INTERMEDIO")).Miembro.Id);
+
+        var clanId = demo?.ClanId;
+        if (clanId is null)
+        {
+            var manada = await Paso(sp => sp.GetRequiredService<AppDbContext>().Clanes
+                .Where(c => c.Nombre == "Manada Demo").Select(c => (Guid?)c.Id).FirstOrDefaultAsync());
+            if (manada is { } id) await Paso(async sp => await Inc(sp).UnirseAClan(miembroId, id));
+            else manada = await Paso(async sp => (await Inc(sp).CrearClan("Manada Demo", miembroId)).Clan.Id);
+            clanId = manada;
+        }
+
+        await Paso(async sp =>
+        {
+            var db = sp.GetRequiredService<AppDbContext>();
+            var hoy = HoraArgentina.Hoy();
+            var inicioHoyUtc = HoraArgentina.InicioDelDiaUtc(hoy);
+            var ayer20Utc = HoraArgentina.InicioDelDiaUtc(hoy.AddDays(-1)).AddHours(20);
+
+            // Historial de los 6 días anteriores (una sola vez), para que la racha de 6 días tenga respaldo
+            if (!await db.Entrenamientos.AnyAsync(e => e.MiembroId == miembroId && e.FechaHora < inicioHoyUtc))
+            {
+                string[] ejercicios = ["SENTADILLA", "PRESS BANCA", "PESO MUERTO", "SENTADILLA", "PRESS MILITAR", "REMO"];
+                for (var d = 6; d >= 1; d--)
+                {
+                    var (peso, reps) = (60m + d * 5, 8 + d % 3);
+                    db.Entrenamientos.Add(new Entrenamiento
+                    {
+                        MiembroId = miembroId, Ejercicio = ejercicios[6 - d], PesoKg = peso, Repeticiones = reps,
+                        PuntajeCer = peso * reps, FechaHora = HoraArgentina.InicioDelDiaUtc(hoy.AddDays(-d)).AddHours(19),
+                    });
+                }
+                await db.SaveChangesAsync();
+            }
+
+            await db.Entrenamientos.Where(e => e.MiembroId == miembroId && e.FechaHora >= inicioHoyUtc).ExecuteDeleteAsync();
+
+            var racha = await db.Rachas.FirstOrDefaultAsync(r => r.MiembroId == miembroId);
+            if (racha is null) db.Rachas.Add(racha = new Racha { MiembroId = miembroId });
+            racha.DiasConsecutivos = 6;
+            racha.Estado = EstadoRacha.EN_RIESGO;
+            racha.UltimoEntrenamiento = ayer20Utc;
+            await db.SaveChangesAsync();
+
+            await db.Clanes.Where(c => c.Id == clanId).ExecuteUpdateAsync(s => s.SetProperty(c => c.PuntosClan, 60));
+            await db.InversionesNodo.Where(i => i.ClanId == clanId).ExecuteDeleteAsync();
+            await db.NodosClan.Where(n => n.ClanId == clanId).ExecuteDeleteAsync();
+            return true;
+        });
+
+        log.LogInformation("Demo lista: {Email} / {Password} — racha 6 días EN_RIESGO, 60 Puntos de Clan, árbol sin invertir.", EmailDemo, PasswordDemo);
     }
 
     // SQL Server tarda unos segundos en aceptar conexiones después de que arranca el contenedor

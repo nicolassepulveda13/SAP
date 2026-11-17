@@ -1,7 +1,9 @@
 -- Deja una cuenta lista para la demo de los 3 CU (ver silverback/docs/Demo-3-CU.md).
 -- Correr ANTES de cada demo (se puede repetir):
 --   sqlcmd -S "localhost\SQLEXPRESS" -d silverback -E -i silverback\demo\preparar-demo.sql
--- En Docker cambiar @email por 'lider@silverback.demo' (contraseña Test1234!).
+-- En Docker no hace falta: la API hace lo mismo en cada arranque (Database:PrepararDemo, DbInicializador.PrepararDemo).
+-- La cuenta demo@silverback.demo / Test1234! la crea la API al arrancar con Database__PrepararDemo=true;
+-- también se puede usar cualquier cuenta con clan cambiando @email.
 --
 -- Qué deja:
 --   · Racha de 6 días con el último entrenamiento AYER (hora Argentina) → EN_RIESGO (banner en el Santuario)
@@ -10,7 +12,7 @@
 --   · Sin entrenamientos de hoy (si no, la racha figuraría ACTIVA)
 
 SET NOCOUNT ON;
-DECLARE @email NVARCHAR(200) = N'nico.luciano.sepulveda@gmail.com';
+DECLARE @email NVARCHAR(200) = N'demo@silverback.demo';
 
 DECLARE @miembro UNIQUEIDENTIFIER, @clan UNIQUEIDENTIFIER;
 SELECT @miembro = Id, @clan = ClanId FROM Miembros WHERE Email = @email;
